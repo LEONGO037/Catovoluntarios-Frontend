@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cato-canvas text-cato-text font-sans antialiased;
+  }
+
+  h1 {
+    @apply text-2xl font-bold text-cato-navy;
+  }
+
+  h2 {
+    @apply text-xl font-semibold text-cato-slate;
+  }
+
+  h3 {
+    @apply text-base font-semibold text-cato-slate;
+  }
+}
+
+@layer components {
+  /* Botones Institucionales */
+  .btn-primary {
+    @apply bg-cato-navy hover:bg-cato-navy-dark text-white font-medium px-4 py-2 rounded-lg transition-colors duration-150 inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-cta {
+    @apply bg-cato-gold hover:bg-cato-gold-dark text-cato-navy font-bold px-5 py-2.5 rounded-lg shadow-sm transition-colors duration-150 inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-outline {
+    @apply border border-cato-border bg-white hover:bg-cato-canvas text-cato-slate font-medium px-4 py-2 rounded-lg transition-colors duration-150 inline-flex items-center justify-center gap-2;
+  }
+
+  /* Tarjetas del App Shell */
+  .cato-card {
+    @apply bg-cato-surface border border-cato-border rounded-xl p-6 shadow-card;
+  }
+
+  /* Inputs de formulario estándar */
+  .cato-input {
+    @apply w-full h-10 px-3 py-2 border border-cato-input rounded-md text-sm text-cato-text placeholder-cato-muted focus:outline-none focus:border-cato-navy focus:ring-1 focus:ring-cato-navy transition-colors duration-150;
+  }
+
+  /* Badges de Semáforo */
+  .badge-semaforo-green {
+    @apply bg-semaforo-green-bg text-semaforo-green-text border border-semaforo-green-border px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-semaforo-amber {
+    @apply bg-semaforo-amber-bg text-semaforo-amber-text border border-semaforo-amber-border px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-semaforo-red {
+    @apply bg-semaforo-red-bg text-semaforo-red-text border border-semaforo-red-border px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-semaforo-purple {
+    @apply bg-semaforo-purple-bg text-semaforo-purple-text border border-semaforo-purple-border px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  /* Badges de Roles */
+  .badge-role-voluntario {
+    @apply bg-role-voluntario-bg text-role-voluntario-text px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-role-catolider {
+    @apply bg-role-catolider-bg text-role-catolider-text px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-role-postulante {
+    @apply bg-role-postulante-bg text-role-postulante-text px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-role-interesado {
+    @apply bg-role-interesado-bg text-role-interesado-text px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-role-admin {
+    @apply bg-role-admin-bg text-role-admin-text px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+}
