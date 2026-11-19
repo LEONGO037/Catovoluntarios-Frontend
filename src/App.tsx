@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './features/auth/context/AuthContext';
 import { LandingPage } from './features/portal-publico/components/LandingPage';
 import { LoginPage } from './features/auth/components/LoginPage';
+import { ResetPasswordPage } from './features/auth/components/ResetPasswordPage';
 import { DashboardPastoral } from './features/dashboard/components/DashboardPastoral';
 import { AppShell } from './components/layout/AppShell';
 import { TeammateModulePlaceholder } from './components/layout/TeammateModulePlaceholder';
@@ -14,6 +15,7 @@ export function App() {
           {/* M01: Responsabilidad Leonardo Delgado */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route
             path="/dashboard"
             element={

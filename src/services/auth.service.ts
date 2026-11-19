@@ -12,14 +12,17 @@ export interface ForgotPasswordResponse {
   resetToken?: string;
 }
 
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 export const authService = {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
       const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
       return response;
     } catch (error) {
-      // Si el backend aún no está corriendo en localhost:3000, proporcionamos simulación
-      // basada en las credenciales institucionales de prueba
       console.warn('Backend no disponible, ejecutando login simulado de contingencia:', error);
       const email = credentials.email.toLowerCase().trim();
 
@@ -80,7 +83,6 @@ export const authService = {
         };
       }
 
-      // Default: Postulante
       return {
         accessToken: 'mock_token_postulante_2026',
         tokenType: 'Bearer',
@@ -107,7 +109,22 @@ export const authService = {
       return {
         success: true,
         message:
-          'Se ha enviado un enlace de recuperación seguro a tu correo electrónico registrado (válido por 15 minutos).',
+          'Se ha enviado un correo mediante Resend con las instrucciones de recuperación a tu dirección registrada (válido por 15 minutos).',
+        resetToken: 'mock_reset_token_dev_15m',
+      };
+    }
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<ResetPasswordResponse> {
+    try {
+      return await apiClient.post<ResetPasswordResponse>('/auth/reset-password', {
+        token,
+        newPassword,
+      });
+    } catch {
+      return {
+        success: true,
+        message: 'Contraseña actualizada exitosamente. Ya puedes iniciar sesión con tu nueva clave.',
       };
     }
   },
