@@ -1,155 +1,229 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sparkles,
-  Calendar,
-  MessageCircle,
   Play,
   Heart,
-  CheckCircle,
+  ChevronDown,
   ArrowRight,
-  Shield,
-  Coins,
+  ChevronLeft,
+  ChevronRight,
+  HandHeart,
+  Smile,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 
 interface HeroSectionProps {
-  onOpenSaberMas: () => void;
+  onOpenVideo: () => void;
+  onScrollToDetails: () => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenSaberMas }) => {
+interface SlideItem {
+  id: number;
+  image: string;
+  tag: string;
+  tagIcon: React.ReactNode;
+  title: string;
+  message: string;
+  subphrase: string;
+}
+
+export const HeroSection: React.FC<HeroSectionProps> = ({
+  onOpenVideo,
+  onScrollToDetails,
+}) => {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides: SlideItem[] = [
+    {
+      id: 1,
+      image: '/images/voluntarios/voluntarios-1.jpg',
+      tag: 'Vocación & Ayuda Social',
+      tagIcon: <HandHeart className="w-4 h-4 text-cato-gold" />,
+      title: 'Tu tiempo y tu corazón pueden transformar vidas enteras.',
+      message:
+        'Súmate a la comunidad solidaria de la UCB La Paz. Sé la esperanza, la compañía y la alegría de quienes más lo necesitan en nuestra ciudad.',
+      subphrase: '4 horas por semana que dejan una huella imborrable.',
+    },
+    {
+      id: 2,
+      image: '/images/voluntarios/voluntarios-2.jpg',
+      tag: 'Esperanza & Empatía',
+      tagIcon: <Heart className="w-4 h-4 text-cato-gold fill-cato-gold" />,
+      title: 'Sembrando esperanza, afecto y dignidad en cada rincón.',
+      message:
+        'Acompaña a niños en hospitales, abuelitos en asilos y personas vulnerables en comedores comunitarios con el amor y carisma que te caracterizan.',
+      subphrase: 'Manos que ayudan, corazones que escuchan y transforman realidades.',
+    },
+    {
+      id: 3,
+      image: '/images/voluntarios/voluntarios-3.jpg',
+      tag: 'Fraternidad Universitaria',
+      tagIcon: <Smile className="w-4 h-4 text-cato-gold" />,
+      title: 'Manos jóvenes unidas por una misma misión de amor y fe.',
+      message:
+        'Conoce amigos extraordinarios de todas las carreras de la UCB mientras descubres el impacto real de tu vocación profesional al servicio de los demás.',
+      subphrase: 'Crece como persona y como futuro profesional con valores sólidos.',
+    },
+    {
+      id: 4,
+      image: '/images/voluntarios/voluntarios-4.jpg',
+      tag: 'Compromiso & Respaldo UCB',
+      tagIcon: <ShieldCheck className="w-4 h-4 text-cato-gold" />,
+      title: 'La fe se demuestra con obras: un voluntariado seguro y formativo.',
+      message:
+        'Con seguro estudiantil activo en campo, reposición diaria fija de pasajes en Bs y certificación institucional oficial avalada por Pastoral Universitaria.',
+      subphrase: 'Acreditado y reconocido por la Universidad Católica Boliviana San Pablo.',
+    },
+  ];
+
+  // Cambio automático del carrusel cada 5.5 segundos
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5500);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  const handlePrev = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  const handleNext = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const current = slides[currentSlide];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-cato-navy via-cato-navy-dark to-[#002244] text-white pt-28 pb-20 px-4 sm:px-6 lg:px-8">
-      {/* Elementos decorativos de fondo */}
-      <div className="absolute top-10 right-10 w-96 h-96 bg-cato-gold/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-10 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+    <section className="relative min-h-[92vh] sm:min-h-screen flex items-center justify-center text-white overflow-hidden pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+      {/* Carrusel de Fotografías de Fondo con Transición Suave */}
+      {slides.map((slide, index) => (
+        <div
+          key={slide.id}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            index === currentSlide ? 'opacity-100 z-0 scale-100' : 'opacity-0 -z-10 scale-105'
+          } transition-transform duration-[7000ms]`}
+          style={{
+            backgroundImage: `url(${slide.image})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 35%',
+          }}
+          aria-hidden={index !== currentSlide}
+        />
+      ))}
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-        {/* Columna Izquierda: Texto Jovial y Acciones */}
-        <div className="lg:col-span-7 space-y-6 text-left">
-          {/* Badge Convocatoria */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-cato-gold text-xs font-semibold backdrop-blur-sm">
-            <Sparkles className="w-4 h-4 text-cato-gold animate-spin" />
-            <span>Convocatoria Abierta — Gestión 2/2026</span>
-          </div>
+      {/* Capa de Gradiente Institucional Oscuro sobre las Fotos para Legibilidad Perfecta */}
+      <div className="absolute inset-0 bg-gradient-to-r from-cato-navy/95 via-cato-navy/85 to-[#001830]/80 z-10 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 bg-radial from-transparent via-transparent to-black/40 z-10" />
 
-          {/* Título Principal */}
-          <h1 className="text-3xl sm:text-5xl font-black text-white leading-tight tracking-tight">
-            ¿Listo para transformar vidas y dejar tu huella?
-          </h1>
-
-          {/* Subtítulo fresco y amigable */}
-          <p className="text-base sm:text-lg text-blue-100/90 leading-relaxed max-w-2xl">
-            Súmate a la comunidad solidaria más grande de la <strong>UCB La Paz</strong>. Haz voluntariado 4 horas por semana, conoce amigos increíbles de todas las carreras y sé la esperanza de quienes más lo necesitan.
-          </p>
-
-          {/* Botones de Acción (Las 3 intenciones de usuario) */}
-          <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-            {/* 1. Postúlate (CTA Principal Amarillo Institucional) */}
-            <div className="relative group">
-              <Button
-                variant="cta"
-                size="lg"
-                onClick={() => navigate('/postulacion')}
-                className="w-full sm:w-auto text-base font-extrabold px-8 py-4 shadow-xl hover:shadow-cato-gold/30 hover:scale-105 transition-all"
-                rightIcon={<ArrowRight className="w-5 h-5 text-cato-navy" />}
-              >
-                ¡Postúlate Aquí!
-              </Button>
-              {/* Manito Señaladora Intermitente */}
-              <div className="hidden sm:flex items-center gap-1.5 absolute -top-8 left-4 text-xs font-bold text-cato-gold animate-bounce pointer-events-none">
-                <span className="text-base">👇</span>
-                <span>¡Solo 5 minutos!</span>
-              </div>
-            </div>
-
-            {/* 2. Quiero Saber Más (Abre Modal SECRAD) */}
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={onOpenSaberMas}
-              className="w-full sm:w-auto text-sm border-white/30 text-white bg-white/10 hover:bg-white/20 hover:text-cato-gold backdrop-blur-sm"
-              leftIcon={<Play className="w-4 h-4 text-cato-gold fill-cato-gold" />}
-            >
-              Quiero Saber Más
-            </Button>
-          </div>
-
-          {/* 3 Ventajas Rápidas para Estudiantes */}
-          <div className="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-blue-100">
-            <div className="flex items-center gap-2 bg-white/5 p-2.5 rounded-lg border border-white/10">
-              <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>Seguro Estudiantil UCB</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/5 p-2.5 rounded-lg border border-white/10">
-              <Coins className="w-4 h-4 text-cato-gold shrink-0" />
-              <span>Pasajes Fijos Repuestos</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/5 p-2.5 rounded-lg border border-white/10">
-              <CheckCircle className="w-4 h-4 text-sky-400 shrink-0" />
-              <span>Certificado Institucional</span>
-            </div>
-          </div>
+      {/* Contenido Central Inspirador y Minimalista */}
+      <div className="relative z-20 max-w-4xl mx-auto text-center space-y-6 pt-6 sm:pt-10">
+        {/* Badge Dinámico del Mensaje */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-cato-gold text-xs sm:text-sm font-semibold backdrop-blur-md shadow-sm">
+          {current.tagIcon}
+          <span>{current.tag}</span>
+          <span className="text-white/40">·</span>
+          <span className="text-blue-100">Pastoral UCB 2/2026</span>
         </div>
 
-        {/* Columna Derecha: Tarjeta Resumen de Convocatoria + Fotos Humanas */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Tarjeta de Cierre de Convocatoria */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 shadow-2xl text-left space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <span className="text-xs uppercase font-bold text-cato-gold tracking-wider flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-cato-gold" />
-                Cierre de Convocatoria
-              </span>
-              <span className="text-[11px] bg-rose-500/80 text-white font-bold px-2 py-0.5 rounded-full">
-                ¡Últimos Días!
-              </span>
-            </div>
+        {/* Título Principal de Esperanza */}
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-md">
+          {current.title}
+        </h1>
 
-            <div>
-              <p className="text-2xl font-black text-white">22 de Noviembre, 2026</p>
-              <p className="text-xs text-blue-200 mt-1">
-                A las 23:59 hrs cerramos el formulario web para coordinar turnos de entrevista con los Catolíderes.
-              </p>
-            </div>
+        {/* Mensaje Corto de Ayuda y Sensibilidad */}
+        <p className="text-base sm:text-xl text-blue-100/90 leading-relaxed max-w-2xl mx-auto font-normal drop-shadow-sm">
+          {current.message}
+        </p>
 
-            {/* Enlace directo a WhatsApp de Pastoral */}
-            <div className="pt-2">
-              <a
-                href="https://wa.me/59171523489?text=Hola%20Pastoral%20UCB,%20tengo%20una%20consulta%20sobre%20la%20convocatoria%20de%20Catovoluntarios"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 px-4 rounded-xl shadow-md transition-colors duration-150"
-              >
-                <MessageCircle className="w-4 h-4 fill-white" />
-                <span>¿Tienes dudas? Escríbenos al WhatsApp</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Mini banner para antiguos voluntarios */}
-          <div className="bg-cato-navy-dark/80 border border-white/10 rounded-xl p-4 text-left flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Heart className="w-4 h-4 text-cato-gold fill-cato-gold" />
-                ¿Ya fuiste Catovoluntario el semestre pasado?
-              </p>
-              <p className="text-[11px] text-blue-200/80 mt-0.5">
-                No vuelvas a llenar el formulario. Entra directo a tu cuenta.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/login')}
-              className="shrink-0 text-xs border-cato-gold text-cato-gold hover:bg-cato-gold hover:text-cato-navy"
-            >
-              Ingresar
-            </Button>
-          </div>
+        {/* Frase Destacada de Impacto */}
+        <div className="inline-block px-4 py-2 rounded-xl bg-cato-gold/15 border border-cato-gold/30 text-cato-gold text-xs sm:text-sm font-bold backdrop-blur-sm">
+          ✨ {current.subphrase}
         </div>
+
+        {/* Botones de Acción Principales */}
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md sm:max-w-none mx-auto">
+          {/* 1. Postúlate Ahora (CTA Principal en Dorado) */}
+          <Button
+            variant="cta"
+            size="lg"
+            onClick={() => navigate('/postulacion')}
+            className="w-full sm:w-auto text-base font-extrabold px-8 py-4 shadow-xl hover:shadow-cato-gold/40 hover:scale-105 transition-all"
+            rightIcon={<ArrowRight className="w-5 h-5 text-cato-navy" />}
+          >
+            ¡Postúlate Ahora!
+          </Button>
+
+          {/* 2. Ver Video Oficial de Catovoluntarios */}
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={onOpenVideo}
+            className="w-full sm:w-auto text-sm sm:text-base border-white/40 text-white bg-white/10 hover:bg-white/20 hover:text-cato-gold backdrop-blur-md px-6 py-4"
+            leftIcon={<Play className="w-5 h-5 text-cato-gold fill-cato-gold shrink-0" />}
+          >
+            Ver Video Catovoluntarios
+          </Button>
+
+          {/* 3. Botón de Saber Más (Navega a los datos detallados) */}
+          <button
+            onClick={onScrollToDetails}
+            type="button"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm font-bold text-blue-200 hover:text-white px-5 py-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            <span>Saber Más</span>
+            <ChevronDown className="w-4 h-4 text-cato-gold animate-bounce" />
+          </button>
+        </div>
+
+        {/* Indicadores de Carrusel (Dots) y Flechas de Navegación Manual */}
+        <div className="pt-8 flex items-center justify-center gap-3">
+          <button
+            onClick={handlePrev}
+            type="button"
+            className="p-1.5 rounded-full bg-white/10 hover:bg-white/25 text-white/80 hover:text-white transition-colors"
+            aria-label="Foto anterior"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-center gap-2">
+            {slides.map((slide, idx) => (
+              <button
+                key={slide.id}
+                onClick={() => setCurrentSlide(idx)}
+                type="button"
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  idx === currentSlide ? 'w-8 bg-cato-gold' : 'w-2 bg-white/40 hover:bg-white/70'
+                }`}
+                aria-label={`Ir a foto ${idx + 1}`}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={handleNext}
+            type="button"
+            className="p-1.5 rounded-full bg-white/10 hover:bg-white/25 text-white/80 hover:text-white transition-colors"
+            aria-label="Siguiente foto"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Flecha Flotante Inferior de Saber Más */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 hidden md:block">
+        <button
+          onClick={onScrollToDetails}
+          type="button"
+          className="flex flex-col items-center gap-1 text-[11px] uppercase tracking-widest text-blue-200/80 hover:text-cato-gold font-bold transition-colors cursor-pointer"
+        >
+          <span>Conoce las etapas y proyectos</span>
+          <ChevronDown className="w-4 h-4 animate-bounce text-cato-gold" />
+        </button>
       </div>
     </section>
   );

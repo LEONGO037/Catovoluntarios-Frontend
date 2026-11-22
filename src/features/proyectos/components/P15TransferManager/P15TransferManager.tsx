@@ -86,11 +86,10 @@ export const P15TransferManager: React.FC<P15TransferManagerProps> = ({
 
         {/* Indicador de Semana del Semestre */}
         <div
-          className={`px-3.5 py-2 rounded-lg border flex items-center gap-2.5 text-xs font-semibold ${
-            periodoHabilitado
+          className={`px-3.5 py-2 rounded-lg border flex items-center gap-2.5 text-xs font-semibold ${periodoHabilitado
               ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
               : 'bg-red-50 text-red-900 border-red-300'
-          }`}
+            }`}
         >
           <Clock className="w-4 h-4 text-emerald-700" />
           <div>

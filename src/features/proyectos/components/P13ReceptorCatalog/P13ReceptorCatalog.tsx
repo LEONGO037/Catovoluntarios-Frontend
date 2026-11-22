@@ -53,8 +53,8 @@ export const P13ReceptorCatalog: React.FC<P13ReceptorCatalogProps> = ({
     const promedioPasajes =
       total > 0
         ? Math.round(
-            proyectos.reduce((acc, p) => acc + p.monto_pasaje_fijo, 0) / total
-          )
+          proyectos.reduce((acc, p) => acc + p.monto_pasaje_fijo, 0) / total
+        )
         : 0;
 
     return { total, totalCupos, totalAsignados, promedioPasajes };

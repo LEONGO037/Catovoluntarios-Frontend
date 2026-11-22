@@ -4,30 +4,92 @@ import { HeroSection } from './HeroSection';
 import { CicloEtapasSection } from './CicloEtapasSection';
 import { PoblacionesSection } from './PoblacionesSection';
 import { VideoSecradModal } from './VideoSecradModal';
-import { Heart, Mail, Phone, MapPin } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Heart, Mail, Phone, MapPin, Sparkles, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '../../../components/ui/Button';
 
 export const LandingPage: React.FC = () => {
-  const [showSecradModal, setShowSecradModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const navigate = useNavigate();
+
+  const handleScrollToDetails = () => {
+    const el = document.getElementById('detalles-programa');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-cato-canvas flex flex-col text-cato-text">
-      {/* Navbar Público Fijo en #004077 sin Sidebar */}
-      <PublicNavbar onOpenSaberMas={() => setShowSecradModal(true)} />
+      {/* Header Público Simplificado: Solo Logo, Soy Catovoluntario y Postúlate Ahora */}
+      <PublicNavbar />
 
-      {/* Hero Section con Fotografías, CTA Postúlate y Modal SECRAD */}
-      <HeroSection onOpenSaberMas={() => setShowSecradModal(true)} />
+      {/* Hero Section con Carrusel de Fotos de Fondo, Mensajes Cortos de Esperanza y Botón Saber Más */}
+      <HeroSection
+        onOpenVideo={() => setShowVideoModal(true)}
+        onScrollToDetails={handleScrollToDetails}
+      />
 
-      {/* Ciclo Oficial de 4 Etapas */}
-      <CicloEtapasSection />
+      {/* Sección Detallada del Programa (Solo visible o accesible al hacer clic en Saber Más o scroll) */}
+      <div id="detalles-programa" className="scroll-mt-16">
+        {/* Banner de Introducción al Detalle */}
+        <section className="bg-white py-12 px-4 sm:px-6 lg:px-8 border-b border-cato-border text-center">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <span className="text-xs uppercase font-extrabold text-cato-navy tracking-widest bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-200 inline-flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-cato-gold" />
+              Todo lo que necesitas saber
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-cato-navy">
+              ¿Cómo funciona Catovoluntarios en la UCB?
+            </h2>
+            <p className="text-sm sm:text-base text-cato-muted max-w-2xl mx-auto leading-relaxed">
+              Un programa diseñado para adaptarse a tus horarios de clases, con acompañamiento continuo de Catolíderes y proyectos en toda la ciudad de La Paz.
+            </p>
+          </div>
+        </section>
 
-      {/* Poblaciones y Centros Conveniados */}
-      <PoblacionesSection />
+        {/* Ciclo Oficial de 4 Etapas */}
+        <CicloEtapasSection />
 
-      {/* Modal Interactivo SECRAD con Video y Niveles */}
+        {/* Poblaciones y Centros Conveniados */}
+        <PoblacionesSection />
+
+        {/* Llamado a la Acción Final previo al Footer */}
+        <section className="bg-gradient-to-r from-cato-navy via-cato-navy-dark to-[#001830] text-white py-14 px-4 text-center">
+          <div className="max-w-3xl mx-auto space-y-6">
+            <h3 className="text-2xl sm:text-3xl font-black">
+              ¿Listo para dar el primer paso?
+            </h3>
+            <p className="text-sm text-blue-100 max-w-xl mx-auto leading-relaxed">
+              El proceso de postulación toma solo 5 minutos. Déjanos tus datos, tus horarios disponibles y la población con la que más te gustaría colaborar.
+            </p>
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button
+                variant="cta"
+                size="lg"
+                onClick={() => navigate('/postulacion')}
+                className="font-extrabold shadow-lg"
+                rightIcon={<ArrowRight className="w-4 h-4 text-cato-navy" />}
+              >
+                Comenzar Mi Postulación
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setShowVideoModal(true)}
+                className="border-white/30 text-white hover:bg-white/10"
+              >
+                Ver Testimonios en Video
+              </Button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Modal Interactivo con el Video Real de Catovoluntarios */}
       <VideoSecradModal
-        isOpen={showSecradModal}
-        onClose={() => setShowSecradModal(false)}
+        isOpen={showVideoModal}
+        onClose={() => setShowVideoModal(false)}
       />
 
       {/* Footer Institucional */}
@@ -67,7 +129,7 @@ export const LandingPage: React.FC = () => {
             <p className="font-bold text-white text-sm mb-2">Acceso a la Plataforma</p>
             <p>
               <Link to="/login" className="hover:text-cato-gold transition-colors">
-                Iniciar Sesión en el App Shell (P-02)
+                Soy Catovoluntario — Iniciar Sesión (P-02)
               </Link>
             </p>
             <p>
