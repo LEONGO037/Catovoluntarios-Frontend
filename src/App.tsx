@@ -4,6 +4,9 @@ import { LandingPage } from './features/portal-publico/components/LandingPage';
 import { LoginPage } from './features/auth/components/LoginPage';
 import { ResetPasswordPage } from './features/auth/components/ResetPasswordPage';
 import { DashboardPastoral } from './features/dashboard/components/DashboardPastoral';
+import { P19SemaforoReporte } from './features/semaforos/components/P19SemaforoReporte/P19SemaforoReporte';
+import { P20BaseMadre } from './features/semaforos/components/P20BaseMadre/P20BaseMadre';
+import { P21FeedbackCertificados } from './features/semaforos/components/P21FeedbackCertificados/P21FeedbackCertificados';
 import { AppShell } from './components/layout/AppShell';
 import { TeammateModulePlaceholder } from './components/layout/TeammateModulePlaceholder';
 
@@ -291,56 +294,29 @@ export function App() {
             }
           />
 
-          {/* M07: Semáforos, Base Madre y Certificados — Leandro Colque */}
+          {/* M07: Semáforos, Base Madre y Certificados — Leandro Baldur Colque Palacios */}
           <Route
             path="/semaforos"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-19"
-                title="Reporte Mensual y Semáforo Cualitativo de Desempeño"
-                responsible="Leandro Baldur Colque Palacios"
-                sprint="Sprint 4 (Semana 4)"
-                description="Matriz mensual del Catolíder para calificar a sus voluntarios con selector de semáforo (Verde, Amarillo, Rojo, Morado) y justificación obligatoria en texto."
-                requirements={[
-                  'RF-18: Calificación cromática mensual por voluntario',
-                  'Justificación escrita obligatoria para sustentar el color asignado',
-                  'Checkbox de notificación de abandono inmediato a Pastoral',
-                ]}
-              />
+              <AppShell>
+                <P19SemaforoReporte />
+              </AppShell>
             }
           />
           <Route
             path="/base-madre"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-20"
-                title="Base Madre Histórica y Módulo de Premiaciones"
-                responsible="Leandro Baldur Colque Palacios"
-                sprint="Sprint 4 (Semana 4)"
-                description="Tabla unificada multi-semestre con columna histórica de premios individuales, podio de premiados a partir de semáforos morados y exportación a Excel."
-                requirements={[
-                  'RF-20: Base histórica multi-período con filtros globales',
-                  'Columna de premios con modal de desglose de becas e incentivos',
-                  'Podio y galería de premiados del semestre',
-                ]}
-              />
+              <AppShell>
+                <P20BaseMadre />
+              </AppShell>
             }
           />
           <Route
             path="/certificados"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-21"
-                title="Feedback Semestral de Proyectos y Generador de Certificados"
-                responsible="Leandro Baldur Colque Palacios"
-                sprint="Sprint 4 (Semana 4)"
-                description="Formulario para centros con Punto 4 libre de sugerencias y generador de datos oficiales de voluntarios para copiar y pegar en certificados."
-                requirements={[
-                  'RF-23: Bloque 4 libre para comentarios y testimonios del centro',
-                  'Generador de datos oficiales de conclusión de voluntariado',
-                  'Botón para copiar datos formateados directo al portapapeles',
-                ]}
-              />
+              <AppShell>
+                <P21FeedbackCertificados />
+              </AppShell>
             }
           />
 
