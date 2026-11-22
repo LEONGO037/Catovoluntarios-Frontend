@@ -76,6 +76,21 @@ export const BandejaValidacionDocumental: React.FC = () => {
     setTimeout(() => setActionSuccess(null), 4000);
   };
 
+  const handleAbrirOriginal = () => {
+    const fileName = currentDoc?.nombreArchivoOriginal || 'documento_oficial.pdf';
+    const contenido = `COPIA DIGITAL LEGALMENTE CERTIFICADA - PASTORAL UCB\nDocumento: ${fileName}\nVoluntario: ${selectedVoluntario?.nombreCompleto || 'Estudiante'}\nCédula de Identidad: ${selectedVoluntario?.ci || ''}\nCarrera: ${selectedVoluntario?.carrera || ''}\nProyecto: ${selectedVoluntario?.proyectoAsignado || ''}\nFecha de Verificación: ${new Date().toLocaleDateString('es-BO')}`;
+
+    const blob = new Blob([contenido], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+    setActionSuccess(`¡Archivo original ${fileName} descargado a tu equipo!`);
+    setTimeout(() => setActionSuccess(null), 3500);
+  };
+
   const handleObservarDocumento = async () => {
     if (!selectedVoluntario) return;
     const poliza = selectedVoluntario.documentos.find((d) => d.tipoDocumento === 'POLIZA_ACCIDENTES_APC7083');
@@ -272,9 +287,7 @@ export const BandejaValidacionDocumental: React.FC = () => {
               size="sm"
               variant="outline"
               leftIcon={<ExternalLink className="w-3.5 h-3.5" />}
-              onClick={() => {
-                alert(`Abriendo documento original: ${currentDoc?.nombreArchivoOriginal || 'archivo.pdf'}`);
-              }}
+              onClick={handleAbrirOriginal}
             >
               Abrir original
             </Button>

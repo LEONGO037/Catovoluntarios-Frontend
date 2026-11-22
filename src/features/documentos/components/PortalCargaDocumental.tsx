@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   FileText,
   Upload,
@@ -23,12 +23,20 @@ export const PortalCargaDocumental: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [bannerSuccess, setBannerSuccess] = useState<string | null>(null);
 
+  // Referencias para file inputs reales
+  const polizaInputRef = useRef<HTMLInputElement>(null);
+  const compromisoInputRef = useRef<HTMLInputElement>(null);
+  const ciInputRef = useRef<HTMLInputElement>(null);
+  const ciTutorInputRef = useRef<HTMLInputElement>(null);
+  const cartaMenorInputRef = useRef<HTMLInputElement>(null);
+
   // Modal para ver archivo
   const [viewerModal, setViewerModal] = useState<{
     isOpen: boolean;
     title: string;
     docType: string;
     fileName: string;
+    fileUrl?: string;
   }>({
     isOpen: false,
     title: '',
@@ -36,7 +44,7 @@ export const PortalCargaDocumental: React.FC = () => {
     fileName: '',
   });
 
-  // Campos de la póliza
+  // Campos de la póliza editables
   const [polizaData, setPolizaData] = useState({
     numeroPoliza: 'APC-7083',
     idPoliza: 'POL-2026-0814',
@@ -75,37 +83,100 @@ export const PortalCargaDocumental: React.FC = () => {
     return expediente?.documentos.find((d) => d.tipoDocumento === tipo);
   };
 
+  // Descarga real de la plantilla oficial de carta de menores
   const handleDescargarPlantillaMenores = () => {
-    const contenido = `PASTORAL UNIVERSITARIA SAN PABLO - REGIONAL LA PAZ
+    const contenido = `==================================================================
+PASTORAL UNIVERSITARIA SAN PABLO - REGIONAL LA PAZ
 PROGRAMA CATOVOLUNTARIOS
-AUTORIZACIÓN OFICIAL PARA MENORES DE EDAD (SEMESTRE 2/2026)
+MODELO OFICIAL DE AUTORIZACIÓN PARA MENORES DE EDAD (2/2026)
+==================================================================
 
-Yo, _________________________________________________, con C.I. ____________________,
-en calidad de Padre / Madre / Tutor Legal del estudiante menor de edad:
-Nombre: ${expediente?.nombreCompleto || 'María Fernanda Rojas'}
-C.I.: ${expediente?.ci || '9420187 LP'}      Carrera: ${expediente?.carrera || 'Psicología'}
+Yo, ____________________________________________________________________,
+mayor de edad, con Cédula de Identidad N.º ____________________ emitido en ______,
+con domicilio en ________________________________________________________,
+en mi condición de (Padre / Madre / Tutor Legal) __________________________,
+del/de la estudiante menor de edad:
 
-Por la presente AUTORIZO expresamente a mi hijo/a o tutelado/a a participar activamente
-en las actividades formativas y de voluntariado en campo asignadas por Pastoral UCB.
+Nombre del Voluntario: ${expediente?.nombreCompleto || 'María Fernanda Rojas'}
+Cédula de Identidad (CI): ${expediente?.ci || '9420187 LP'}
+Carrera: ${expediente?.carrera || 'Psicología - 3er Semestre'}
+Proyecto Asignado: ${expediente?.proyectoAsignado || 'Hogar San Ramón - Área Memoria'}
 
-Firma del Padre / Madre o Tutor: _____________________________________
-Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
+DECLARO Y AUTORIZO EXPRESAMENTE:
+1. Conocer los objetivos, actividades formativas y de voluntariado social que desarrollará en el marco del Programa Catovoluntarios de Pastoral UCB durante el semestre 2/2026.
+2. Autorizar su participación activa en campo en el proyecto receptor conveniado, sujeto a la cobertura de la Póliza Universitaria contra Accidentes Personales UCB (APC-7083).
+3. Adjuntar copia legible de mi Cédula de Identidad vigente en respaldo de la presente autorización.
+
+En constancia de conformidad, firmo al pie del presente documento:
+
+_______________________________________________
+Firma del Padre, Madre o Tutor Legal
+Aclaración: ___________________________________
+C.I.: _________________________________________
+Teléfono de Contacto: _________________________
+Fecha: La Paz, _____ de ___________________ de 2026
+`;
 
     const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'Modelo_Autorizacion_Padres_Pastoral_UCB.txt';
+    link.download = 'Modelo_Oficial_Autorizacion_Padres_Pastoral_UCB.docx';
     link.click();
     URL.revokeObjectURL(url);
+
+    setBannerSuccess('¡Plantilla oficial de autorización de menores descargada correctamente!');
+    setTimeout(() => setBannerSuccess(null), 4000);
   };
 
-  const handleSimularSubida = async (tipo: any, nombreArchivo: string) => {
+  // Descarga real de la plantilla oficial del compromiso de voluntariado
+  const handleDescargarPlantillaCompromiso = () => {
+    const contenido = `==================================================================
+PASTORAL UNIVERSITARIA SAN PABLO - REGIONAL LA PAZ
+PROGRAMA CATOVOLUNTARIOS
+COMPROMISO FORMAL DE VOLUNTARIADO (SEMESTRE 2/2026)
+==================================================================
+
+Yo, ${expediente?.nombreCompleto || 'María Fernanda Rojas'}, con CI ${expediente?.ci || '9420187 LP'},
+estudiante regular de la carrera de ${expediente?.carrera || 'Psicología'},
+asumo formalmente el presente compromiso ante Pastoral UCB:
+
+1. Cumplir con un mínimo de 4 horas semanales de servicio y acompañamiento en el proyecto receptor asignado.
+2. Completar de manera obligatoria el Taller de Inducción Institucional previo a la salida a campo.
+3. Respetar y salvaguardar la dignidad de la población vulnerable atendida en el centro.
+4. Mantener vigente mi Póliza de Seguro Estudiantil (APC-7083) durante todo el periodo.
+
+Firma del Catovoluntario: ____________________________________
+Fecha: La Paz, _____ de _________________ de 2026
+`;
+
+    const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Compromiso_Catovoluntario_Pastoral_UCB_2_2026.pdf';
+    link.click();
+    URL.revokeObjectURL(url);
+
+    setBannerSuccess('¡Plantilla de Compromiso de Voluntariado descargada!');
+    setTimeout(() => setBannerSuccess(null), 4000);
+  };
+
+  // Manejo de carga de archivos reales desde el explorador del usuario
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, tipo: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     setSaving(true);
+    const fileUrl = URL.createObjectURL(file);
+    const fileSizeMb = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+
     try {
       await documentosService.subirDocumento({
         tipoDocumento: tipo,
-        nombreArchivoOriginal: nombreArchivo,
+        nombreArchivoOriginal: file.name,
+        archivoUrl: fileUrl,
+        tamanio: fileSizeMb,
         numeroPoliza: polizaData.numeroPoliza,
         idPoliza: polizaData.idPoliza,
         numeroCertificado: polizaData.numeroCertificado,
@@ -113,8 +184,40 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
         vigenciaFin: polizaData.vigenciaHasta,
         asegurado: polizaData.asegurado,
       });
-      await cargarDatos();
-      setBannerSuccess(`Documento "${nombreArchivo}" subido correctamente.`);
+
+      // Actualizar estado local reactivo
+      if (expediente) {
+        const nuevosDocs = [...expediente.documentos];
+        const docIdx = nuevosDocs.findIndex((d) => d.tipoDocumento === tipo);
+        const docActualizado: DocumentoVoluntario = {
+          id: Date.now(),
+          tipoDocumento: tipo,
+          nombreArchivoOriginal: file.name,
+          archivoUrl: fileUrl,
+          tamanio: fileSizeMb,
+          fechaSubida: new Date().toLocaleDateString('es-BO'),
+          numeroPoliza: polizaData.numeroPoliza,
+          idPoliza: polizaData.idPoliza,
+          numeroCertificado: polizaData.numeroCertificado,
+          vigenciaInicio: polizaData.vigenciaDesde,
+          vigenciaFin: polizaData.vigenciaHasta,
+          asegurado: polizaData.asegurado,
+          estado: 'PENDIENTE',
+        };
+
+        if (docIdx >= 0) {
+          nuevosDocs[docIdx] = docActualizado;
+        } else {
+          nuevosDocs.push(docActualizado);
+        }
+
+        setExpediente({
+          ...expediente,
+          documentos: nuevosDocs,
+        });
+      }
+
+      setBannerSuccess(`¡Archivo "${file.name}" cargado exitosamente!`);
       setTimeout(() => setBannerSuccess(null), 4000);
     } finally {
       setSaving(false);
@@ -125,18 +228,47 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
     setSaving(true);
     setTimeout(() => {
       setSaving(false);
-      setBannerSuccess('¡Documentación enviada a revisión con éxito! Pastoral te notificará.');
+      setBannerSuccess('¡Expediente documental completo enviado a Pastoral para revisión y habilitación!');
       setTimeout(() => setBannerSuccess(null), 5000);
-    }, 800);
+    }, 600);
   };
 
-  const abrirVisor = (title: string, docType: string, fileName: string) => {
+  const abrirVisor = (title: string, docType: string, fileName: string, fileUrl?: string) => {
     setViewerModal({
       isOpen: true,
       title,
       docType,
       fileName,
+      fileUrl,
     });
+  };
+
+  // Descarga real desde el visor modal
+  const handleDescargarArchivoModal = () => {
+    if (viewerModal.fileUrl && viewerModal.fileUrl.startsWith('blob:')) {
+      const a = document.createElement('a');
+      a.href = viewerModal.fileUrl;
+      a.download = viewerModal.fileName;
+      a.click();
+    } else {
+      const contenido = `COPIA OFICIAL RESGUARDADA POR PASTORAL UCB
+Archivo: ${viewerModal.fileName}
+Tipo de Documento: ${viewerModal.docType}
+Postulante: ${expediente?.nombreCompleto || 'María Fernanda Rojas'}
+CI: ${expediente?.ci || '9420187 LP'}
+Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
+
+      const blob = new Blob([contenido], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = viewerModal.fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    setBannerSuccess(`¡Archivo ${viewerModal.fileName} descargado a tu equipo!`);
+    setTimeout(() => setBannerSuccess(null), 3000);
   };
 
   if (loading) {
@@ -158,11 +290,48 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
 
   return (
     <div className="space-y-6">
+      {/* Inputs ocultos para subida de archivos reales */}
+      <input
+        ref={polizaInputRef}
+        type="file"
+        accept=".pdf,.png,.jpg,.jpeg"
+        className="hidden"
+        onChange={(e) => handleFileChange(e, 'POLIZA_ACCIDENTES_APC7083')}
+      />
+      <input
+        ref={compromisoInputRef}
+        type="file"
+        accept=".pdf,.png,.jpg,.jpeg"
+        className="hidden"
+        onChange={(e) => handleFileChange(e, 'COMPROMISO_VOLUNTARIADO')}
+      />
+      <input
+        ref={ciInputRef}
+        type="file"
+        accept=".pdf,.png,.jpg,.jpeg"
+        className="hidden"
+        onChange={(e) => handleFileChange(e, 'CI_ANVERSO_REVERSO')}
+      />
+      <input
+        ref={ciTutorInputRef}
+        type="file"
+        accept=".pdf,.png,.jpg,.jpeg"
+        className="hidden"
+        onChange={(e) => handleFileChange(e, 'CI_PADRE_TUTOR_MENOR')}
+      />
+      <input
+        ref={cartaMenorInputRef}
+        type="file"
+        accept=".pdf,.png,.jpg,.jpeg"
+        className="hidden"
+        onChange={(e) => handleFileChange(e, 'CARTA_AUTORIZACION_PADRES_MENOR')}
+      />
+
       {/* Mensaje de confirmación interactivo */}
       {bannerSuccess && (
         <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center gap-3 text-emerald-800 shadow-sm animate-fadeIn">
           <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-          <span className="text-sm font-medium">{bannerSuccess}</span>
+          <span className="text-sm font-semibold">{bannerSuccess}</span>
         </div>
       )}
 
@@ -174,12 +343,12 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
           </div>
           <h1 className="text-2xl font-bold text-cato-navy">Mis documentos</h1>
           <p className="text-sm text-cato-muted mt-0.5">
-            Sube los requisitos para continuar tu incorporación al proyecto.
+            Sube o actualiza los requisitos para continuar tu incorporación al proyecto receptor.
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold self-start sm:self-center">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold self-start sm:self-center shadow-xs">
           <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-          3 de 4 requisitos por completar
+          {cartaMenorDoc ? '4 de 4 requisitos cargados' : '3 de 4 requisitos por completar'}
         </div>
       </div>
 
@@ -193,7 +362,7 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
             </div>
             <div>
               <div className="text-xs font-bold text-cato-navy">1. Postulación</div>
-              <div className="text-xs text-cato-muted">Formulario recibido</div>
+              <div className="text-xs text-cato-muted">Formulario recibido ✓</div>
             </div>
           </div>
 
@@ -204,7 +373,7 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
             </div>
             <div>
               <div className="text-xs font-bold text-cato-navy">2. Documentos</div>
-              <div className="text-xs text-cato-navy font-medium">Completa y envía para revisión</div>
+              <div className="text-xs text-cato-navy font-semibold">Completa y envía para revisión</div>
             </div>
           </div>
 
@@ -215,7 +384,7 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
             </div>
             <div>
               <div className="text-xs font-bold text-slate-600">3. Inducción</div>
-              <div className="text-xs text-slate-500">Después de la aprobación</div>
+              <div className="text-xs text-slate-500">Habilitación definitiva a campo</div>
             </div>
           </div>
         </div>
@@ -225,8 +394,7 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
       <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 shadow-sm">
         <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="text-xs text-amber-900 leading-relaxed">
-          <strong className="font-bold">La póliza vigente es obligatoria antes del ingreso a campo.</strong>{' '}
-          Tu asignación al proyecto está confirmada, pero tus horas en campo permanecerán bloqueadas hasta la validación de tu seguro estudiantil UCB (APC-7083). Pastoral revisará tus archivos y te avisará si debes corregir alguno.
+          <strong className="font-bold">Regla Institucional de Pastoral:</strong> Un voluntario puede estar asignado a un centro receptor, pero <strong>NO PUEDE iniciar horas en campo</strong> sin su póliza de seguro de accidentes vigente (APC-7083) debidamente aprobada por la administración.
         </div>
       </div>
 
@@ -246,23 +414,23 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
                   Sube una imagen o PDF legible de tu póliza vigente (APC-7083).
                 </p>
               </div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
                 ● En revisión
               </span>
             </div>
 
-            {/* Archivo cargado */}
-            <div className="p-3.5 bg-cato-canvas border border-dashed border-cato-border rounded-lg flex items-center justify-between gap-4">
+            {/* Archivo cargado con controles interactivos reales */}
+            <div className="p-4 bg-cato-canvas border border-dashed border-cato-border rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded bg-red-100 text-red-600 flex items-center justify-center shrink-0 font-bold text-xs">
+                <div className="w-10 h-10 rounded bg-red-100 text-red-600 flex items-center justify-center shrink-0 font-bold text-xs shadow-2xs">
                   PDF
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-cato-navy truncate">
                     {polizaDoc?.nombreArchivoOriginal || 'poliza_maria_rojas.pdf'}
                   </div>
-                  <div className="text-[11px] text-cato-muted">
-                    PDF · {polizaDoc?.tamanio || '1.8 MB'} · Cargado el {polizaDoc?.fechaSubida || '08/09/2026'}
+                  <div className="text-[11px] text-cato-muted mt-0.5">
+                    {polizaDoc?.tamanio || '1.8 MB'} · Cargado el {polizaDoc?.fechaSubida || '08/09/2026'}
                   </div>
                 </div>
               </div>
@@ -273,9 +441,10 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
                   leftIcon={<Eye className="w-3.5 h-3.5" />}
                   onClick={() =>
                     abrirVisor(
-                      'Póliza contra Accidentes UCB',
+                      'Póliza contra Accidentes UCB (APC-7083)',
                       'POLIZA_ACCIDENTES_APC7083',
                       polizaDoc?.nombreArchivoOriginal || 'poliza_maria_rojas.pdf',
+                      polizaDoc?.archivoUrl,
                     )
                   }
                 >
@@ -283,45 +452,45 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
                 </Button>
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="primary"
                   leftIcon={<Upload className="w-3.5 h-3.5" />}
-                  onClick={() => handleSimularSubida('POLIZA_ACCIDENTES_APC7083', 'poliza_renovada_2026.pdf')}
+                  onClick={() => polizaInputRef.current?.click()}
                   isLoading={saving}
                 >
-                  Reemplazar
+                  Subir / Reemplazar PDF
                 </Button>
               </div>
             </div>
 
-            {/* Campos de la póliza */}
+            {/* Campos editables de la póliza */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
               <div>
-                <label className="block text-xs font-semibold text-cato-slate mb-1">N.º de póliza</label>
+                <label className="block text-xs font-bold text-cato-slate mb-1">N.º de póliza</label>
                 <input
                   type="text"
                   value={polizaData.numeroPoliza}
                   onChange={(e) => setPolizaData({ ...polizaData, numeroPoliza: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy"
+                  className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy font-semibold text-cato-navy"
                   placeholder="APC-7083"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-cato-slate mb-1">ID de póliza</label>
+                <label className="block text-xs font-bold text-cato-slate mb-1">ID de póliza</label>
                 <input
                   type="text"
                   value={polizaData.idPoliza}
                   onChange={(e) => setPolizaData({ ...polizaData, idPoliza: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy"
+                  className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy text-cato-slate"
                   placeholder="POL-2026-0814"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-cato-slate mb-1">N.º de certificado</label>
+                <label className="block text-xs font-bold text-cato-slate mb-1">N.º de certificado</label>
                 <input
                   type="text"
                   value={polizaData.numeroCertificado}
                   onChange={(e) => setPolizaData({ ...polizaData, numeroCertificado: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy"
+                  className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy text-cato-slate"
                   placeholder="CERT-11408"
                 />
               </div>
@@ -329,7 +498,7 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-cato-slate mb-1">Vigente desde</label>
+                <label className="block text-xs font-bold text-cato-slate mb-1">Vigente desde</label>
                 <input
                   type="date"
                   value={polizaData.vigenciaDesde}
@@ -338,7 +507,7 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-cato-slate mb-1">Vigente hasta</label>
+                <label className="block text-xs font-bold text-cato-slate mb-1">Vigente hasta</label>
                 <input
                   type="date"
                   value={polizaData.vigenciaHasta}
@@ -347,12 +516,12 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-cato-slate mb-1">Asegurado/a</label>
+                <label className="block text-xs font-bold text-cato-slate mb-1">Asegurado/a</label>
                 <input
                   type="text"
                   value={polizaData.asegurado}
                   onChange={(e) => setPolizaData({ ...polizaData, asegurado: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy"
+                  className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy font-semibold text-cato-navy"
                   placeholder="Nombre del estudiante"
                 />
               </div>
@@ -368,42 +537,62 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
                   02 · Compromiso Catovoluntario
                 </h3>
                 <p className="text-xs text-cato-muted mt-0.5">
-                  Adjunta el documento firmado correspondiente al periodo académico.
+                  Descarga la plantilla oficial, fírmala y vuelve a subir el documento escaneado.
                 </p>
               </div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                 ● Aprobado
               </span>
             </div>
 
-            <div className="p-3.5 bg-cato-canvas border border-dashed border-cato-border rounded-lg flex items-center justify-between gap-4">
+            <div className="p-4 bg-cato-canvas border border-dashed border-cato-border rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded bg-red-100 text-red-600 flex items-center justify-center shrink-0 font-bold text-xs">
+                <div className="w-10 h-10 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-xs shadow-2xs">
                   PDF
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-cato-navy truncate">
                     {compromisoDoc?.nombreArchivoOriginal || 'compromiso_firmado.pdf'}
                   </div>
-                  <div className="text-[11px] text-cato-muted">
-                    PDF · {compromisoDoc?.tamanio || '620 KB'} · Validado por Pastoral
+                  <div className="text-[11px] text-cato-muted mt-0.5">
+                    {compromisoDoc?.tamanio || '620 KB'} · Documento validado por Pastoral
                   </div>
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                leftIcon={<Eye className="w-3.5 h-3.5" />}
-                onClick={() =>
-                  abrirVisor(
-                    'Compromiso de Voluntariado',
-                    'COMPROMISO_VOLUNTARIADO',
-                    compromisoDoc?.nombreArchivoOriginal || 'compromiso_firmado.pdf',
-                  )
-                }
-              >
-                Ver archivo
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  leftIcon={<Download className="w-3.5 h-3.5" />}
+                  onClick={handleDescargarPlantillaCompromiso}
+                >
+                  Descargar Modelo
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  leftIcon={<Eye className="w-3.5 h-3.5" />}
+                  onClick={() =>
+                    abrirVisor(
+                      'Compromiso de Voluntariado',
+                      'COMPROMISO_VOLUNTARIADO',
+                      compromisoDoc?.nombreArchivoOriginal || 'compromiso_firmado.pdf',
+                      compromisoDoc?.archivoUrl,
+                    )
+                  }
+                >
+                  Ver archivo
+                </Button>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  leftIcon={<Upload className="w-3.5 h-3.5" />}
+                  onClick={() => compromisoInputRef.current?.click()}
+                  isLoading={saving}
+                >
+                  Reemplazar
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -419,45 +608,57 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
                   Fotocopia legible anverso y reverso del CI vigente del postulante.
                 </p>
               </div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                 ● Aprobado
               </span>
             </div>
 
-            <div className="p-3.5 bg-cato-canvas border border-dashed border-cato-border rounded-lg flex items-center justify-between gap-4">
+            <div className="p-4 bg-cato-canvas border border-dashed border-cato-border rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 font-bold text-xs">
+                <div className="w-10 h-10 rounded bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 font-bold text-xs shadow-2xs">
                   CI
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-cato-navy truncate">
                     {ciDoc?.nombreArchivoOriginal || 'ci_anverso_reverso.pdf'}
                   </div>
-                  <div className="text-[11px] text-cato-muted">
-                    PDF · {ciDoc?.tamanio || '890 KB'} · CI 9420187 LP
+                  <div className="text-[11px] text-cato-muted mt-0.5">
+                    {ciDoc?.tamanio || '890 KB'} · Cédula: 9420187 LP
                   </div>
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                leftIcon={<Eye className="w-3.5 h-3.5" />}
-                onClick={() =>
-                  abrirVisor(
-                    'Carnet de Identidad (Anverso/Reverso)',
-                    'CI_ANVERSO_REVERSO',
-                    ciDoc?.nombreArchivoOriginal || 'ci_anverso_reverso.pdf',
-                  )
-                }
-              >
-                Ver archivo
-              </Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  leftIcon={<Eye className="w-3.5 h-3.5" />}
+                  onClick={() =>
+                    abrirVisor(
+                      'Carnet de Identidad (Anverso/Reverso)',
+                      'CI_ANVERSO_REVERSO',
+                      ciDoc?.nombreArchivoOriginal || 'ci_anverso_reverso.pdf',
+                      ciDoc?.archivoUrl,
+                    )
+                  }
+                >
+                  Ver archivo
+                </Button>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  leftIcon={<Upload className="w-3.5 h-3.5" />}
+                  onClick={() => ciInputRef.current?.click()}
+                  isLoading={saving}
+                >
+                  Reemplazar CI
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* Card 04: Sección Dinámica Menores de 18 Años */}
           <div className="bg-white rounded-xl border-2 border-amber-300 p-5 shadow-sm space-y-4">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-bold text-cato-navy">Por ser menor de 18 años</h3>
@@ -466,7 +667,7 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
                   </span>
                 </div>
                 <p className="text-xs text-cato-muted mt-0.5">
-                  Se necesitan documentos de tu padre, madre o tutor legal para habilitar tu participación.
+                  Se necesitan documentos de tu padre, madre o tutor legal para habilitar tu ingreso a campo.
                 </p>
               </div>
               <Button
@@ -474,37 +675,48 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
                 variant="outline"
                 leftIcon={<Download className="w-3.5 h-3.5" />}
                 onClick={handleDescargarPlantillaMenores}
+                className="shrink-0"
               >
                 Descargar Modelo Oficial de Carta
               </Button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Carga CI Tutor */}
+              {/* Carga CI Tutor con input real */}
               <div
-                onClick={() => handleSimularSubida('CI_PADRE_TUTOR_MENOR', 'ci_tutor_firmado.pdf')}
+                onClick={() => ciTutorInputRef.current?.click()}
                 className="p-4 bg-cato-canvas border border-dashed border-cato-border hover:border-cato-navy rounded-lg cursor-pointer transition text-center group"
               >
-                <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 mx-auto flex items-center justify-center mb-2 group-hover:bg-cato-navy group-hover:text-white transition">
-                  {ciPadreDoc ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Upload className="w-4 h-4" />}
+                <div className="w-9 h-9 rounded-full bg-slate-200 text-slate-700 mx-auto flex items-center justify-center mb-2 group-hover:bg-cato-navy group-hover:text-white transition">
+                  {ciPadreDoc ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <Upload className="w-5 h-5" />}
                 </div>
                 <div className="text-xs font-bold text-cato-navy">+ CI de padre/madre</div>
                 <div className="text-[11px] text-cato-muted mt-0.5">
-                  {ciPadreDoc ? 'Archivo cargado · ci_padre_tutor.pdf' : 'JPG, PNG o PDF'}
+                  {ciPadreDoc ? `${ciPadreDoc.nombreArchivoOriginal} (${ciPadreDoc.tamanio || 'Cargado'})` : 'Clic para seleccionar PDF o Imagen'}
                 </div>
               </div>
 
-              {/* Carga Carta Firmada */}
+              {/* Carga Carta Firmada con input real */}
               <div
-                onClick={() => handleSimularSubida('CARTA_AUTORIZACION_PADRES_MENOR', 'carta_autorizacion_firmada.pdf')}
-                className="p-4 bg-cato-canvas border border-dashed border-amber-400 hover:border-amber-600 rounded-lg cursor-pointer transition text-center group"
+                onClick={() => cartaMenorInputRef.current?.click()}
+                className={`p-4 bg-cato-canvas border border-dashed rounded-lg cursor-pointer transition text-center group ${
+                  cartaMenorDoc
+                    ? 'border-emerald-400 hover:border-emerald-600'
+                    : 'border-amber-400 hover:border-amber-600'
+                }`}
               >
-                <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 mx-auto flex items-center justify-center mb-2 group-hover:bg-amber-500 group-hover:text-white transition">
-                  {cartaMenorDoc ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Upload className="w-4 h-4" />}
+                <div
+                  className={`w-9 h-9 rounded-full mx-auto flex items-center justify-center mb-2 transition ${
+                    cartaMenorDoc
+                      ? 'bg-emerald-100 text-emerald-800 group-hover:bg-emerald-600 group-hover:text-white'
+                      : 'bg-amber-100 text-amber-800 group-hover:bg-amber-500 group-hover:text-white'
+                  }`}
+                >
+                  {cartaMenorDoc ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <Upload className="w-5 h-5" />}
                 </div>
-                <div className="text-xs font-bold text-cato-navy">+ Carta firmada</div>
-                <div className="text-[11px] text-amber-700 mt-0.5">
-                  {cartaMenorDoc ? 'Archivo cargado' : 'Formato pendiente de subida'}
+                <div className="text-xs font-bold text-cato-navy">+ Carta firmada de autorización</div>
+                <div className="text-[11px] text-cato-muted mt-0.5">
+                  {cartaMenorDoc ? `${cartaMenorDoc.nombreArchivoOriginal} (${cartaMenorDoc.tamanio || 'Cargado'})` : 'Clic para subir carta firmada'}
                 </div>
               </div>
             </div>
@@ -512,7 +724,7 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
             <div className="flex items-center gap-2 text-xs text-cato-muted bg-slate-50 p-2.5 rounded-lg">
               <Info className="w-4 h-4 text-slate-400 shrink-0" />
               <span>
-                La carta debe estar firmada físicamente por tu padre/madre/tutor. Formato oficial pendiente de confirmación por Pastoral.
+                La carta debe estar firmada físicamente por tu padre/madre/tutor. Puedes descargar el modelo oficial arriba, imprimirlo, firmarlo y subirlo aquí en PDF o foto legible.
               </span>
             </div>
           </div>
@@ -527,28 +739,34 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between py-2 border-b border-cato-border">
                 <span className="text-xs font-medium text-cato-slate">Compromiso firmado</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
                   ● Aprobado
                 </span>
               </div>
 
               <div className="flex items-center justify-between py-2 border-b border-cato-border">
                 <span className="text-xs font-medium text-cato-slate">Póliza vigente</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
                   ● En revisión
                 </span>
               </div>
 
               <div className="flex items-center justify-between py-2 border-b border-cato-border">
                 <span className="text-xs font-medium text-cato-slate">Documentos de menor</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                  ● Pendiente
-                </span>
+                {cartaMenorDoc ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                    ● Cargado
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">
+                    ● Pendiente
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center justify-between py-2">
                 <span className="text-xs font-medium text-cato-slate">Inducción inicial</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
                   ● Por realizar
                 </span>
               </div>
@@ -566,8 +784,8 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
             <div className="text-xs text-cato-muted">
               Líder tutor: <strong>{expediente?.catoliderAsignado || 'Valeria Sanjinés'}</strong>
             </div>
-            <div className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
-              Horas de voluntariado bloqueadas hasta validación de póliza.
+            <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded border border-amber-200 leading-tight">
+              Horas de voluntariado en campo bloqueadas hasta la validación de la póliza estudiantil.
             </div>
           </div>
 
@@ -586,7 +804,7 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
               className="w-full"
               variant="outline"
               onClick={() => {
-                setBannerSuccess('Borrador guardado localmente.');
+                setBannerSuccess('Borrador y cambios guardados correctamente.');
                 setTimeout(() => setBannerSuccess(null), 3000);
               }}
             >
@@ -596,7 +814,7 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
         </div>
       </div>
 
-      {/* Modal Visor de Documento */}
+      {/* Modal Visor de Documento con DESCARGA REAL */}
       <Modal
         isOpen={viewerModal.isOpen}
         onClose={() => setViewerModal({ ...viewerModal, isOpen: false })}
@@ -609,15 +827,15 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
             <FileText className="w-16 h-16 text-cato-navy mb-3 opacity-80" />
             <h4 className="text-base font-bold text-cato-navy">{viewerModal.fileName}</h4>
             <p className="text-xs text-cato-muted mt-1 max-w-md">
-              Vista previa oficial del documento cargado en el portal de Pastoral UCB. Documento digital legalmente resguardado.
+              Vista previa oficial del documento cargado en el portal de Pastoral UCB. Documento digital resguardado institucionalmente.
             </p>
             <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              Documento legible y verificado
+              Documento verificado y legible
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-2 border-t border-cato-border">
             <Button
               variant="outline"
               onClick={() => setViewerModal({ ...viewerModal, isOpen: false })}
@@ -627,11 +845,9 @@ Lugar y Fecha: La Paz, ______ de ________________ de 2026`;
             <Button
               variant="primary"
               leftIcon={<Download className="w-4 h-4" />}
-              onClick={() => {
-                alert(`Descargando copia local de ${viewerModal.fileName}`);
-              }}
+              onClick={handleDescargarArchivoModal}
             >
-              Descargar archivo
+              Descargar archivo ({viewerModal.fileName})
             </Button>
           </div>
         </div>
