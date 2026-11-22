@@ -4,21 +4,35 @@ import { LandingPage } from './features/portal-publico/components/LandingPage';
 import { LoginPage } from './features/auth/components/LoginPage';
 import { ResetPasswordPage } from './features/auth/components/ResetPasswordPage';
 import { DashboardPastoral } from './features/dashboard/components/DashboardPastoral';
-import { P19SemaforoReporte } from './features/semaforos/components/P19SemaforoReporte/P19SemaforoReporte';
-import { P20BaseMadre } from './features/semaforos/components/P20BaseMadre/P20BaseMadre';
-import { P21FeedbackCertificados } from './features/semaforos/components/P21FeedbackCertificados/P21FeedbackCertificados';
 import { AppShell } from './components/layout/AppShell';
 import { TeammateModulePlaceholder } from './components/layout/TeammateModulePlaceholder';
+
+// M02: Admisión y Postulación — Alan Flores
+import { PostulacionWizard } from './features/admision/components/PostulacionWizard';
+import { BandejaPostulantes } from './features/admision/components/BandejaPostulantes';
+import { SeleccionCatolideres } from './features/admision/components/SeleccionCatolideres';
+
+// M04: Habilitación Documental y Seguro — Christian Coronel
 import { PortalCargaDocumental } from './features/documentos/components/PortalCargaDocumental';
 import { BandejaValidacionDocumental } from './features/documentos/components/BandejaValidacionDocumental';
 import { ControlInduccion } from './features/documentos/components/ControlInduccion';
+
+// M05: Proyectos y Ubicación — Kael Lopez
+import { P13ReceptorCatalog } from './features/proyectos/components/P13ReceptorCatalog/P13ReceptorCatalog';
+import { P14MatchingBoard } from './features/proyectos/components/P14MatchingBoard/P14MatchingBoard';
+import { P15TransferManager } from './features/proyectos/components/P15TransferManager/P15TransferManager';
+
+// M07: Semáforos, Base Madre y Feedback — Leandro Colque
+import { P19SemaforoReporte } from './features/semaforos/components/P19SemaforoReporte/P19SemaforoReporte';
+import { P20BaseMadre } from './features/semaforos/components/P20BaseMadre/P20BaseMadre';
+import { P21FeedbackCertificados } from './features/semaforos/components/P21FeedbackCertificados/P21FeedbackCertificados';
 
 export function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* M01: Responsabilidad Leonardo Delgado */}
+          {/* M01: Portal Público, Auth & Dashboard — Leonardo Delgado */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -32,90 +46,37 @@ export function App() {
           />
 
           {/* M02: Admisión y Postulación — Alan Flores */}
-          <Route
-            path="/postulacion"
-            element={
-              <TeammateModulePlaceholder
-                screenId="P-04 & P-05"
-                title="Formulario de Postulación Web y Wizard en 4 Pasos"
-                responsible="Alan Franz Flores Campos"
-                sprint="Sprint 2 (Semana 2)"
-                description="Asistente de postulación pública con autocalculo de edad a partir de fecha de nacimiento, filtro anti-sobrecarga académica (bloqueo si materias > 6) y autorización de padres para menores de edad."
-                requirements={[
-                  'RF-01: Formulario web de postulación semestral',
-                  'RF-03: Filtro anti-sobrecarga (bloqueo si cursa más de 6 materias)',
-                  'RF-08: Validación y confirmación de autorización de padres si edad < 18',
-                  'Generación de código alfanumérico único de postulación (POST-2026-XXXX)',
-                ]}
-              />
-            }
-          />
+          <Route path="/postulacion" element={<PostulacionWizard />} />
           <Route
             path="/postulantes"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-06"
-                title="Bandeja Administrativa de Postulantes"
-                responsible="Alan Franz Flores Campos"
-                sprint="Sprint 2 (Semana 2)"
-                description="Bandeja de gestión de postulantes con principio de menor privilegio: Administrador Pastoral con lectura/edición y Catolíderes con permiso exclusivo de Solo Lectura (Read-Only)."
-                requirements={[
-                  'RF-02: Control de acceso RBAC estricto',
-                  'Filtros por carrera, zona, edad y estado de admisión',
-                  'Enlace directo a WhatsApp de cada postulante (https://wa.me/...)',
-                  'Catolíderes solo pueden consultar para preparar entrevistas',
-                ]}
-              />
+              <AppShell>
+                <BandejaPostulantes />
+              </AppShell>
             }
           />
           <Route
             path="/catolideres"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-06B"
-                title="Selección y Asignación Semestral de Catolíderes"
-                responsible="Alan Franz Flores Campos"
-                sprint="Sprint 2 (Semana 2)"
-                description="Módulo exclusivo para Administradora Pastoral para reiniciar roles de liderazgo del período anterior a Catovoluntario estándar y asignar manualmente nuevos Catolíderes titulares y aprendices."
-                requirements={[
-                  'Botón de reseteo masivo de roles de Catolíderes del semestre anterior',
-                  'Buscador de voluntarios históricos con nivel Pro o Super Pro',
-                  'Asignación por proyecto receptor y modalidad de liderazgo',
-                ]}
-              />
+              <AppShell>
+                <SeleccionCatolideres />
+              </AppShell>
             }
           />
 
-          {/* M03: Entrevistas y Psicología — Marvin Mollo */}
+          {/* M03: Entrevistas y Psicología — Marvin Larry Mollo Ramirez (Pendiente) */}
           <Route
             path="/entrevistas"
             element={
               <TeammateModulePlaceholder
-                screenId="P-07"
-                title="Agendamiento de Entrevistas Presenciales"
+                screenId="P-07 & P-08"
+                title="Agendamiento y Ficha Digital de Entrevista Presencial"
                 responsible="Marvin Larry Mollo Ramirez"
                 sprint="Sprint 2 (Semana 2)"
-                description="Calendario de turnos de entrevista con visualización del ciclo en 4 etapas y marcado rápido de estados: Asistió, Faltó o Reprogramar."
+                description="Digitalización de la entrevista con rúbrica obligatoria (Apto / No Apto / Observado) y sugerencia obligatoria de proyecto receptor."
                 requirements={[
-                  'RF-04: Calendario de franjas horarias configurables',
-                  'Marcado rápido de asistencia [✓ Asistió], [✗ Faltó], [↺ Reprogramar]',
-                  'Vista de selección para postulantes y vista de agenda para líderes',
-                ]}
-              />
-            }
-          />
-          <Route
-            path="/ficha-entrevista"
-            element={
-              <TeammateModulePlaceholder
-                screenId="P-08"
-                title="Ficha Digital de Entrevista Pastoral"
-                responsible="Marvin Larry Mollo Ramirez"
-                sprint="Sprint 2 (Semana 2)"
-                description="Guía digital de entrevista con escala de afinidad religiosa (1 al 10), sección obligatoria de observaciones y recomendación de proyecto receptor."
-                requirements={[
-                  'RF-05: Digitalización de guía de entrevista Pastoral UCB',
-                  'Escala numérica de apertura religiosa institucional (1 al 10)',
+                  'RF-04: Agendamiento de entrevistas presenciales con slots horarios',
+                  'RF-05: Ficha digital con rúbrica estructurada de preguntas',
                   'Campo obligatorio de proyecto receptor sugerido para el postulante',
                 ]}
               />
@@ -169,68 +130,42 @@ export function App() {
           <Route
             path="/proyectos"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-13"
-                title="Catálogo de Proyectos Receptores y Convenios"
-                responsible="Kael Alessandro Lopez Castillo"
-                sprint="Sprint 1 y 3 (Semanas 1 y 3)"
-                description="Ficha oficial de centros conveniados con población atendida, actividades semestrales específicas y tarifa fija de reposición de pasajes por día."
-                requirements={[
-                  'RF-10: Nomenclatura oficial: Proyecto Receptor en toda la UI',
-                  'Campos obligatorios: Población atendida y actividades del semestre',
-                  'Tarifa fija de pasajes por día definida por Pastoral (10, 12, 15, 20 Bs)',
-                ]}
-              />
+              <AppShell>
+                <P13ReceptorCatalog />
+              </AppShell>
             }
           />
           <Route
             path="/ubicacion"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-14"
-                title="Asignación Inteligente y Ubicación Balanceada"
-                responsible="Kael Alessandro Lopez Castillo"
-                sprint="Sprint 3 (Semana 3)"
-                description="Tablero en tiempo real con pestañas por centro, celular visible con enlace a WhatsApp y balance demográfico por carreras, edades y antiguos/nuevos."
-                requirements={[
-                  'RF-12: Emparejamiento cruzado con población sugerida por el psicólogo',
-                  'Pestañas por centro con porcentaje de balance demográfico en vivo',
-                  'Celular visible con enlace directo a WhatsApp en cada fila',
-                ]}
-              />
+              <AppShell>
+                <P14MatchingBoard />
+              </AppShell>
             }
           />
           <Route
-            path="/reasignaciones"
+            path="/traslados"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-15"
-                title="Gestión de Reasignaciones y Traslados del Primer Mes"
-                responsible="Kael Alessandro Lopez Castillo"
-                sprint="Sprint 3 (Semana 3)"
-                description="Módulo de movilidad justificada de voluntarios durante las 4 primeras semanas con panel de notificaciones automáticas para líderes y voluntarios."
-                requirements={[
-                  'RF-13: Reubicación justificada por cruce de materias o distancia',
-                  'Generación de alertas automáticas para líderes de origen y destino',
-                ]}
-              />
+              <AppShell>
+                <P15TransferManager />
+              </AppShell>
             }
           />
 
-          {/* M06: Asistencia, Pasajes y Voluntario — Juan José Cordeiro */}
+          {/* M06: Asistencia, Pasajes y Portal Voluntario — Juan José Cordeiro (Pendiente) */}
           <Route
-            path="/asistencias"
+            path="/asistencia"
             element={
               <TeammateModulePlaceholder
                 screenId="P-16"
-                title="Registro Mensual de Asistencia y Conciliación"
-                responsible="Juan José Cordeiro Iñiguez"
-                sprint="Sprint 3 (Semana 3)"
-                description="Registro diario de jornadas por parte del voluntario, flujo de aprobación semanal por el Catolíder y conciliación con el reporte físico del supervisor del centro."
+                title="Registro Mensual de Asistencia y Planilla de Pasajes"
+                responsible="Juan José Cordeiro"
+                sprint="Sprint 4 (Semana 4)"
+                description="Control de asistencia en campo con días efectivos y cálculo automático de pasajes según tarifa pactada con la institución receptora."
                 requirements={[
-                  'RF-14: Registro de entrada, salida y tareas por el voluntario',
-                  'Aprobación preliminar por Catolíder y conciliación mensual con firmas físicas',
-                  'Botón de impresión directa con formato oficial institucional',
+                  'RF-14: Registro de asistencia semanal de 4 horas mínimas',
+                  'RF-16: Cálculo automático de reposición de pasajes por día asistido',
+                  'Pestaña de conciliación mensual previa a la liquidación',
                 ]}
               />
             }
@@ -240,14 +175,14 @@ export function App() {
             element={
               <TeammateModulePlaceholder
                 screenId="P-17"
-                title="Generador Contable y Liquidación de Pasajes"
-                responsible="Juan José Cordeiro Iñiguez"
-                sprint="Sprint 3 (Semana 3)"
-                description="Cálculo contable exacto: Días Presenciales Asistidos × Tarifa Fija del Centro. Generación de planilla macro por proyecto y planilla individual con 'Recibí Conforme'."
+                title="Generador de Planillas de Reposición de Pasajes"
+                responsible="Juan José Cordeiro"
+                sprint="Sprint 4 (Semana 4)"
+                description="Exportación de planilla contable mensual lista para firma de beneficiarios y descargo administrativo Pastoral."
                 requirements={[
-                  'RF-16 & RF-17: Fórmula fija sin montos arbitrarios de centavos',
-                  'Exportación de planilla macro por proyecto para retiro de caja',
-                  'Hojas individuales de Recibí Conforme para firma física del estudiante',
+                  'RF-17: Generación de planilla oficial con desglose de monto en Bs',
+                  'Exportación en formato PDF y Excel con firmas reglamentarias',
+                  'Historial de liquidaciones por centro y semestre',
                 ]}
               />
             }
@@ -258,19 +193,19 @@ export function App() {
               <TeammateModulePlaceholder
                 screenId="P-18"
                 title="Portal Operativo del Catovoluntario"
-                responsible="Juan José Cordeiro Iñiguez"
-                sprint="Sprint 3 (Semana 3)"
-                description="Portal de autoservicio con gamificación, stickers oficiales por categoría (Junior, Pro, Super Pro), barra circular de avance de horas y registro de Actividades Emergentes."
+                responsible="Juan José Cordeiro"
+                sprint="Sprint 4 (Semana 4)"
+                description="Vista personalizada para el voluntario con sus datos de proyecto asignado, horarios comprometidos y registro de asistencias."
                 requirements={[
-                  'Insignias dinámicas de nivel autocalculadas por horas acumuladas',
-                  'Pestaña de Actividades Emergentes habilitadas por Pastoral (sin pasajes)',
-                  'Mensajes de gratificación y emojis amigables',
+                  'RF-15: Visualización de horas acumuladas y estado de seguro',
+                  'Datos de contacto de su Catolíder y supervisor de centro',
+                  'Historial de asistencias registradas',
                 ]}
               />
             }
           />
 
-          {/* M07: Semáforos, Base Madre y Certificados — Leandro Baldur Colque Palacios */}
+          {/* M07: Semáforos, Base Madre y Feedback — Leandro Colque */}
           <Route
             path="/semaforos"
             element={
@@ -288,7 +223,7 @@ export function App() {
             }
           />
           <Route
-            path="/certificados"
+            path="/feedback-certificados"
             element={
               <AppShell>
                 <P21FeedbackCertificados />
@@ -296,7 +231,6 @@ export function App() {
             }
           />
 
-          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
