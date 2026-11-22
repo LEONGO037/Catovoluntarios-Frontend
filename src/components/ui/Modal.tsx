@@ -8,7 +8,8 @@ export interface ModalProps {
   title?: React.ReactNode;
   subtitle?: string;
   footer?: React.ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | '5xl';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | string;
   children: React.ReactNode;
 }
 
@@ -19,6 +20,7 @@ export const Modal: React.FC<ModalProps> = ({
   subtitle,
   footer,
   maxWidth = 'lg',
+  size,
   children,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -49,9 +51,12 @@ export const Modal: React.FC<ModalProps> = ({
     lg: 'max-w-lg',
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
     '4xl': 'max-w-4xl',
     '5xl': 'max-w-5xl',
   };
+
+  const effectiveSize = (size || maxWidth) as keyof typeof maxWidthClasses;
 
   return (
     <div
@@ -66,7 +71,7 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         className={cn(
           'w-full bg-white rounded-2xl shadow-2xl border border-cato-border overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150',
-          maxWidthClasses[maxWidth] || maxWidthClasses.lg,
+          maxWidthClasses[effectiveSize] || maxWidthClasses.lg,
         )}
       >
         {/* Header */}

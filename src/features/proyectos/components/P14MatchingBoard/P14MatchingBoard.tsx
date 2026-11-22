@@ -16,12 +16,12 @@ import { QuickAssignModal } from './QuickAssignModal';
 import { AlertBanner } from '../../../../components/feedback/AlertBanner';
 
 export interface P14MatchingBoardProps {
-  userRole: UserRole;
-  voluntariosCountsByProject: Record<string, number>;
+  userRole?: UserRole;
+  voluntariosCountsByProject?: Record<string, number>;
 }
 
 export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
-  userRole,
+  userRole = 'admin',
 }) => {
   const { proyectos } = useProyectos();
   const [selectedProjectId, setSelectedProjectId] = useState<string>(

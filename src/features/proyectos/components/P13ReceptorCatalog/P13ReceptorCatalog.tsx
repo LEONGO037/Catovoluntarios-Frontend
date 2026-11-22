@@ -18,13 +18,13 @@ import { ZONAS_LA_PAZ } from '../../../../constants/zonas';
 import { AlertBanner } from '../../../../components/feedback/AlertBanner';
 
 export interface P13ReceptorCatalogProps {
-  userRole: UserRole;
-  voluntariosCountsByProject: Record<string, number>;
+  userRole?: UserRole;
+  voluntariosCountsByProject?: Record<string, number>;
 }
 
 export const P13ReceptorCatalog: React.FC<P13ReceptorCatalogProps> = ({
-  userRole,
-  voluntariosCountsByProject,
+  userRole = 'admin',
+  voluntariosCountsByProject = {},
 }) => {
   const {
     proyectos,

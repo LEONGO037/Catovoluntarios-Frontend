@@ -24,7 +24,7 @@ export const RoleBadge: FC<RoleBadgeProps> = ({ rol, role, className, showDot = 
     >
       {showDot && (
         <span
-          className={cn('w-1.5 h-1.5 rounded-full animate-pulse', config.dotClass)}
+          className={cn('w-1.5 h-1.5 rounded-full animate-pulse', config.pillColor)}
         />
       )}
       {config.label}

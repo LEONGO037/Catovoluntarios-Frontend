@@ -14,11 +14,11 @@ import { TransferHistoryTable } from './TransferHistoryTable';
 import { AlertBanner } from '../../../../components/feedback/AlertBanner';
 
 export interface P15TransferManagerProps {
-  userRole: UserRole;
+  userRole?: UserRole;
 }
 
 export const P15TransferManager: React.FC<P15TransferManagerProps> = ({
-  userRole,
+  userRole = 'admin',
 }) => {
   const { proyectos } = useProyectos();
   const { voluntarios, refreshVoluntarios } = useMatching(proyectos, proyectos[0]?.id || '');
