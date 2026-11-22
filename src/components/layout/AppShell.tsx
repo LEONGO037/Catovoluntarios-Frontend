@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { Modal } from '../ui/Modal';
-import { Bell, AlertTriangle, ArrowRight } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface AppShellProps {
+export interface AppShellProps {
   children: React.ReactNode;
+  currentView?: string;
+  onNavigate?: (view: any) => void;
+  currentRole?: any;
+  onRoleChange?: (role: any) => void;
+  pageTitle?: string;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
 }
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
@@ -29,7 +35,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       id: '2',
       title: '3 Solicitudes de Traslado entre Proyectos',
       desc: 'Reubicaciones solicitadas durante las primeras 4 semanas por cruce de horarios.',
-      action: '/reasignaciones',
+      action: '/traslados',
       btnText: 'Gestionar en P-15',
       priority: 'medium',
     },
@@ -85,25 +91,21 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
               key={notif.id}
               className="p-4 rounded-xl border border-rose-200 bg-rose-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left"
             >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
-                  <h4 className="font-bold text-sm text-cato-slate">{notif.title}</h4>
-                </div>
-                <p className="text-xs text-cato-muted">{notif.desc}</p>
+              <div>
+                <h5 className="font-bold text-sm text-cato-navy">
+                  {notif.title}
+                </h5>
+                <p className="text-xs text-cato-muted mt-0.5">{notif.desc}</p>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
+              <button
                 onClick={() => {
                   setShowNotificationsModal(false);
                   navigate(notif.action);
                 }}
-                className="shrink-0 text-xs border-rose-300 text-rose-700 hover:bg-rose-100"
-                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                className="shrink-0 text-xs font-semibold px-3 py-1.5 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors"
               >
                 {notif.btnText}
-              </Button>
+              </button>
             </div>
           ))}
         </div>

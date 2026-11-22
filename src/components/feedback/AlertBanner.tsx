@@ -4,10 +4,12 @@ import { cn } from '../../utils/cn';
 
 export type AlertType = 'info' | 'success' | 'warning' | 'danger';
 
-interface AlertBannerProps {
+export interface AlertBannerProps {
   type?: AlertType;
   title?: string;
-  children: React.ReactNode;
+  message?: string | React.ReactNode;
+  children?: React.ReactNode;
+  action?: React.ReactNode;
   onClose?: () => void;
   className?: string;
 }
@@ -15,10 +17,14 @@ interface AlertBannerProps {
 export const AlertBanner: React.FC<AlertBannerProps> = ({
   type = 'info',
   title,
+  message,
   children,
+  action,
   onClose,
   className,
 }) => {
+  const content = children || message;
+
   const styles = {
     info: {
       container: 'bg-sky-50 border-sky-200 text-sky-800',
@@ -50,8 +56,9 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
       {styles.icon}
       <div className="flex-1">
         {title && <h4 className="font-semibold text-sm mb-1">{title}</h4>}
-        <div className="text-sm leading-relaxed">{children}</div>
+        <div className="text-sm leading-relaxed">{content}</div>
       </div>
+      {action && <div className="shrink-0 ml-2">{action}</div>}
       {onClose && (
         <button
           onClick={onClose}

@@ -3,14 +3,16 @@ import type { UserRole } from '../../types/auth.types';
 import { ROLE_CONFIGS } from '../../constants/roles';
 import { cn } from '../../utils/cn';
 
-interface RoleBadgeProps {
-  rol: UserRole | string;
+export interface RoleBadgeProps {
+  rol?: UserRole | string;
+  role?: UserRole | string;
   className?: string;
   showDot?: boolean;
 }
 
-export const RoleBadge: FC<RoleBadgeProps> = ({ rol, className, showDot = true }) => {
-  const config = ROLE_CONFIGS[rol as UserRole] || ROLE_CONFIGS.INTERESADO;
+export const RoleBadge: FC<RoleBadgeProps> = ({ rol, role, className, showDot = true }) => {
+  const actualRole = (rol || role || 'INTERESADO') as UserRole;
+  const config = ROLE_CONFIGS[actualRole] || ROLE_CONFIGS.INTERESADO;
 
   return (
     <span
@@ -22,8 +24,7 @@ export const RoleBadge: FC<RoleBadgeProps> = ({ rol, className, showDot = true }
     >
       {showDot && (
         <span
-          className="w-1.5 h-1.5 rounded-full shrink-0"
-          style={{ backgroundColor: config.dotColor }}
+          className={cn('w-1.5 h-1.5 rounded-full animate-pulse', config.dotClass)}
         />
       )}
       {config.label}

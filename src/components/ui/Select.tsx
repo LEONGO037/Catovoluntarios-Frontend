@@ -2,20 +2,24 @@ import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
-export interface Option {
+export interface SelectOption {
   value: string | number;
   label: string;
+  disabled?: boolean;
 }
+
+export type Option = SelectOption;
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
-  options: Option[];
+  options: SelectOption[];
   error?: string;
   helperText?: string;
+  placeholder?: string;
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, options, error, helperText, id, ...props }, ref) => {
+  ({ className, label, options, error, helperText, placeholder, id, ...props }, ref) => {
     const selectId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
 
     return (
@@ -40,12 +44,18 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               error
                 ? 'border-rose-400 focus:border-rose-500'
                 : 'border-cato-input',
+              props.disabled && 'bg-slate-100 cursor-not-allowed',
               className,
             )}
             {...props}
           >
+            {placeholder && (
+              <option value="" disabled>
+                {placeholder}
+              </option>
+            )}
             {options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
+              <option key={opt.value} value={opt.value} disabled={opt.disabled}>
                 {opt.label}
               </option>
             ))}
