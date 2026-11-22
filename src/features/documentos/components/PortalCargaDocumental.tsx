@@ -814,41 +814,56 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
         </div>
       </div>
 
-      {/* Modal Visor de Documento con DESCARGA REAL */}
+      {/* Modal Visor de Documento con VISOR REAL E INTEGRADO */}
       <Modal
         isOpen={viewerModal.isOpen}
         onClose={() => setViewerModal({ ...viewerModal, isOpen: false })}
         title={viewerModal.title}
         subtitle={`Archivo: ${viewerModal.fileName}`}
-        maxWidth="2xl"
+        maxWidth="3xl"
       >
         <div className="space-y-4">
-          <div className="bg-slate-50 border border-cato-border rounded-xl p-6 min-h-[300px] flex flex-col items-center justify-center text-center">
-            <FileText className="w-16 h-16 text-cato-navy mb-3 opacity-80" />
-            <h4 className="text-base font-bold text-cato-navy">{viewerModal.fileName}</h4>
-            <p className="text-xs text-cato-muted mt-1 max-w-md">
-              Vista previa oficial del documento cargado en el portal de Pastoral UCB. Documento digital resguardado institucionalmente.
-            </p>
-            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              Documento verificado y legible
-            </div>
+          <div className="bg-slate-50 border border-cato-border rounded-xl p-2 min-h-[460px] flex flex-col items-center justify-center">
+            {viewerModal.fileUrl ? (
+              <iframe
+                src={viewerModal.fileUrl}
+                title={viewerModal.fileName}
+                className="w-full h-[480px] rounded-lg border border-slate-200 shadow-inner"
+              />
+            ) : (
+              <div className="text-center p-6">
+                <FileText className="w-16 h-16 text-cato-navy mb-3 opacity-80 mx-auto" />
+                <h4 className="text-base font-bold text-cato-navy">{viewerModal.fileName}</h4>
+                <p className="text-xs text-cato-muted mt-1 max-w-md">
+                  Vista previa oficial del documento cargado en el portal de Pastoral UCB. Documento digital resguardado institucionalmente.
+                </p>
+                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  Documento verificado y legible
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-2 border-t border-cato-border">
-            <Button
-              variant="outline"
-              onClick={() => setViewerModal({ ...viewerModal, isOpen: false })}
-            >
-              Cerrar visor
-            </Button>
-            <Button
-              variant="primary"
-              leftIcon={<Download className="w-4 h-4" />}
-              onClick={handleDescargarArchivoModal}
-            >
-              Descargar archivo ({viewerModal.fileName})
-            </Button>
+          <div className="flex justify-between items-center pt-2 border-t border-cato-border">
+            <span className="text-xs text-cato-muted">
+              Documento digitalizado certificado para el Programa Catovoluntarios 2/2026.
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setViewerModal({ ...viewerModal, isOpen: false })}
+              >
+                Cerrar visor
+              </Button>
+              <Button
+                variant="primary"
+                leftIcon={<Download className="w-4 h-4" />}
+                onClick={handleDescargarArchivoModal}
+              >
+                Descargar archivo
+              </Button>
+            </div>
           </div>
         </div>
       </Modal>

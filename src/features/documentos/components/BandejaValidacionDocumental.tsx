@@ -325,63 +325,71 @@ export const BandejaValidacionDocumental: React.FC = () => {
             })}
           </div>
 
-          {/* Contenedor del documento (renderizado fiel al mockup) */}
-          <div className="flex-1 p-6 bg-slate-100 flex items-center justify-center overflow-y-auto">
-            <div className="w-full max-w-md bg-white border border-cato-border shadow-md rounded-lg p-6 relative">
-              {/* Marca de agua */}
-              <div className="absolute right-6 bottom-8 w-24 h-24 rounded-full border-4 border-dashed border-slate-300 flex items-center justify-center text-center opacity-40 rotate-12 pointer-events-none">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                  VISTA ILUSTRATIVA
-                </span>
-              </div>
-
-              {/* Contenido del certificado simulado */}
-              <div className="text-center pb-4 border-b border-cato-border">
-                <div className="w-10 h-10 rounded-full bg-cato-navy text-white flex items-center justify-center mx-auto mb-2 font-bold text-xs">
-                  UCB
-                </div>
-                <h4 className="text-sm font-bold text-cato-navy tracking-wide uppercase">
-                  PÓLIZA DE ACCIDENTES
-                </h4>
-                <p className="text-[10px] text-cato-muted mt-0.5">
-                  Documento de muestra · Solo para vista de prototipo
-                </p>
-                <div className="mt-2 text-xs font-bold text-cato-slate uppercase tracking-wider">
-                  Certificado individual
-                </div>
-              </div>
-
-              <div className="py-4 space-y-2.5 text-xs">
-                <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-cato-muted">N.º de póliza</span>
-                  <span className="font-bold text-cato-navy">{polizaDoc?.numeroPoliza || 'APC-7083'}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-cato-muted">ID de póliza</span>
-                  <span className="font-bold text-cato-slate">{polizaDoc?.idPoliza || 'POL-2026-0814'}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-cato-muted">N.º certificado</span>
-                  <span className="font-bold text-cato-slate">{polizaDoc?.numeroCertificado || 'CERT-11408'}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-100">
-                  <span className="text-cato-muted">Asegurada</span>
-                  <span className="font-bold text-cato-navy">
-                    {polizaDoc?.asegurado || selectedVoluntario?.nombreCompleto || 'María Fernanda Rojas'}
+          {/* Contenedor del documento (Visor de PDF Real) */}
+          <div className="flex-1 p-3 bg-slate-100 flex items-center justify-center overflow-hidden">
+            {currentDoc?.archivoUrl ? (
+              <iframe
+                src={currentDoc.archivoUrl}
+                title={currentDoc.nombreArchivoOriginal}
+                className="w-full h-full min-h-[560px] rounded-lg border border-cato-border shadow-md bg-white"
+              />
+            ) : (
+              <div className="w-full max-w-md bg-white border border-cato-border shadow-md rounded-lg p-6 relative">
+                {/* Marca de agua */}
+                <div className="absolute right-6 bottom-8 w-24 h-24 rounded-full border-4 border-dashed border-slate-300 flex items-center justify-center text-center opacity-40 rotate-12 pointer-events-none">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                    VISTA ILUSTRATIVA
                   </span>
                 </div>
-                <div className="flex justify-between py-1">
-                  <span className="text-cato-muted">Vigencia</span>
-                  <span className="font-bold text-emerald-700">
-                    {polizaDoc?.vigenciaInicio || '01/08/26'} – {polizaDoc?.vigenciaFin || '31/07/27'}
-                  </span>
+
+                {/* Contenido del certificado simulado */}
+                <div className="text-center pb-4 border-b border-cato-border">
+                  <div className="w-10 h-10 rounded-full bg-cato-navy text-white flex items-center justify-center mx-auto mb-2 font-bold text-xs">
+                    UCB
+                  </div>
+                  <h4 className="text-sm font-bold text-cato-navy tracking-wide uppercase">
+                    PÓLIZA DE ACCIDENTES
+                  </h4>
+                  <p className="text-[10px] text-cato-muted mt-0.5">
+                    Documento de muestra · Solo para vista de prototipo
+                  </p>
+                  <div className="mt-2 text-xs font-bold text-cato-slate uppercase tracking-wider">
+                    Certificado individual
+                  </div>
+                </div>
+
+                <div className="py-4 space-y-2.5 text-xs">
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-cato-muted">N.º de póliza</span>
+                    <span className="font-bold text-cato-navy">{polizaDoc?.numeroPoliza || 'APC-7083'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-cato-muted">ID de póliza</span>
+                    <span className="font-bold text-cato-slate">{polizaDoc?.idPoliza || 'POL-2026-0814'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-cato-muted">N.º certificado</span>
+                    <span className="font-bold text-cato-slate">{polizaDoc?.numeroCertificado || 'CERT-11408'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-cato-muted">Asegurada</span>
+                    <span className="font-bold text-cato-navy">
+                      {polizaDoc?.asegurado || selectedVoluntario?.nombreCompleto || 'María Fernanda Rojas'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-cato-muted">Vigencia</span>
+                    <span className="font-bold text-emerald-700">
+                      {polizaDoc?.vigenciaInicio || '01/08/26'} – {polizaDoc?.vigenciaFin || '31/07/27'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 text-[10px] text-cato-muted leading-relaxed">
+                  La validación requiere verificar el archivo original y su legibilidad antes de otorgar el dictamen favorable de Pastoral.
                 </div>
               </div>
-
-              <div className="pt-3 border-t border-slate-100 text-[10px] text-cato-muted leading-relaxed">
-                La validación requiere verificar el archivo original y su legibilidad antes de otorgar el dictamen favorable de Pastoral.
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
