@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+/* oxlint-disable react/set-state-in-effect */
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FileBadge,
   Building2,
@@ -92,17 +93,17 @@ export const P21FeedbackCertificados: React.FC = () => {
   ];
 
   // Cargar datos de feedback
-  const cargarFeedback = async () => {
+  const cargarFeedback = useCallback(async () => {
     try {
       const data = await semaforosService.obtenerFeedbackProyecto(1, '2/2026');
       setFeedback(data);
     } catch (e) {
       console.error('Error cargando feedback:', e);
     }
-  };
+  }, []);
 
   // Cargar certificado
-  const cargarCertificado = async () => {
+  const cargarCertificado = useCallback(async () => {
     try {
       const cert = await semaforosService.generarPlantillaCertificado(
         usuarioCertificadoId,
@@ -112,15 +113,15 @@ export const P21FeedbackCertificados: React.FC = () => {
     } catch (e) {
       console.error('Error cargando certificado:', e);
     }
-  };
-
-  useEffect(() => {
-    cargarFeedback();
-  }, []);
-
-  useEffect(() => {
-    cargarCertificado();
   }, [usuarioCertificadoId]);
+
+  useEffect(() => {
+    void cargarFeedback();
+  }, [cargarFeedback]);
+
+  useEffect(() => {
+    void cargarCertificado();
+  }, [cargarCertificado]);
 
   // Guardar / Enviar Feedback
   const handleGuardarFeedback = async () => {

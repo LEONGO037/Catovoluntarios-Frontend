@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+/* oxlint-disable react/set-state-in-effect */
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Award,
   BookOpen,
@@ -55,7 +56,7 @@ export const P20BaseMadre: React.FC = () => {
   const [notificacion, setNotificacion] = useState<string | null>(null);
 
   // Cargar datos Base Madre
-  const cargarBaseMadre = async () => {
+  const cargarBaseMadre = useCallback(async () => {
     try {
       const data = await semaforosService.obtenerBaseMadre({
         busqueda,
@@ -67,10 +68,10 @@ export const P20BaseMadre: React.FC = () => {
     } catch (e) {
       console.error('Error cargando Base Madre:', e);
     }
-  };
+  }, [busqueda, nivelFiltro, carreraFiltro]);
 
   // Cargar ranking
-  const cargarRanking = async () => {
+  const cargarRanking = useCallback(async () => {
     try {
       const data = await semaforosService.obtenerRankingDestacados('2/2026');
       setRanking(data.rankingCompleto);
@@ -79,12 +80,12 @@ export const P20BaseMadre: React.FC = () => {
     } catch (e) {
       console.error('Error cargando ranking:', e);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    cargarBaseMadre();
-    cargarRanking();
-  }, [busqueda, nivelFiltro, carreraFiltro]);
+    void cargarBaseMadre();
+    void cargarRanking();
+  }, [cargarBaseMadre, cargarRanking]);
 
   // Recalcular niveles
   const handleRecalcularNiveles = () => {

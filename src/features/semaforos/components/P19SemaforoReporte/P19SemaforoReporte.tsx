@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+/* oxlint-disable react/set-state-in-effect */
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Activity,
   Save,
@@ -28,7 +29,7 @@ export const P19SemaforoReporte: React.FC = () => {
   const [enviado, setEnviado] = useState<boolean>(false);
 
   // Cargar datos
-  const cargarDatos = async () => {
+  const cargarDatos = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await semaforosService.obtenerReportesProyecto(
@@ -42,11 +43,11 @@ export const P19SemaforoReporte: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [proyectoId, mesSeleccionado]);
 
   useEffect(() => {
-    cargarDatos();
-  }, [proyectoId, mesSeleccionado]);
+    void cargarDatos();
+  }, [cargarDatos]);
 
   // Cambiar color de semáforo
   const handleColorChange = (idAsignacion: number, color: ColorSemaforo) => {
