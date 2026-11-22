@@ -6,6 +6,9 @@ import { ResetPasswordPage } from './features/auth/components/ResetPasswordPage'
 import { DashboardPastoral } from './features/dashboard/components/DashboardPastoral';
 import { AppShell } from './components/layout/AppShell';
 import { TeammateModulePlaceholder } from './components/layout/TeammateModulePlaceholder';
+import { PortalCargaDocumental } from './features/documentos/components/PortalCargaDocumental';
+import { BandejaValidacionDocumental } from './features/documentos/components/BandejaValidacionDocumental';
+import { ControlInduccion } from './features/documentos/components/ControlInduccion';
 
 export function App() {
   return (
@@ -137,52 +140,25 @@ export function App() {
           <Route
             path="/documentos"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-10"
-                title="Portal de Carga Documental del Catovoluntario"
-                responsible="Christian Kevin Coronel Condori"
-                sprint="Sprint 2 (Semana 2)"
-                description="Portal para voluntarios admitidos: carga de Póliza de Accidentes UCB (APC-7083), CI y descarga del modelo oficial de carta de autorización de padres para menores."
-                requirements={[
-                  'RF-07: Póliza contra Accidentes Personales UCB vigente',
-                  'RF-08: Sección dinámica para menores de 18 años con descarga de modelo oficial',
-                  'Regla de Oro: Bloqueo de horas en campo si la póliza no está validada',
-                ]}
-              />
+              <AppShell>
+                <PortalCargaDocumental />
+              </AppShell>
             }
           />
           <Route
             path="/validacion-documental"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-11"
-                title="Bandeja Split-Screen de Validación de Pólizas"
-                responsible="Christian Kevin Coronel Condori"
-                sprint="Sprint 2 (Semana 2)"
-                description="Panel interactivo de auditoría con visor de PDF integrado en el panel izquierdo y cédula de identidad destacada en el panel derecho."
-                requirements={[
-                  'Visor integrado de documentos y pólizas estudiantiles',
-                  'Cédula de Identidad (CI) destacada en ficha derecha',
-                  'Botones de aprobación y observación con notificación automática',
-                ]}
-              />
+              <AppShell>
+                <BandejaValidacionDocumental />
+              </AppShell>
             }
           />
           <Route
             path="/induccion"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-12"
-                title="Control de Asistencia a Inducción Institucional"
-                responsible="Christian Kevin Coronel Condori"
-                sprint="Sprint 2 (Semana 2)"
-                description="Registro de participantes con badges cromáticos oficiales por rol y cambio automático de estado a 'HABILITADO PARA CAMPO' tras cumplir póliza e inducción."
-                requirements={[
-                  'RF-09: Taller de inducción institucional previo a campo',
-                  'Candado crítico: poliza_validada + induccion_completada = habilitado_campo',
-                  'Uso de código cromático por rol oficial',
-                ]}
-              />
+              <AppShell>
+                <ControlInduccion />
+              </AppShell>
             }
           />
 
