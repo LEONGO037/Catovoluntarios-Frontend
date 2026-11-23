@@ -6,6 +6,12 @@ import { ResetPasswordPage } from './features/auth/components/ResetPasswordPage'
 import { DashboardPastoral } from './features/dashboard/components/DashboardPastoral';
 import { AppShell } from './components/layout/AppShell';
 import { TeammateModulePlaceholder } from './components/layout/TeammateModulePlaceholder';
+import { RutaPorRol } from './features/entrevistas/components/RutaPorRol';
+import { P07AgendaEntrevistas } from './features/entrevistas/components/P07AgendaEntrevistas/P07AgendaEntrevistas';
+import { ListaFichasEntrevista } from './features/entrevistas/components/P08FichaEntrevista/ListaFichasEntrevista';
+import { P08FichaEntrevista } from './features/entrevistas/components/P08FichaEntrevista/P08FichaEntrevista';
+import { ListaPostulantesEvaluables } from './features/entrevistas/components/P09EvaluacionEsre/ListaPostulantesEvaluables';
+import { P09EvaluacionEsre } from './features/entrevistas/components/P09EvaluacionEsre/P09EvaluacionEsre';
 
 export function App() {
   return (
@@ -84,52 +90,49 @@ export function App() {
           <Route
             path="/entrevistas"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-07"
-                title="Agendamiento de Entrevistas Presenciales"
-                responsible="Marvin Larry Mollo Ramirez"
-                sprint="Sprint 2 (Semana 2)"
-                description="Calendario de turnos de entrevista con visualización del ciclo en 4 etapas y marcado rápido de estados: Asistió, Faltó o Reprogramar."
-                requirements={[
-                  'RF-04: Calendario de franjas horarias configurables',
-                  'Marcado rápido de asistencia [✓ Asistió], [✗ Faltó], [↺ Reprogramar]',
-                  'Vista de selección para postulantes y vista de agenda para líderes',
-                ]}
-              />
+              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER', 'POSTULANTE']}>
+                <P07AgendaEntrevistas />
+              </RutaPorRol>
             }
           />
           <Route
             path="/ficha-entrevista"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-08"
-                title="Ficha Digital de Entrevista Pastoral"
-                responsible="Marvin Larry Mollo Ramirez"
-                sprint="Sprint 2 (Semana 2)"
-                description="Guía digital de entrevista con escala de afinidad religiosa (1 al 10), sección obligatoria de observaciones y recomendación de proyecto receptor."
-                requirements={[
-                  'RF-05: Digitalización de guía de entrevista Pastoral UCB',
-                  'Escala numérica de apertura religiosa institucional (1 al 10)',
-                  'Campo obligatorio de proyecto receptor sugerido para el postulante',
-                ]}
-              />
+              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER']}>
+                <AppShell>
+                  <ListaFichasEntrevista />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+          <Route
+            path="/ficha-entrevista/:entrevistaId"
+            element={
+              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER']}>
+                <AppShell>
+                  <P08FichaEntrevista />
+                </AppShell>
+              </RutaPorRol>
             }
           />
           <Route
             path="/psicologia"
             element={
-              <TeammateModulePlaceholder
-                screenId="P-09"
-                title="Módulo Confidencial de Evaluación Psicológica E-SRE"
-                responsible="Marvin Larry Mollo Ramirez"
-                sprint="Sprint 2 (Semana 2)"
-                description="Registro confidencial exclusivo para psicólogos y Pastoral con subida de informe PDF y selección obligatoria de Población Sugerida."
-                requirements={[
-                  'RF-06: Restricción estricta de privacidad por RBAC',
-                  'Campo obligatorio: Población Sugerida para guiar la etapa de ubicación',
-                  'Subida y almacenamiento de informe psicotécnico PDF',
-                ]}
-              />
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <ListaPostulantesEvaluables />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+          <Route
+            path="/psicologia/:postulacionId"
+            element={
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <P09EvaluacionEsre />
+                </AppShell>
+              </RutaPorRol>
             }
           />
 
