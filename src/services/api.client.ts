@@ -1,136 +1,102 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-class ApiClient {
-  private baseUrl: string;
-
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
-  }
-
-  private getHeaders(): HeadersInit {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    const token = localStorage.getItem('catovoluntarios_token');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return headers;
-  }
-
-  async get<T>(endpoint: string): Promise<T> {
-    const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders(),
+function getHeaders(extraHeaders?: HeadersInit): HeadersInit {
+  const token = localStorage.getItem('catovoluntarios_token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+  if (extraHeaders) {
+    if (extraHeaders instanceof Headers) {
+      extraHeaders.forEach((val, key) => {
+        headers[key] = val;
       });
-
-      if (response.status === 401) {
-        localStorage.removeItem('catovoluntarios_token');
-        localStorage.removeItem('catovoluntarios_user');
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
-      }
-
-      return (await response.json()) as T;
-    } catch (error) {
-      console.warn(`[ApiClient GET ${endpoint}] Fallback o error:`, error);
-      throw error;
+    } else if (Array.isArray(extraHeaders)) {
+      extraHeaders.forEach(([key, val]) => {
+        headers[key] = val;
+      });
+    } else {
+      Object.assign(headers, extraHeaders);
     }
   }
-
-  async post<T>(endpoint: string, body?: unknown): Promise<T> {
-    const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: body ? JSON.stringify(body) : undefined,
-    });
-
-    if (response.status === 401) {
-      localStorage.removeItem('catovoluntarios_token');
-      localStorage.removeItem('catovoluntarios_user');
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
-    }
-
-    return (await response.json()) as T;
-  }
-
-  async patch<T>(endpoint: string, body?: unknown): Promise<T> {
-    const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: this.getHeaders(),
-      body: body ? JSON.stringify(body) : undefined,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
-    }
-
-    return (await response.json()) as T;
-  }
-
-  async delete<T>(endpoint: string): Promise<T> {
-    const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-    const response = await fetch(url, {
-      method: 'DELETE',
-      headers: this.getHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
-    }
-
-    return (await response.json()) as T;
-  }
+  return headers;
 }
 
-const clientInstance = new ApiClient(API_BASE_URL);
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: getHeaders(options.headers),
+  });
+
+  if (response.status === 401 && !endpoint.includes('/auth/login')) {
+    localStorage.removeItem('catovoluntarios_token');
+    localStorage.removeItem('catovoluntarios_user');
+  }
+
+  if (!response.ok) {
+    let errorMsg = `Error ${response.status}: ${response.statusText}`;
+    try {
+      const errorJson = await response.json();
+      if (errorJson.message) {
+        errorMsg = Array.isArray(errorJson.message)
+          ? errorJson.message.join(', ')
+          : errorJson.message;
+      }
+    } catch {
+      // Ignorar error al parsear cuerpo no JSON
+    }
+    throw new Error(errorMsg);
+  }
+
+  const text = await response.text();
+  return (text ? JSON.parse(text) : {}) as T;
+}
+
+export interface ApiClientFn {
+  <T>(endpoint: string, options?: RequestInit): Promise<T>;
+  get<T>(endpoint: string, options?: RequestInit): Promise<T>;
+  post<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T>;
+  patch<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T>;
+  put<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T>;
+  delete<T>(endpoint: string, options?: RequestInit): Promise<T>;
+  baseUrl: string;
+}
 
 // Soporte dual: como función ejecutable (apiClient(endpoint, options)) y como cliente orientado a objetos (apiClient.get/post/patch/delete)
-export const apiClient: typeof clientInstance & (<T>(endpoint: string, options?: RequestInit) => Promise<T>) = Object.assign(
+export const apiClient: ApiClientFn = Object.assign(
   async function <T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-    const token = localStorage.getItem('catovoluntarios_token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers as Record<string, string>),
-    };
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      let errorMsg = `Error ${response.status}: ${response.statusText}`;
-      try {
-        const errorJson = await response.json();
-        if (errorJson.message) {
-          errorMsg = Array.isArray(errorJson.message)
-            ? errorJson.message.join(', ')
-            : errorJson.message;
-        }
-      } catch {
-        // Ignorar error al parsear cuerpo no JSON
-      }
-      throw new Error(errorMsg);
-    }
-
-    return response.json() as Promise<T>;
+    return request<T>(endpoint, options);
   },
-  clientInstance,
+  {
+    baseUrl: API_BASE_URL,
+    get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+      return request<T>(endpoint, { ...options, method: 'GET' });
+    },
+    post<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
+      return request<T>(endpoint, {
+        ...options,
+        method: 'POST',
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+    },
+    patch<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
+      return request<T>(endpoint, {
+        ...options,
+        method: 'PATCH',
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+    },
+    put<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
+      return request<T>(endpoint, {
+        ...options,
+        method: 'PUT',
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+    },
+    delete<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+      return request<T>(endpoint, { ...options, method: 'DELETE' });
+    },
+  },
 );
