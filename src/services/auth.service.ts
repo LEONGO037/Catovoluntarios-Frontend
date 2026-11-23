@@ -109,7 +109,7 @@ export const authService = {
       return {
         success: true,
         message:
-          'Se ha enviado un correo mediante Resend con las instrucciones de recuperación a tu dirección registrada (válido por 15 minutos).',
+          'Se ha enviado un correo con las instrucciones de recuperación a tu dirección registrada (válido por 15 minutos).',
         resetToken: 'mock_reset_token_dev_15m',
       };
     }

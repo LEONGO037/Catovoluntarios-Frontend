@@ -41,7 +41,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
       }
     } catch {
       setSuccessMessage(
-        'Si tu correo se encuentra registrado en Pastoral, recibirás las instrucciones en breve mediante Resend.',
+        'Si tu correo se encuentra registrado en Pastoral, recibirás las instrucciones en breve.',
       );
     } finally {
       setIsLoading(false);
@@ -69,10 +69,10 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
       title={
         <div className="flex items-center gap-2">
           <KeyRound className="w-5 h-5 text-cato-navy" />
-          <span>Recuperar Contraseña con Resend</span>
+          <span>Recuperar Contraseña</span>
         </div>
       }
-      subtitle="Te enviaremos un correo oficial a través del servicio Resend (validez de 15 minutos)"
+      subtitle="Te enviaremos un correo oficial con las instrucciones (validez de 15 minutos)"
     >
       {successMessage ? (
         <div className="space-y-4 text-center py-4">
@@ -80,7 +80,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
             <CheckCircle2 className="w-7 h-7" />
           </div>
           <div className="space-y-1">
-            <h4 className="font-bold text-base text-cato-navy">¡Correo enviado con Resend!</h4>
+            <h4 className="font-bold text-base text-cato-navy">¡Correo enviado!</h4>
             <p className="text-xs text-cato-slate max-w-sm mx-auto leading-relaxed">
               {successMessage}
             </p>
@@ -116,7 +116,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
           {errorMessage && <AlertBanner type="danger">{errorMessage}</AlertBanner>}
 
           <p className="text-xs text-cato-slate leading-relaxed">
-            Ingresa tu correo electrónico registrado (institucional <code>@ucb.edu.bo</code> o personal). El sistema enviará automáticamente un correo a través del servicio <strong>Resend</strong> con el enlace de reseteo seguro.
+            Ingresa tu correo electrónico registrado (institucional <code>@ucb.edu.bo</code> o personal). El sistema enviará automáticamente un correo con el enlace de reseteo seguro.
           </p>
 
           <Input
@@ -124,7 +124,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="andrea.moscoso@ucb.edu.bo"
+            placeholder="usuario@ucb.edu.bo"
             required
             leftIcon={<Mail className="w-4 h-4" />}
           />
@@ -134,7 +134,7 @@ export const PasswordRecoveryModal: React.FC<PasswordRecoveryModalProps> = ({
               Cancelar
             </Button>
             <Button variant="primary" size="sm" type="submit" isLoading={isLoading}>
-              Enviar Correo con Resend
+              Enviar Correo
             </Button>
           </div>
         </form>

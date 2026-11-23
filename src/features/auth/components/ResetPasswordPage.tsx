@@ -76,7 +76,7 @@ export const ResetPasswordPage: React.FC = () => {
             Restablecer Contraseña
           </h2>
           <p className="text-xs text-cato-muted">
-            Ingresa tu nueva clave de acceso seguro verificada mediante Resend.
+            Ingresa tu nueva clave de acceso seguro.
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export const ResetPasswordPage: React.FC = () => {
             {errorMessage && <AlertBanner type="danger">{errorMessage}</AlertBanner>}
 
             <Input
-              label="Token de Verificación (Enviado por Resend)"
+              label="Token de Verificación"
               type="text"
               value={token}
               onChange={(e) => setToken(e.target.value)}
