@@ -69,7 +69,7 @@ export function App() {
             path="/entrevistas"
             element={
               <TeammateModulePlaceholder
-                screenId="P-07 & P-08"
+                screenId="MÓDULO 03"
                 title="Agendamiento y Ficha Digital de Entrevista Presencial"
                 responsible="Marvin Larry Mollo Ramirez"
                 sprint="Sprint 2 (Semana 2)"
@@ -86,7 +86,7 @@ export function App() {
             path="/psicologia"
             element={
               <TeammateModulePlaceholder
-                screenId="P-09"
+                screenId="MÓDULO 03"
                 title="Módulo Confidencial de Evaluación Psicológica E-SRE"
                 responsible="Marvin Larry Mollo Ramirez"
                 sprint="Sprint 2 (Semana 2)"
@@ -165,7 +165,7 @@ export function App() {
             path="/asistencia"
             element={
               <TeammateModulePlaceholder
-                screenId="P-16"
+                screenId="MÓDULO 06"
                 title="Registro Mensual de Asistencia y Planilla de Pasajes"
                 responsible="Juan José Cordeiro"
                 sprint="Sprint 4 (Semana 4)"
@@ -182,7 +182,7 @@ export function App() {
             path="/asistencias"
             element={
               <TeammateModulePlaceholder
-                screenId="P-16"
+                screenId="MÓDULO 06"
                 title="Registro Mensual de Asistencia y Planilla de Pasajes"
                 responsible="Juan José Cordeiro"
                 sprint="Sprint 4 (Semana 4)"
@@ -199,7 +199,7 @@ export function App() {
             path="/pasajes"
             element={
               <TeammateModulePlaceholder
-                screenId="P-17"
+                screenId="MÓDULO 06"
                 title="Generador de Planillas de Reposición de Pasajes"
                 responsible="Juan José Cordeiro"
                 sprint="Sprint 4 (Semana 4)"
@@ -216,7 +216,7 @@ export function App() {
             path="/portal-voluntario"
             element={
               <TeammateModulePlaceholder
-                screenId="P-18"
+                screenId="MÓDULO 06"
                 title="Portal Operativo del Catovoluntario"
                 responsible="Juan José Cordeiro"
                 sprint="Sprint 4 (Semana 4)"

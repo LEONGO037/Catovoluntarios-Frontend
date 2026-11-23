@@ -14,7 +14,7 @@ interface TopbarProps {
 export const Topbar: React.FC<TopbarProps> = ({
   selectedSemestre,
   onSelectSemestre,
-  urgentCount = 3,
+  urgentCount = 0,
   onOpenNotifications,
 }) => {
   const { user } = useAuth();
@@ -85,11 +85,11 @@ export const Topbar: React.FC<TopbarProps> = ({
         {/* Perfil del Usuario */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-cato-navy text-white font-bold text-xs flex items-center justify-center shadow-xs">
-            {user ? user.nombres.charAt(0) : 'A'}
+            {user ? user.nombres.charAt(0) : 'U'}
           </div>
           <div className="hidden sm:flex flex-col text-left">
             <span className="text-xs font-bold text-cato-text leading-tight">
-              {user ? `${user.nombres} ${user.primerApellido}` : 'Lic. Andrea Moscoso'}
+              {user ? `${user.nombres} ${user.primerApellido}` : 'Usuario'}
             </span>
             <div className="mt-0.5">
               <RoleBadge rol={user?.rol || 'ADMIN_PASTORAL'} showDot={false} />

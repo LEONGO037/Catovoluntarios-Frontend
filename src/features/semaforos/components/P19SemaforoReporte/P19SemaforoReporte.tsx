@@ -12,6 +12,7 @@ import {
   Phone,
 } from 'lucide-react';
 import { semaforosService } from '../../services/semaforos.service';
+import { dashboardService } from '../../../../services/dashboard.service';
 import type {
   VoluntarioSemaforo,
   ColorSemaforo,
@@ -19,6 +20,7 @@ import type {
 
 export const P19SemaforoReporte: React.FC = () => {
   const [proyectoId, setProyectoId] = useState<number>(1);
+  const [listaProyectos, setListaProyectos] = useState<{ id: number; nombre: string }[]>([]);
   const [mesSeleccionado, setMesSeleccionado] = useState<string>('Septiembre');
   const [voluntarios, setVoluntarios] = useState<VoluntarioSemaforo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -27,6 +29,18 @@ export const P19SemaforoReporte: React.FC = () => {
     mensaje: string;
   } | null>(null);
   const [enviado, setEnviado] = useState<boolean>(false);
+
+  useEffect(() => {
+    dashboardService
+      .getCuposProyectos()
+      .then((res) => {
+        if (res && res.proyectos && res.proyectos.length > 0) {
+          setListaProyectos(res.proyectos.map((p) => ({ id: p.id, nombre: p.nombre })));
+          setProyectoId(res.proyectos[0].id);
+        }
+      })
+      .catch((err) => console.error('Error cargando proyectos para semaforo:', err));
+  }, []);
 
   // Cargar datos
   const cargarDatos = useCallback(async () => {
@@ -166,15 +180,12 @@ export const P19SemaforoReporte: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 1. Header con Badge de Pantalla */}
+      {/* 1. Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-cato-border">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded bg-blue-100 text-cato-navy font-bold text-xs font-mono">
-              P-19
-            </span>
             <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold text-xs">
-              Requerimientos RF-18 y RF-19
+              Supervisión de Desempeño
             </span>
           </div>
           <h1 className="text-2xl font-extrabold text-cato-navy mt-1 tracking-tight flex items-center gap-2">
@@ -235,10 +246,15 @@ export const P19SemaforoReporte: React.FC = () => {
             onChange={(e) => setProyectoId(Number(e.target.value))}
             className="w-full text-xs font-medium border border-cato-border rounded-lg p-2 bg-slate-50 focus:border-cato-navy focus:bg-white"
           >
-            <option value={1}>Hogar San Ramón — Área Memoria (24 Voluntarios)</option>
-            <option value={2}>Hospital San Juan de Dios (18 Voluntarios)</option>
-            <option value={3}>Comedor San Calixto (15 Voluntarios)</option>
-            <option value={4}>Centro de Apoyo Escolar San Pedro (12 Voluntarios)</option>
+            {listaProyectos.length === 0 ? (
+              <option value={1}>Sin proyectos registrados</option>
+            ) : (
+              listaProyectos.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre}
+                </option>
+              ))
+            )}
           </select>
         </div>
 

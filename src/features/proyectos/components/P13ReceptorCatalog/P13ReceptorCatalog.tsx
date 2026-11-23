@@ -116,7 +116,7 @@ export const P13ReceptorCatalog: React.FC<P13ReceptorCatalogProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-cato-navy tracking-tight">
-            P-13: Catálogo y Ficha de Proyectos Receptores
+            Catálogo y Ficha de Proyectos Receptores
           </h2>
           <p className="text-xs text-cato-muted mt-0.5">
             Registro de instituciones aliadas, convenios activos, pasajes fijos y asignación de liderazgo (RF-10, RF-11).

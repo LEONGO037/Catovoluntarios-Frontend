@@ -79,7 +79,7 @@ export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
         <AlertBanner
           type="warning"
           title="Acceso Restringido a Administrador Pastoral"
-          message="La pantalla P-14 (Asignación Inteligente y Ubicación de Voluntarios) es de uso exclusivo de la Administración de Pastoral para garantizar el equilibrio demográfico institucional."
+          message="La pantalla de Asignación Inteligente y Ubicación de Voluntarios es de uso exclusivo de la Administración de Pastoral para garantizar el equilibrio demográfico institucional."
         />
       </div>
     );
@@ -92,7 +92,7 @@ export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
         <div>
           <h2 className="text-xl font-extrabold text-cato-navy tracking-tight flex items-center gap-2">
             <Users2 className="w-6 h-6 text-cato-navy" />
-            P-14: Asignación Inteligente y Ubicación de Voluntarios
+            Asignación Inteligente y Ubicación de Voluntarios
           </h2>
           <p className="text-xs text-cato-muted mt-0.5">
             Emparejamiento de admitidos con Proyectos Receptores en tiempo real y balance demográfico por sede (RF-12).

@@ -77,7 +77,7 @@ export const TeammateModulePlaceholder: FC<TeammateModulePlaceholderProps> = ({
               Este módulo forma parte de la arquitectura base del App Shell diseñada por Leonardo Delgado.
             </span>
             <Button size="sm" variant="outline" onClick={() => navigate('/dashboard')}>
-              Ir al Dashboard P-03
+              Ir al Dashboard Principal
             </Button>
           </div>
         </div>

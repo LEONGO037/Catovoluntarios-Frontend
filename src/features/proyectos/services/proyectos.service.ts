@@ -240,7 +240,7 @@ class ProyectosService {
       destinatario_rol: 'voluntario',
       destinatario_nombre: voluntario.nombre_completo,
       titulo: 'Sede de Voluntariado Actualizada',
-      mensaje: `Tu solicitud de traslado hacia ${proyectoDestino.nombre_proyecto} fue aprobada. Tu portal (P-18) ahora refleja tu nueva sede y tarifa de pasajes (${proyectoDestino.monto_pasaje_fijo} Bs/día).`,
+      mensaje: `Tu solicitud de traslado hacia ${proyectoDestino.nombre_proyecto} fue aprobada. Tu portal ahora refleja tu nueva sede y tarifa de pasajes (${proyectoDestino.monto_pasaje_fijo} Bs/día).`,
       fecha: formattedNow,
       leido: false,
     };

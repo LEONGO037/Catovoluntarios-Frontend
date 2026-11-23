@@ -24,19 +24,18 @@ export const P21FeedbackCertificados: React.FC = () => {
   // Estados Feedback
   const [feedback, setFeedback] = useState<FeedbackInstitucion>({
     proyectoId: 1,
-    nombreProyecto: 'Hogar de Ancianos San Ramón',
+    nombreProyecto: 'Proyecto Receptor',
     semestre: '2/2026',
-    voluntariosRecibidos: 12,
-    voluntariosCulminados: 11,
-    bajasAbandonos: 1,
+    voluntariosRecibidos: 0,
+    voluntariosCulminados: 0,
+    bajasAbandonos: 0,
     calificacionGrupo: 5,
     calificacionCatolider: 5,
     solicitaContinuidadConvenio: true,
-    cuposSolicitadosProximoSemestre: 14,
-    bloque4ObservacionesSugerenciasLibres:
-      'Agradecemos sinceramente el apoyo brindado por la Pastoral Universitaria y sus estudiantes este semestre. Los voluntarios mostraron un alto grado de empatía, calidez y puntualidad en cada jornada en el Hogar. En particular destacamos el trabajo de Rodrigo Quispe, quien confeccionó juegos de mesa adaptados para el área de memoria. Para el próximo semestre sugerimos mantener los talleres en sábados por la mañana.',
-    nombreResponsableLlenado: 'Lic. Miriam Salinas',
-    cargoResponsable: 'Trabajadora Social y Supervisora de Voluntariado',
+    cuposSolicitadosProximoSemestre: 0,
+    bloque4ObservacionesSugerenciasLibres: '',
+    nombreResponsableLlenado: '',
+    cargoResponsable: '',
   });
 
   const [notificacion, setNotificacion] = useState<{
@@ -48,49 +47,10 @@ export const P21FeedbackCertificados: React.FC = () => {
   const [certificado, setCertificado] = useState<PlantillaCertificado | null>(null);
   const [copiado, setCopiado] = useState<boolean>(false);
   const [usuarioCertificadoId, setUsuarioCertificadoId] = useState<number>(1);
-
-  // Lista de voluntarios en el centro para la tabla de evaluación individual P-21
-  const evaluacionesVoluntarios = [
-    {
-      id: 1,
-      nombre: 'Rodrigo Quispe Mendoza',
-      carrera: 'Ing. Biomédica',
-      tareas: 'Estimulación cognitiva, memoria, lectura guiada y juegos adaptados',
-      calificacion: 5,
-      contribucion:
-        'Excelente disposición; diseñó juegos de mesa adaptados que motivaron a los abuelitos.',
-      beneficiarios: '28 adultos mayores',
-    },
-    {
-      id: 2,
-      nombre: 'Camila Vargas Ramos',
-      carrera: 'Psicología',
-      tareas: 'Acompañamiento, soporte en comedor y dinámicas en jardín',
-      calificacion: 5,
-      contribucion:
-        'Cálida y muy paciente. Gran empatía en el pabellón San José.',
-      beneficiarios: '24 adultos mayores',
-    },
-    {
-      id: 3,
-      nombre: 'Diego Fernández Calle',
-      carrera: 'Administración',
-      tareas: 'Paseos en jardín y apoyo en logística de comedor',
-      calificacion: 3,
-      contribucion:
-        'Tuvo 2 atrasos al inicio del ciclo, pero cumplió de forma responsable.',
-      beneficiarios: '15 adultos mayores',
-    },
-    {
-      id: 4,
-      nombre: 'Esteban Choque Huanca',
-      carrera: 'Ing. Civil',
-      tareas: 'Apoyo en lavado de bandejas',
-      calificacion: 1,
-      contribucion: 'Abandonó en la tercera semana. Dejó las tareas asignadas.',
-      beneficiarios: '4 personas',
-    },
-  ];
+  const [voluntariosCertificado, setVoluntariosCertificado] = useState<
+    { id: number; nombre: string; ci: string; horas: number }[]
+  >([]);
+  const [evaluacionesVoluntarios] = useState<any[]>([]);
 
   // Cargar datos de feedback
   const cargarFeedback = useCallback(async () => {
@@ -100,6 +60,26 @@ export const P21FeedbackCertificados: React.FC = () => {
     } catch (e) {
       console.error('Error cargando feedback:', e);
     }
+  }, []);
+
+  // Cargar lista de voluntarios para certificados
+  useEffect(() => {
+    semaforosService
+      .obtenerBaseMadre({})
+      .then((res) => {
+        if (res && res.voluntarios && res.voluntarios.length > 0) {
+          setVoluntariosCertificado(
+            res.voluntarios.map((v) => ({
+              id: v.id,
+              nombre: v.nombreCompleto,
+              ci: v.ci,
+              horas: v.horasTotalesHistoricas || 0,
+            })),
+          );
+          setUsuarioCertificadoId(res.voluntarios[0].id);
+        }
+      })
+      .catch((err) => console.error('Error cargando base madre para certificados:', err));
   }, []);
 
   // Cargar certificado
@@ -182,15 +162,12 @@ export const P21FeedbackCertificados: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 1. Header con Badge de Pantalla */}
+      {/* 1. Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-cato-border">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded bg-blue-100 text-cato-navy font-bold text-xs font-mono">
-              P-21
-            </span>
             <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-semibold text-xs">
-              Requerimiento RF-23
+              Cierre de Gestión
             </span>
           </div>
           <h1 className="text-2xl font-extrabold text-cato-navy mt-1 tracking-tight flex items-center gap-2">
@@ -243,7 +220,7 @@ export const P21FeedbackCertificados: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Pestañas de Navegación P-21 */}
+      {/* 2. Pestañas de Navegación */}
       <div className="border-b border-cato-border flex items-center gap-3">
         <button
           onClick={() => setActiveTab('feedback')}
@@ -401,7 +378,14 @@ export const P21FeedbackCertificados: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {evaluacionesVoluntarios.map((item) => (
+                  {evaluacionesVoluntarios.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-xs text-cato-muted">
+                        No hay evaluaciones individuales registradas en este período.
+                      </td>
+                    </tr>
+                  ) : (
+                    evaluacionesVoluntarios.map((item) => (
                     <tr
                       key={item.id}
                       className={`hover:bg-slate-50 ${
@@ -436,8 +420,9 @@ export const P21FeedbackCertificados: React.FC = () => {
                         {item.beneficiarios}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
+                  ))
+                )}
+              </tbody>
               </table>
             </div>
           </div>
@@ -614,10 +599,15 @@ export const P21FeedbackCertificados: React.FC = () => {
                 onChange={(e) => setUsuarioCertificadoId(Number(e.target.value))}
                 className="text-xs border border-cato-border rounded-lg p-2 bg-white font-semibold text-slate-800 w-full sm:w-80"
               >
-                <option value={1}>Rodrigo Quispe Mendoza (8392104 LP) — 54 hrs</option>
-                <option value={2}>Camila Vargas Ramos (9283102 LP) — 48 hrs</option>
-                <option value={3}>Ignacio Ticona Mamani (7610943 LP) — 48 hrs</option>
-                <option value={4}>Sofía Arce Del Carpio (8401923 LP) — 44 hrs</option>
+                {voluntariosCertificado.length === 0 ? (
+                  <option value={1}>Sin voluntarios registrados</option>
+                ) : (
+                  voluntariosCertificado.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.nombre} ({v.ci}) — {v.horas} hrs
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -677,18 +667,18 @@ export const P21FeedbackCertificados: React.FC = () => {
               </p>
             </div>
 
-            {/* Firmas simuladas */}
+            {/* Firmas de Certificación */}
             <div className="grid grid-cols-2 gap-8 pt-8 border-t border-slate-200 text-center text-xs">
               <div className="space-y-1">
                 <div className="w-40 border-b border-slate-400 mx-auto pb-6"></div>
-                <div className="font-extrabold text-slate-800">Lic. Andrea Moscoso</div>
-                <div className="text-[11px] text-slate-500">Coordinadora de Pastoral UCB</div>
+                <div className="font-extrabold text-slate-800">Coordinación Pastoral</div>
+                <div className="text-[11px] text-slate-500">Pastoral Universitaria UCB</div>
               </div>
 
               <div className="space-y-1">
                 <div className="w-40 border-b border-slate-400 mx-auto pb-6"></div>
-                <div className="font-extrabold text-slate-800">Lic. Miriam Salinas</div>
-                <div className="text-[11px] text-slate-500">Supervisora del Proyecto Receptor</div>
+                <div className="font-extrabold text-slate-800">Supervisión Institucional</div>
+                <div className="text-[11px] text-slate-500">Proyecto Receptor Aliado</div>
               </div>
             </div>
 

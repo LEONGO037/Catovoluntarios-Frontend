@@ -126,15 +126,12 @@ export const P20BaseMadre: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 1. Header con Badge de Pantalla */}
+      {/* 1. Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-cato-border">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded bg-blue-100 text-cato-navy font-bold text-xs font-mono">
-              P-20
-            </span>
             <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold text-xs">
-              Requerimientos RF-20, RF-21 y RF-22
+              Historial y Reconocimientos
             </span>
           </div>
           <h1 className="text-2xl font-extrabold text-cato-navy mt-1 tracking-tight flex items-center gap-2">
@@ -142,7 +139,7 @@ export const P20BaseMadre: React.FC = () => {
             Base Madre Histórica & Preselección de Premiaciones
           </h1>
           <p className="text-xs text-cato-muted mt-0.5">
-            Repositorio central con más de 400 voluntarios históricos, consolidación de horas sociales y ranking RF-22.
+            Repositorio central de voluntarios, consolidación de horas sociales y ranking por desempeño.
           </p>
         </div>
 
@@ -175,7 +172,7 @@ export const P20BaseMadre: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Pestañas de Navegación P-20 */}
+      {/* 2. Pestañas de Navegación */}
       <div className="border-b border-cato-border flex items-center gap-3">
         <button
           onClick={() => setActiveTab('base-madre')}

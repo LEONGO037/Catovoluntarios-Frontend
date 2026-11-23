@@ -97,10 +97,10 @@ con domicilio en ________________________________________________________,
 en mi condición de (Padre / Madre / Tutor Legal) __________________________,
 del/de la estudiante menor de edad:
 
-Nombre del Voluntario: ${expediente?.nombreCompleto || 'María Fernanda Rojas'}
-Cédula de Identidad (CI): ${expediente?.ci || '9420187 LP'}
-Carrera: ${expediente?.carrera || 'Psicología - 3er Semestre'}
-Proyecto Asignado: ${expediente?.proyectoAsignado || 'Hogar San Ramón - Área Memoria'}
+Nombre del Voluntario: ${expediente?.nombreCompleto || 'Estudiante Voluntario'}
+Cédula de Identidad (CI): ${expediente?.ci || 'Sin registrar'}
+Carrera: ${expediente?.carrera || 'Carrera Universitaria'}
+Proyecto Asignado: ${expediente?.proyectoAsignado || 'Sin asignar'}
 
 DECLARO Y AUTORIZO EXPRESAMENTE:
 1. Conocer los objetivos, actividades formativas y de voluntariado social que desarrollará en el marco del Programa Catovoluntarios de Pastoral UCB durante el semestre 2/2026.
@@ -339,7 +339,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="text-xs font-semibold text-cato-navy tracking-wider uppercase mb-1">
-            P-10 · HABILITACIÓN DOCUMENTAL
+            HABILITACIÓN DOCUMENTAL
           </div>
           <h1 className="text-2xl font-bold text-cato-navy">Mis documentos</h1>
           <p className="text-sm text-cato-muted mt-0.5">
@@ -779,10 +779,10 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
               Asignación Actual
             </div>
             <div className="text-sm font-bold text-cato-slate">
-              {expediente?.proyectoAsignado || 'Hogar San Ramón - Área Memoria'}
+              {expediente?.proyectoAsignado || 'Sin asignar'}
             </div>
             <div className="text-xs text-cato-muted">
-              Líder tutor: <strong>{expediente?.catoliderAsignado || 'Valeria Sanjinés'}</strong>
+              Líder tutor: <strong>{expediente?.catoliderAsignado || 'Coordinación Pastoral'}</strong>
             </div>
             <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded border border-amber-200 leading-tight">
               Horas de voluntariado en campo bloqueadas hasta la validación de la póliza estudiantil.

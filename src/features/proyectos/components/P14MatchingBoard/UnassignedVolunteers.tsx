@@ -53,7 +53,7 @@ export const UnassignedVolunteers: React.FC<UnassignedVolunteersProps> = ({
         </div>
       </div>
 
-      {/* Filtros de Búsqueda y Cruce P-09 */}
+      {/* Filtros de Búsqueda y Cruce */}
       <div className="p-3 border-b border-cato-border bg-cato-canvas space-y-2 text-xs">
         {/* Search */}
         <div className="relative">
@@ -127,7 +127,7 @@ export const UnassignedVolunteers: React.FC<UnassignedVolunteersProps> = ({
             }
             className="h-7 px-2 rounded border border-cato-input bg-white text-[11px] text-cato-text focus:outline-none"
           >
-            <option value="Todas">Población Sugerida (P-09)</option>
+            <option value="Todas">Población Sugerida</option>
             {POBLACIONES_OBJETIVO.map((p) => (
               <option key={p} value={p}>
                 {p}

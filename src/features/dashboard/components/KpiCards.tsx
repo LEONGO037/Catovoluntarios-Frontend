@@ -13,8 +13,8 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics, isLoading }) => {
   const cards = [
     {
       title: 'Total Postulantes',
-      value: kpis?.totalPostulantes.value ?? 142,
-      sub: kpis?.totalPostulantes.tendencia ?? '+18% vs Gestión 1/2026',
+      value: kpis?.totalPostulantes?.value ?? 0,
+      sub: kpis?.totalPostulantes?.tendencia ?? 'Sin registros',
       desc: 'Aspirantes en admisión web',
       icon: Users,
       color: 'bg-blue-600',
@@ -22,8 +22,8 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics, isLoading }) => {
     },
     {
       title: 'Voluntarios en Campo',
-      value: kpis?.voluntariosActivos.value ?? 86,
-      sub: kpis?.voluntariosActivos.tendencia ?? '92% retención activa',
+      value: kpis?.voluntariosActivos?.value ?? 0,
+      sub: kpis?.voluntariosActivos?.tendencia ?? 'Sin habilitados',
       desc: 'Asignados con inducción aprobada',
       icon: UserCheck,
       color: 'bg-emerald-600',
@@ -31,8 +31,8 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics, isLoading }) => {
     },
     {
       title: 'Pólizas Validadas',
-      value: kpis?.polizasValidadas.value ?? 78,
-      sub: kpis?.polizasValidadas.tendencia ?? 'Póliza UCB APC-7083',
+      value: kpis?.polizasValidadas?.value ?? 0,
+      sub: kpis?.polizasValidadas?.tendencia ?? 'Pendientes',
       desc: 'Seguro obligatorio vigente',
       icon: ShieldCheck,
       color: 'bg-purple-600',
@@ -40,8 +40,8 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics, isLoading }) => {
     },
     {
       title: 'Horas del Mes',
-      value: `${(kpis?.horasTotalesMes.value ?? 1248).toLocaleString()} h`,
-      sub: kpis?.horasTotalesMes.tendencia ?? 'Meta mensual superada',
+      value: `${(kpis?.horasTotalesMes?.value ?? 0).toLocaleString()} h`,
+      sub: kpis?.horasTotalesMes?.tendencia ?? '0 hrs',
       desc: 'Horas presenciales registradas',
       icon: Clock,
       color: 'bg-amber-500',
@@ -72,8 +72,8 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ metrics, isLoading }) => {
               {isLoading ? '...' : card.value}
             </h3>
             <div className="flex items-center gap-1.5 mt-1.5 text-xs">
-              <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-                <TrendingUp className="w-3.5 h-3.5" />
+              <span className="text-cato-slate font-semibold flex items-center gap-0.5">
+                <TrendingUp className="w-3.5 h-3.5 text-cato-navy" />
                 {card.sub}
               </span>
             </div>

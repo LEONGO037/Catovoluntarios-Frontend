@@ -67,12 +67,12 @@ export const VolunteerCard: React.FC<VolunteerCardProps> = ({
         </div>
       </div>
 
-      {/* Población Sugerida de Psicología (P-09) */}
+      {/* Población Sugerida de Psicología */}
       <div className="mb-3 p-2 rounded bg-cato-surface-header border border-cato-border/80">
         <div className="flex items-center justify-between text-[10px] text-cato-slate font-semibold mb-1">
           <span className="flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-cato-gold-dark" />
-            Población Sugerida (P-09):
+            Población Sugerida:
           </span>
           {matchesCurrentProjectPopulation && (
             <span className="text-emerald-700 font-bold flex items-center gap-0.5">

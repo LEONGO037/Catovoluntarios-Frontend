@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { Modal } from '../ui/Modal';
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { dashboardService, type NotificacionUrgente } from '../../services/dashboard.service';
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -20,34 +21,28 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selectedSemestre, setSelectedSemestre] = useState('2/2026');
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [urgentNotifications, setUrgentNotifications] = useState<NotificacionUrgente[]>([]);
   const navigate = useNavigate();
 
-  const urgentNotifications = [
-    {
-      id: '1',
-      title: '5 Cartas de Autorización de Menores sin Validar',
-      desc: 'Postulantes menores de 18 años requieren aprobación de carta de padres para avanzar.',
-      action: '/validacion-documental',
-      btnText: 'Ir a Validación (P-11)',
-      priority: 'high',
-    },
-    {
-      id: '2',
-      title: '3 Solicitudes de Traslado entre Proyectos',
-      desc: 'Reubicaciones solicitadas durante las primeras 4 semanas por cruce de horarios.',
-      action: '/traslados',
-      btnText: 'Gestionar en P-15',
-      priority: 'medium',
-    },
-    {
-      id: '3',
-      title: '8 Pólizas APC-7083 por Vencer',
-      desc: 'Seguro de accidentes vence este mes; horas de voluntariado en campo serán bloqueadas si no renuevan.',
-      action: '/documentos',
-      btnText: 'Ver Pólizas (P-10)',
-      priority: 'high',
-    },
-  ];
+  useEffect(() => {
+    let isMounted = true;
+    dashboardService
+      .getNotificaciones()
+      .then((data) => {
+        if (isMounted && Array.isArray(data)) {
+          setUrgentNotifications(data);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setUrgentNotifications([]);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedSemestre]);
 
   return (
     <div className="min-h-screen bg-cato-canvas flex text-cato-text">
@@ -86,28 +81,34 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         subtitle="Asuntos operativos que requieren atención inmediata en el semestre activo"
       >
         <div className="space-y-3">
-          {urgentNotifications.map((notif) => (
-            <div
-              key={notif.id}
-              className="p-4 rounded-xl border border-rose-200 bg-rose-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left"
-            >
-              <div>
-                <h5 className="font-bold text-sm text-cato-navy">
-                  {notif.title}
-                </h5>
-                <p className="text-xs text-cato-muted mt-0.5">{notif.desc}</p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowNotificationsModal(false);
-                  navigate(notif.action);
-                }}
-                className="shrink-0 text-xs font-semibold px-3 py-1.5 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors"
-              >
-                {notif.btnText}
-              </button>
+          {urgentNotifications.length === 0 ? (
+            <div className="p-8 text-center text-xs text-cato-muted bg-cato-canvas rounded-xl border border-cato-border">
+              No hay alertas ni notificaciones urgentes pendientes en este momento.
             </div>
-          ))}
+          ) : (
+            urgentNotifications.map((notif) => (
+              <div
+                key={notif.id}
+                className="p-4 rounded-xl border border-rose-200 bg-rose-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left"
+              >
+                <div>
+                  <h5 className="font-bold text-sm text-cato-navy">
+                    {notif.titulo}
+                  </h5>
+                  <p className="text-xs text-cato-muted mt-0.5">{notif.descripcion}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowNotificationsModal(false);
+                    if (notif.accion) navigate(notif.accion);
+                  }}
+                  className="shrink-0 text-xs font-semibold px-3 py-1.5 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-colors"
+                >
+                  Ver Detalle
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </Modal>
     </div>

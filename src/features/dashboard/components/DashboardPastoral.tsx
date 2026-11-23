@@ -71,16 +71,21 @@ export const DashboardPastoral: React.FC = () => {
   }, []);
 
   const handleExportReport = () => {
+    const totalPost = metrics?.kpis?.totalPostulantes?.value ?? 0;
+    const activos = metrics?.kpis?.voluntariosActivos?.value ?? 0;
+    const polizas = metrics?.kpis?.polizasValidadas?.value ?? 0;
+    const horas = metrics?.kpis?.horasTotalesMes?.value ?? 0;
+
     const blob = new Blob(
       [
-        `PROGRAMA CATOVOLUNTARIOS UCB — GESTIÓN 2/2026\nReporte Ejecutivo Pastoral\nFecha: ${new Date().toLocaleDateString()}\nTotal Postulantes: 142\nVoluntarios en Campo: 86\nPólizas APC-7083 Validadas: 78\nHoras Mes: 1,248 h\n`,
+        `PROGRAMA CATOVOLUNTARIOS UCB — GESTIÓN 2/2026\nReporte Ejecutivo Pastoral\nFecha: ${new Date().toLocaleDateString()}\nTotal Postulantes: ${totalPost}\nVoluntarios en Campo: ${activos}\nPólizas Validadas: ${polizas}\nHoras Mes: ${horas} h\n`,
       ],
       { type: 'text/plain;charset=utf-8' },
     );
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Reporte_Ejecutivo_Pastoral_Catovoluntarios_${Date.now()}.txt`;
+    a.download = `Reporte_Ejecutivo_Pastoral_${Date.now()}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -92,7 +97,7 @@ export const DashboardPastoral: React.FC = () => {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-xs font-extrabold uppercase tracking-widest text-cato-navy bg-blue-100 px-3 py-0.5 rounded-full">
-              P-03: Dashboard Ejecutivo
+              Dashboard Ejecutivo
             </span>
             <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
@@ -101,7 +106,7 @@ export const DashboardPastoral: React.FC = () => {
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-cato-navy">
-            Bienvenida, {user ? `${user.nombres} ${user.primerApellido}` : 'Lic. Andrea Moscoso'}
+            Bienvenido(a), {user ? `${user.nombres} ${user.primerApellido}` : 'Usuario'}
           </h1>
           <p className="text-xs sm:text-sm text-cato-muted max-w-2xl">
             Cuadro de mando integral de Pastoral Universitaria UCB Regional La Paz. Supervisión de admisión, cupos por proyecto y semáforos cualitativos.
@@ -127,7 +132,7 @@ export const DashboardPastoral: React.FC = () => {
             leftIcon={<Download className="w-3.5 h-3.5" />}
             className="shadow-sm font-bold"
           >
-            Descargar Reporte (.xlsx)
+            Descargar Reporte (.txt)
           </Button>
         </div>
       </div>
@@ -135,7 +140,7 @@ export const DashboardPastoral: React.FC = () => {
       {/* 2. Tarjetas KPI Principales */}
       <KpiCards metrics={metrics} isLoading={isLoading} />
 
-      {/* 3. Barra Visual de Ocupación de Cupos estilo Google Storage */}
+      {/* 3. Barra Visual de Ocupación de Cupos */}
       <QuotaStorageBar data={cupos} isLoading={isLoading} />
 
       {/* 4. Semáforo Operativo del Mes */}

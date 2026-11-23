@@ -139,7 +139,7 @@ export const BandejaValidacionDocumental: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="text-xs font-semibold text-cato-navy tracking-wider uppercase mb-1">
-            P-11 · CONTROL DE DOCUMENTOS
+            CONTROL DE DOCUMENTOS
           </div>
           <h1 className="text-2xl font-bold text-cato-navy">Validación documental</h1>
           <p className="text-sm text-cato-muted mt-0.5">

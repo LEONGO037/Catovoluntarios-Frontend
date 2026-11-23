@@ -129,12 +129,12 @@ export const LandingPage: React.FC = () => {
             <p className="font-bold text-white text-sm mb-2">Acceso a la Plataforma</p>
             <p>
               <Link to="/login" className="hover:text-cato-gold transition-colors">
-                Soy Catovoluntario — Iniciar Sesión (P-02)
+                Soy Catovoluntario — Iniciar Sesión
               </Link>
             </p>
             <p>
               <Link to="/postulacion" className="hover:text-cato-gold transition-colors">
-                Wizard de Postulación Abierto (P-04)
+                Wizard de Postulación Abierto
               </Link>
             </p>
             <p className="text-[11px] text-blue-300/60 pt-2">

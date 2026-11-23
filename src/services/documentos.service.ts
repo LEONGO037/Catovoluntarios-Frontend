@@ -58,7 +58,7 @@ export const documentosService = {
   },
 
   // P-12: Participantes de inducción
-  async getParticipantesInduccion(proyecto = 'Hogar San Ramón'): Promise<{
+  async getParticipantesInduccion(proyecto = ''): Promise<{
     kpis: {
       voluntariosHabilitados: number;
       induccionCompletada: number;

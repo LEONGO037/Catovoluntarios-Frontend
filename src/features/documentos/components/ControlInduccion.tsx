@@ -14,7 +14,7 @@ import type { UserRole } from '../../../types/auth.types';
 export const ControlInduccion: React.FC = () => {
   const [participantes, setParticipantes] = useState<ParticipanteInduccion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProyecto, setSelectedProyecto] = useState('Hogar San Ramón');
+  const [selectedProyecto, setSelectedProyecto] = useState('Todos');
   const [filtroEstado, setFiltroEstado] = useState('TODOS');
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
@@ -50,20 +50,20 @@ export const ControlInduccion: React.FC = () => {
     proyecto: string;
   }>({
     isOpen: false,
-    titulo: 'Inducción Inicial San Ramón 2/2026',
-    fechaHora: '2026-09-15T09:00',
+    titulo: '',
+    fechaHora: '',
     modalidad: 'PRESENCIAL',
-    lugarEnlace: 'Auditorio San Pablo (Edificio F)',
-    facilitador: 'Lic. Andrea Moscoso / Valeria Sanjinés',
-    proyecto: 'Hogar San Ramón',
+    lugarEnlace: '',
+    facilitador: '',
+    proyecto: '',
   });
 
   // KPIs
   const [kpis, setKpis] = useState({
-    voluntariosHabilitados: 78,
-    induccionCompletada: 61,
-    pendientesInduccion: 14,
-    reprogramarAsistencia: 3,
+    voluntariosHabilitados: 0,
+    induccionCompletada: 0,
+    pendientesInduccion: 0,
+    reprogramarAsistencia: 0,
   });
 
   const cargarDatos = useCallback(async () => {
@@ -239,7 +239,7 @@ export const ControlInduccion: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="text-xs font-semibold text-cato-navy tracking-wider uppercase mb-1">
-            P-12 · PRIMERA SEMANA EN PROYECTO
+            PRIMERA SEMANA EN PROYECTO
           </div>
           <h1 className="text-2xl font-bold text-cato-navy">Control de inducción</h1>
           <p className="text-sm text-cato-muted mt-0.5">
@@ -284,10 +284,7 @@ export const ControlInduccion: React.FC = () => {
             onChange={(e) => setSelectedProyecto(e.target.value)}
             className="px-3 py-1.5 text-xs bg-cato-canvas border border-cato-border rounded-lg font-semibold text-cato-navy focus:outline-none focus:border-cato-navy"
           >
-            <option value="Hogar San Ramón">Hogar San Ramón</option>
-            <option value="Comedor Santa Rita">Comedor Santa Rita</option>
-            <option value="Pabellón San Juan de Dios">Pabellón San Juan de Dios</option>
-            <option value="Centro Infantil San Antonio">Centro Infantil San Antonio</option>
+            <option value="Todos">Todos los Proyectos</option>
           </select>
 
           <select className="px-3 py-1.5 text-xs bg-cato-canvas border border-cato-border rounded-lg font-semibold text-cato-slate focus:outline-none focus:border-cato-navy">
@@ -491,7 +488,7 @@ export const ControlInduccion: React.FC = () => {
             Solo los voluntarios con documentos aprobados pueden figurar en esta lista. Cuando un voluntario tiene marcados{' '}
             <strong className="text-cato-navy">Póliza Validada = TRUE</strong> e{' '}
             <strong className="text-cato-navy">Inducción Completada = TRUE</strong>, su estado cambia automáticamente a{' '}
-            <span className="font-bold text-emerald-700">HABILITADO PARA CAMPO</span>, desbloqueando el registro de horas de voluntariado en P-16.
+            <span className="font-bold text-emerald-700">HABILITADO PARA CAMPO</span>, desbloqueando el registro de horas de voluntariado.
           </p>
         </div>
 

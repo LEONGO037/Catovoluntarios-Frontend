@@ -1,6 +1,6 @@
 import React from 'react';
 import type { NotificacionUrgente } from '../../../services/dashboard.service';
-import { AlertCircle, Clock, ArrowRight, ShieldAlert, FileText, ArrowLeftRight } from 'lucide-react';
+import { AlertCircle, Clock, ShieldAlert, FileText, ArrowLeftRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 
@@ -54,7 +54,7 @@ export const UrgentNotifications: React.FC<UrgentNotificationsProps> = ({
             Acciones y Alertas Operativas de Pastoral
           </h3>
           <p className="text-xs text-cato-muted mt-0.5">
-            Pendientes que requieren resolución antes del cierre de quincena.
+            Alertas del sistema que requieren seguimiento.
           </p>
         </div>
         <span className="text-xs bg-rose-100 text-rose-800 font-bold px-2.5 py-0.5 rounded-full">
@@ -62,49 +62,54 @@ export const UrgentNotifications: React.FC<UrgentNotificationsProps> = ({
         </span>
       </div>
 
-      <div className="space-y-3">
-        {notifications.map((notif) => (
-          <div
-            key={notif.id}
-            className="p-4 rounded-xl border border-cato-border bg-cato-canvas hover:bg-white hover:border-cato-navy/30 transition-all duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-          >
-            <div className="flex items-start gap-3.5">
-              <div className="p-2 rounded-xl bg-white border border-cato-border shrink-0 shadow-2xs">
-                {getIcon(notif.tipo)}
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-xs text-cato-navy">{notif.titulo}</h4>
-                  <span
-                    className={`text-[9px] font-bold px-2 py-0.2 rounded-full uppercase tracking-wider ${
-                      notif.prioridad === 'ALTA'
-                        ? 'bg-rose-100 text-rose-700'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}
-                  >
-                    {notif.prioridad}
-                  </span>
-                </div>
-                <p className="text-xs text-cato-muted leading-relaxed">{notif.descripcion}</p>
-                <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {notif.tiempo}
-                </p>
-              </div>
-            </div>
-
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate(getRedirect(notif.tipo))}
-              className="shrink-0 text-xs self-end sm:self-center"
-              rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+      {notifications.length === 0 ? (
+        <div className="p-6 text-center text-xs text-cato-muted bg-cato-canvas rounded-xl">
+          No hay alertas urgentes pendientes en este momento.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {notifications.map((notif) => (
+            <div
+              key={notif.id}
+              className="p-4 rounded-xl border border-cato-border bg-cato-canvas hover:bg-white hover:border-cato-navy/30 transition-all duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
-              {notif.accion}
-            </Button>
-          </div>
-        ))}
-      </div>
+              <div className="flex items-start gap-3.5">
+                <div className="p-2 rounded-xl bg-white border border-cato-border shrink-0 shadow-2xs">
+                  {getIcon(notif.tipo)}
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-xs text-cato-navy">{notif.titulo}</h4>
+                    <span
+                      className={`text-[9px] font-bold px-2 py-0.2 rounded-full uppercase tracking-wider ${
+                        notif.prioridad === 'ALTA'
+                          ? 'bg-rose-100 text-rose-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}
+                    >
+                      {notif.prioridad}
+                    </span>
+                  </div>
+                  <p className="text-xs text-cato-muted leading-relaxed">{notif.descripcion}</p>
+                  <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {notif.tiempo}
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate(getRedirect(notif.tipo))}
+                className="shrink-0 text-xs self-end sm:self-center"
+              >
+                Revisar
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

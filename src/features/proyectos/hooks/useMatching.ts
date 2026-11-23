@@ -79,7 +79,7 @@ export function useMatching(
     };
   }, [assignedVolunteers, currentProyecto]);
 
-  // Postulantes por ubicar filtrados (Columna izquierda P-14)
+  // Postulantes por ubicar filtrados (Columna izquierda)
   const unassignedVolunteers = useMemo(() => {
     return voluntarios
       .filter((v) => !v.proyecto_id)

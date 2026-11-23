@@ -48,7 +48,7 @@ export const QuickAssignModal: React.FC<QuickAssignModalProps> = ({
             <span className="font-bold text-cato-navy">{volunteer.condicion} ({volunteer.edad} años)</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-cato-muted">Población Sugerida (P-09):</span>
+            <span className="text-cato-muted">Población Sugerida:</span>
             <span className="font-bold text-cato-slate">{volunteer.poblacion_sugerida}</span>
           </div>
           <div className="flex justify-between">

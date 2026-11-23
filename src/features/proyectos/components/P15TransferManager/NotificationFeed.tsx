@@ -35,7 +35,7 @@ export const NotificationFeed: React.FC<NotificationFeedProps> = ({
         return {
           icon: <UserCheck className="w-4 h-4 text-blue-600" />,
           badgeClass: 'bg-blue-100 text-blue-800 border-blue-200',
-          label: 'Alerta Voluntario (P-18)',
+          label: 'Alerta Voluntario',
         };
     }
   };

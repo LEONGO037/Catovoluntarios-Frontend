@@ -64,7 +64,7 @@ export const P15TransferManager: React.FC<P15TransferManagerProps> = ({
         <AlertBanner
           type="warning"
           title="Acceso Restringido a Administrador Pastoral"
-          message="La pantalla P-15 (Gestión de Reasignaciones y Traslados entre Proyectos) es de uso exclusivo de la Administración Pastoral durante el primer mes de actividades."
+          message="La pantalla de Gestión de Reasignaciones y Traslados entre Proyectos es de uso exclusivo de la Administración Pastoral durante el primer mes de actividades."
         />
       </div>
     );
@@ -77,7 +77,7 @@ export const P15TransferManager: React.FC<P15TransferManagerProps> = ({
         <div>
           <h2 className="text-xl font-extrabold text-cato-navy tracking-tight flex items-center gap-2">
             <ArrowLeftRight className="w-6 h-6 text-cato-navy" />
-            P-15: Gestión de Reasignaciones y Traslados entre Proyectos
+            Gestión de Reasignaciones y Traslados entre Proyectos
           </h2>
           <p className="text-xs text-cato-muted mt-0.5">
             Procedimiento formal de reubicación justificada y emisión de alertas cruzadas (RF-13).
