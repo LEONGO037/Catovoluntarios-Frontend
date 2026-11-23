@@ -246,10 +246,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center justify-between">
               <div className="truncate">
                 <p className="text-xs font-bold text-white truncate">
-                  {user ? `${user.nombres} ${user.primerApellido}` : 'Lic. Andrea Moscoso'}
+                  {user ? `${user.nombres} ${user.primerApellido}` : 'Usuario'}
                 </p>
                 <p className="text-[10px] text-blue-200/70 truncate">
-                  {user?.email || 'andrea.moscoso@ucb.edu.bo'}
+                  {user?.email || ''}
                 </p>
               </div>
             </div>
