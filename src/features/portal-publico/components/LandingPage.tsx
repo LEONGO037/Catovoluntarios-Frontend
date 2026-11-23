@@ -4,7 +4,7 @@ import { HeroSection } from './HeroSection';
 import { CicloEtapasSection } from './CicloEtapasSection';
 import { PoblacionesSection } from './PoblacionesSection';
 import { VideoSecradModal } from './VideoSecradModal';
-import { Heart, Mail, Phone, MapPin, Sparkles, ArrowRight } from 'lucide-react';
+import { Heart, Mail, Phone, MapPin, Sparkles, ArrowRight, Play } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 
@@ -57,10 +57,10 @@ export const LandingPage: React.FC = () => {
         {/* Llamado a la Acción Final previo al Footer */}
         <section className="bg-gradient-to-r from-cato-navy via-cato-navy-dark to-[#001830] text-white py-14 px-4 text-center">
           <div className="max-w-3xl mx-auto space-y-6">
-            <h3 className="text-2xl sm:text-3xl font-black">
+            <h3 className="text-2xl sm:text-4xl font-black text-cato-gold tracking-tight drop-shadow-sm">
               ¿Listo para dar el primer paso?
             </h3>
-            <p className="text-sm text-blue-100 max-w-xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base text-blue-100 max-w-xl mx-auto leading-relaxed">
               El proceso de postulación toma solo 5 minutos. Déjanos tus datos, tus horarios disponibles y la población con la que más te gustaría colaborar.
             </p>
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -68,7 +68,7 @@ export const LandingPage: React.FC = () => {
                 variant="cta"
                 size="lg"
                 onClick={() => navigate('/postulacion')}
-                className="font-extrabold shadow-lg"
+                className="font-extrabold shadow-lg hover:scale-105 transition-all"
                 rightIcon={<ArrowRight className="w-4 h-4 text-cato-navy" />}
               >
                 Comenzar Mi Postulación
@@ -77,7 +77,8 @@ export const LandingPage: React.FC = () => {
                 variant="outline"
                 size="lg"
                 onClick={() => setShowVideoModal(true)}
-                className="border-white/30 text-white hover:bg-white/10"
+                className="bg-white text-cato-navy hover:bg-blue-50 hover:text-cato-navy-dark border-2 border-white font-extrabold shadow-lg transition-all hover:scale-105"
+                leftIcon={<Play className="w-4 h-4 text-cato-navy fill-cato-navy shrink-0" />}
               >
                 Ver Testimonios en Video
               </Button>
