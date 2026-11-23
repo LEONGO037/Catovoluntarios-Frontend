@@ -16,8 +16,8 @@ export const entrevistasApi = {
     return apiClient.get(`/entrevistas/disponibilidad${semana ? `?semana=${semana}` : ''}`);
   },
 
-  agendar(fechaHora: string): Promise<CitaVista> {
-    return apiClient.post('/entrevistas/agendar', { fechaHora });
+  agendar(fechaHora: string, postulacionId?: number, catoliderId?: number): Promise<CitaVista> {
+    return apiClient.post('/entrevistas/agendar', { fechaHora, postulacionId, catoliderId });
   },
 
   miEntrevista(): Promise<MiEntrevista> {

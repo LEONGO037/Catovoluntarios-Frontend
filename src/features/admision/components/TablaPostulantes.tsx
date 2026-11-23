@@ -10,6 +10,20 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
+const toArraySafe = (val: unknown): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      return val.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+};
+
 interface TablaPostulantesProps {
   postulaciones: Postulacion[];
   cargando: boolean;
@@ -157,17 +171,22 @@ export const TablaPostulantes: React.FC<TablaPostulantesProps> = ({
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <div
-                      className="text-[11px] text-slate-600 truncate max-w-[140px]"
-                      title={p.poblacionesInteres?.join(', ')}
-                    >
-                      {p.poblacionesInteres?.[0] || 'General'}
-                      {(p.poblacionesInteres?.length || 0) > 1 && (
-                        <span className="text-slate-400 ml-1">
-                          (+{(p.poblacionesInteres?.length || 1) - 1})
-                        </span>
-                      )}
-                    </div>
+                    {(() => {
+                      const poblaciones = toArraySafe(p.poblacionesInteres);
+                      return (
+                        <div
+                          className="text-[11px] text-slate-600 truncate max-w-[140px]"
+                          title={poblaciones.join(', ')}
+                        >
+                          {poblaciones[0] || 'General'}
+                          {poblaciones.length > 1 && (
+                            <span className="text-slate-400 ml-1">
+                              (+{poblaciones.length - 1})
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="py-3 px-4 whitespace-nowrap">
                     {getBadgeEstado(p.estado)}

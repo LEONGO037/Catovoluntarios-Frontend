@@ -261,8 +261,8 @@ export const BandejaValidacionDocumental: React.FC = () => {
                   }`}
                 >
                   <div className="w-8 h-8 rounded-full bg-cato-slate text-white text-xs font-bold flex items-center justify-center shrink-0">
-                    {v.nombres.charAt(0)}
-                    {v.primerApellido.charAt(0)}
+                    {(v.nombres?.charAt(0) || v.nombreCompleto?.charAt(0) || 'V').toUpperCase()}
+                    {(v.primerApellido?.charAt(0) || v.nombreCompleto?.split(' ')[1]?.charAt(0) || '').toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-bold text-cato-navy truncate">{v.nombreCompleto}</div>

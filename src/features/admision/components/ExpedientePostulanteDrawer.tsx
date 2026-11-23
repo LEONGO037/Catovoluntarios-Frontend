@@ -17,6 +17,20 @@ import {
   Check,
 } from 'lucide-react';
 
+const toArraySafe = (val: unknown): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      return val.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+};
+
 interface ExpedienteDrawerProps {
   postulacion: Postulacion | null;
   abierto: boolean;
@@ -184,7 +198,7 @@ export const ExpedientePostulanteDrawer: React.FC<ExpedienteDrawerProps> = ({
               {/* Badge Población */}
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white text-cato-slate border border-slate-300">
                 <Heart className="w-3.5 h-3.5 text-cato-gold" />
-                <span>Interés: {postulacion.poblacionesInteres?.[0] || 'Comunitario'}</span>
+                <span>Interés: {toArraySafe(postulacion.poblacionesInteres)[0] || 'Comunitario'}</span>
               </div>
             </div>
 
@@ -350,7 +364,7 @@ export const ExpedientePostulanteDrawer: React.FC<ExpedienteDrawerProps> = ({
                   Poblaciones de Interés Preferidas:
                 </span>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {postulacion.poblacionesInteres?.map((pob) => (
+                  {toArraySafe(postulacion.poblacionesInteres).map((pob) => (
                     <span
                       key={pob}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-100 text-blue-900 border border-blue-200 font-bold text-xs"
@@ -368,8 +382,8 @@ export const ExpedientePostulanteDrawer: React.FC<ExpedienteDrawerProps> = ({
                   Habilidades y Talentos Destacados:
                 </span>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {postulacion.habilidadesDestacadas?.length > 0 ? (
-                    postulacion.habilidadesDestacadas.map((hab) => (
+                  {toArraySafe(postulacion.habilidadesDestacadas).length > 0 ? (
+                    toArraySafe(postulacion.habilidadesDestacadas).map((hab) => (
                       <span
                         key={hab}
                         className="px-3 py-1 rounded-full bg-white border border-slate-300 text-slate-800 font-medium text-xs shadow-2xs"
@@ -389,7 +403,7 @@ export const ExpedientePostulanteDrawer: React.FC<ExpedienteDrawerProps> = ({
                   3 Palabras que Definen su Personalidad:
                 </span>
                 <div className="flex flex-wrap gap-2.5 pt-1">
-                  {postulacion.tresPalabrasPersonalidad?.map((palabra, i) => (
+                  {toArraySafe(postulacion.tresPalabrasPersonalidad).map((palabra, i) => (
                     <span
                       key={i}
                       className="px-3.5 py-1.5 rounded-xl bg-amber-100 text-amber-950 border border-amber-300 font-black text-xs shadow-2xs"
