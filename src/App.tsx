@@ -7,6 +7,14 @@ import { DashboardPastoral } from './features/dashboard/components/DashboardPast
 import { AppShell } from './components/layout/AppShell';
 import { TeammateModulePlaceholder } from './components/layout/TeammateModulePlaceholder';
 
+// M03: Entrevistas y Psicología — Marvin Larry Mollo Ramirez
+import { RutaPorRol } from './features/entrevistas/components/RutaPorRol';
+import { P07AgendaEntrevistas } from './features/entrevistas/components/P07AgendaEntrevistas/P07AgendaEntrevistas';
+import { ListaFichasEntrevista } from './features/entrevistas/components/P08FichaEntrevista/ListaFichasEntrevista';
+import { P08FichaEntrevista } from './features/entrevistas/components/P08FichaEntrevista/P08FichaEntrevista';
+import { ListaPostulantesEvaluables } from './features/entrevistas/components/P09EvaluacionEsre/ListaPostulantesEvaluables';
+import { P09EvaluacionEsre } from './features/entrevistas/components/P09EvaluacionEsre/P09EvaluacionEsre';
+
 // M02: Admisión y Postulación — Alan Flores
 import { PostulacionWizard } from './features/admision/components/PostulacionWizard';
 import { BandejaPostulantes } from './features/admision/components/BandejaPostulantes';
@@ -64,39 +72,53 @@ export function App() {
             }
           />
 
-          {/* M03: Entrevistas y Psicología — Marvin Larry Mollo Ramirez (Pendiente) */}
+          {/* M03: Entrevistas y Psicología — Marvin Larry Mollo Ramirez */}
           <Route
             path="/entrevistas"
             element={
-              <TeammateModulePlaceholder
-                screenId="MÓDULO 03"
-                title="Agendamiento y Ficha Digital de Entrevista Presencial"
-                responsible="Marvin Larry Mollo Ramirez"
-                sprint="Sprint 2 (Semana 2)"
-                description="Digitalización de la entrevista con rúbrica obligatoria (Apto / No Apto / Observado) y sugerencia obligatoria de proyecto receptor."
-                requirements={[
-                  'RF-04: Agendamiento de entrevistas presenciales con slots horarios',
-                  'RF-05: Ficha digital con rúbrica estructurada de preguntas',
-                  'Campo obligatorio de proyecto receptor sugerido para el postulante',
-                ]}
-              />
+              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER', 'POSTULANTE']}>
+                <P07AgendaEntrevistas />
+              </RutaPorRol>
+            }
+          />
+          <Route
+            path="/ficha-entrevista"
+            element={
+              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER']}>
+                <AppShell>
+                  <ListaFichasEntrevista />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+          <Route
+            path="/ficha-entrevista/:entrevistaId"
+            element={
+              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER']}>
+                <AppShell>
+                  <P08FichaEntrevista />
+                </AppShell>
+              </RutaPorRol>
             }
           />
           <Route
             path="/psicologia"
             element={
-              <TeammateModulePlaceholder
-                screenId="MÓDULO 03"
-                title="Módulo Confidencial de Evaluación Psicológica E-SRE"
-                responsible="Marvin Larry Mollo Ramirez"
-                sprint="Sprint 2 (Semana 2)"
-                description="Registro confidencial exclusivo para psicólogos y Pastoral con subida de informe PDF y selección obligatoria de Población Sugerida."
-                requirements={[
-                  'RF-06: Restricción estricta de privacidad por RBAC',
-                  'Campo obligatorio: Población Sugerida para guiar la etapa de ubicación',
-                  'Subida y almacenamiento de informe psicotécnico PDF',
-                ]}
-              />
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <ListaPostulantesEvaluables />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+          <Route
+            path="/psicologia/:postulacionId"
+            element={
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <P09EvaluacionEsre />
+                </AppShell>
+              </RutaPorRol>
             }
           />
 
