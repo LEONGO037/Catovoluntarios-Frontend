@@ -77,57 +77,8 @@ export const SeleccionCatolideres: React.FC = () => {
         setVoluntarioId(elegibles[0].id);
       }
     } catch {
-      // Fallback mocks representativos si el backend está reiniciándose
-      const fallbackVigentes: CatoliderVigente[] = [
-        {
-          id: 101,
-          nombres: 'Mateo',
-          primerApellido: 'Vargas',
-          email: 'mateo.vargas@ucb.edu.bo',
-          ci: '9124578 LP',
-          modalidadLiderazgo: 'Catolíder y Voluntario de Campo',
-          semestreLiderazgo: '2/2026',
-          esCatoliderVigente: true,
-        },
-        {
-          id: 102,
-          nombres: 'Valeria',
-          primerApellido: 'Ríos',
-          email: 'valeria.rios@ucb.edu.bo',
-          ci: '8345129 LP',
-          modalidadLiderazgo: 'Solo Catolíder de Gestión',
-          semestreLiderazgo: '2/2026',
-          esCatoliderVigente: true,
-        },
-      ];
-      const fallbackElegibles: VoluntarioElegible[] = [
-        {
-          id: 201,
-          nombres: 'Rodrigo',
-          primerApellido: 'Mendoza',
-          ci: '7412589 LP',
-          carrera: 'Ingeniería Comercial',
-        },
-        {
-          id: 202,
-          nombres: 'Camila',
-          primerApellido: 'Álvarez',
-          ci: '6589412 LP',
-          carrera: 'Psicología',
-        },
-        {
-          id: 203,
-          nombres: 'Sebastián',
-          primerApellido: 'Quiroga',
-          ci: '8529631 LP',
-          carrera: 'Derecho',
-        },
-      ];
-      setCatolideresVigentes(fallbackVigentes);
-      setVoluntariosElegibles(fallbackElegibles);
-      if (fallbackElegibles.length > 0) {
-        setVoluntarioId(fallbackElegibles[0].id);
-      }
+      setCatolideresVigentes([]);
+      setVoluntariosElegibles([]);
     } finally {
       setCargando(false);
     }

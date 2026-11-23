@@ -70,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items: [
         {
           to: '/dashboard',
-          label: 'Dashboard Ejecutivo (P-03)',
+          label: 'Dashboard Ejecutivo',
           icon: LayoutDashboard,
           badge: 'Pastoral',
         },
@@ -80,17 +80,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       group: 'Admisión y Convocatoria',
       roles: ['ADMIN_PASTORAL', 'CATOLIDER', 'POSTULANTE'],
       items: [
-        { to: '/', label: 'Landing Convocatoria (P-01)', icon: Globe },
-        { to: '/postulacion', label: 'Wizard Postulación (P-04)', icon: FileText },
+        { to: '/', label: 'Landing Convocatoria', icon: Globe },
+        { to: '/postulacion', label: 'Wizard Postulación', icon: FileText },
         {
           to: '/postulantes',
-          label: 'Bandeja Postulantes (P-06)',
+          label: 'Bandeja Postulantes',
           icon: Users,
           roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
         },
         {
           to: '/catolideres',
-          label: 'Selección Catolíderes (P-06B)',
+          label: 'Selección Catolíderes',
           icon: UserCheck,
           roles: ['ADMIN_PASTORAL'],
         },
@@ -100,50 +100,50 @@ export const Sidebar: React.FC<SidebarProps> = ({
       group: 'Entrevistas y Psicología',
       roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
       items: [
-        { to: '/entrevistas', label: 'Turnos Entrevista (P-07)', icon: Calendar },
-        { to: '/ficha-entrevista', label: 'Ficha Digital (P-08)', icon: ClipboardList },
-        { to: '/psicologia', label: 'Psicología E-SRE (P-09)', icon: Brain, roles: ['ADMIN_PASTORAL'] },
+        { to: '/entrevistas', label: 'Turnos Entrevista', icon: Calendar },
+        { to: '/ficha-entrevista', label: 'Ficha Digital', icon: ClipboardList },
+        { to: '/psicologia', label: 'Psicología E-SRE', icon: Brain, roles: ['ADMIN_PASTORAL'] },
       ],
     },
     {
       group: 'Habilitación Documental',
       roles: ['ADMIN_PASTORAL', 'CATOLIDER', 'VOLUNTARIO'],
       items: [
-        { to: '/documentos', label: 'Carga Documental (P-10)', icon: FileCheck2 },
+        { to: '/documentos', label: 'Carga Documental', icon: FileCheck2 },
         {
           to: '/validacion-documental',
-          label: 'Validar Pólizas (P-11)',
+          label: 'Validar Pólizas',
           icon: ShieldCheck,
           roles: ['ADMIN_PASTORAL'],
         },
-        { to: '/induccion', label: 'Control Inducción (P-12)', icon: Award, roles: ['ADMIN_PASTORAL', 'CATOLIDER'] },
+        { to: '/induccion', label: 'Control Inducción', icon: Award, roles: ['ADMIN_PASTORAL', 'CATOLIDER'] },
       ],
     },
     {
       group: 'Proyectos y Ubicación',
       roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
       items: [
-        { to: '/proyectos', label: 'Proyectos Receptores (P-13)', icon: Building2 },
-        { to: '/ubicacion', label: 'Ubicación Balanceada (P-14)', icon: Shuffle, roles: ['ADMIN_PASTORAL'] },
-        { to: '/reasignaciones', label: 'Reasignaciones (P-15)', icon: Shuffle, roles: ['ADMIN_PASTORAL'] },
+        { to: '/proyectos', label: 'Proyectos Receptores', icon: Building2 },
+        { to: '/ubicacion', label: 'Ubicación Balanceada', icon: Shuffle, roles: ['ADMIN_PASTORAL'] },
+        { to: '/reasignaciones', label: 'Reasignaciones', icon: Shuffle, roles: ['ADMIN_PASTORAL'] },
       ],
     },
     {
       group: 'Campo, Horas y Finanzas',
       roles: ['ADMIN_PASTORAL', 'CATOLIDER', 'VOLUNTARIO'],
       items: [
-        { to: '/asistencias', label: 'Control Asistencias (P-16)', icon: Clock },
-        { to: '/pasajes', label: 'Planillas Pasajes (P-17)', icon: Coins, roles: ['ADMIN_PASTORAL'] },
-        { to: '/portal-voluntario', label: 'Portal Catovoluntario (P-18)', icon: Smile, roles: ['VOLUNTARIO', 'ADMIN_PASTORAL'] },
+        { to: '/asistencias', label: 'Control Asistencias', icon: Clock },
+        { to: '/pasajes', label: 'Planillas Pasajes', icon: Coins, roles: ['ADMIN_PASTORAL'] },
+        { to: '/portal-voluntario', label: 'Portal Catovoluntario', icon: Smile, roles: ['VOLUNTARIO', 'ADMIN_PASTORAL'] },
       ],
     },
     {
       group: 'Desempeño y Cierre',
       roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
       items: [
-        { to: '/semaforos', label: 'Semáforos Mensuales (P-19)', icon: Activity },
-        { to: '/base-madre', label: 'Base Madre y Podio (P-20)', icon: Award, roles: ['ADMIN_PASTORAL'] },
-        { to: '/certificados', label: 'Feedback y Certificados (P-21)', icon: FileBadge, roles: ['ADMIN_PASTORAL'] },
+        { to: '/semaforos', label: 'Semáforos Mensuales', icon: Activity },
+        { to: '/base-madre', label: 'Base Madre y Podio', icon: Award, roles: ['ADMIN_PASTORAL'] },
+        { to: '/certificados', label: 'Feedback y Certificados', icon: FileBadge, roles: ['ADMIN_PASTORAL'] },
       ],
     },
   ];

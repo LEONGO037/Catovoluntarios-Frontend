@@ -6,21 +6,14 @@ import type {
   MotivoTraslado,
   CatoliderInfo,
 } from '../types/proyectos.types';
-import {
-  INITIAL_PROYECTOS,
-  INITIAL_VOLUNTARIOS,
-  INITIAL_TRASLADOS,
-  INITIAL_NOTIFICACIONES,
-  INITIAL_CATOLIDERES,
-} from './proyectos.mock';
 
-// Local in-memory repository to simulate API client operations
+// Repositorio de gestión de proyectos y asignaciones
 class ProyectosService {
-  private proyectos: ProyectoReceptor[] = [...INITIAL_PROYECTOS];
-  private voluntarios: VoluntarioAdmitido[] = [...INITIAL_VOLUNTARIOS];
-  private traslados: TrasladoRegistro[] = [...INITIAL_TRASLADOS];
-  private notificaciones: NotificacionTraslado[] = [...INITIAL_NOTIFICACIONES];
-  private catolideres: CatoliderInfo[] = [...INITIAL_CATOLIDERES];
+  private proyectos: ProyectoReceptor[] = [];
+  private voluntarios: VoluntarioAdmitido[] = [];
+  private traslados: TrasladoRegistro[] = [];
+  private notificaciones: NotificacionTraslado[] = [];
+  private catolideres: CatoliderInfo[] = [];
 
   // RF-10: Catálogo de Proyectos Receptores
   getProyectos(): ProyectoReceptor[] {

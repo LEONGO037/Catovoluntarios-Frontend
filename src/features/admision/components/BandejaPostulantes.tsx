@@ -47,48 +47,15 @@ export const BandejaPostulantes: React.FC = () => {
       setTotal(listRes.total);
       setTotalPages(listRes.totalPages);
     } catch {
-      // Mock fallback si el backend local no está corriendo en ese momento
-      const mockPostulacion: Postulacion = {
-        id: 1,
-        codigoPostulacion: 'POST-2026-0842',
-        tipoRelacionUcb: 'Estudiante Regular',
-        nombres: 'María René',
-        primerApellido: 'Condori',
-        segundoApellido: 'Flores',
-        ci: '8421455',
-        expedido: 'LP',
-        fechaNacimiento: '2004-05-14',
-        edad: 22,
-        celular: '71542899',
-        correoElectronico: 'maria.condori@ucb.edu.bo',
-        carrera: 'Psicología',
-        zonaResidencia: 'Miraflores / Villa Fátima',
-        numeroMaterias: 5,
-        tieneMateriasPesadas: false,
-        actividadesExtracurriculares: 1,
-        detalleActividades: 'Voluntariado parroquial',
-        experienciaVoluntariadoPrevia: true,
-        detalleExperiencia: 'Hogar San Ramón 2025',
-        habilidadesDestacadas: ['Escucha Activa y Empatía', 'Música y Canto'],
-        conocimientoComputacion: true,
-        tresPalabrasPersonalidad: ['Empática', 'Alegre', 'Responsable'],
-        poblacionesInteres: ['Adultos mayores', 'Niños y primera infancia'],
-        requiereAutorizacionPadres: false,
-        autorizacionPadresConfirmada: false,
-        compromisoAceptado: true,
-        estado: 'APTO_ENTREVISTA',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setPostulaciones([mockPostulacion]);
+      setPostulaciones([]);
       setKpis({
-        total: 1,
-        aptos: 1,
+        total: 0,
+        aptos: 0,
         observadosSobrecarga: 0,
         descartados: 0,
         pendientes: 0,
       });
-      setTotal(1);
+      setTotal(0);
       setTotalPages(1);
     } finally {
       setCargando(false);
