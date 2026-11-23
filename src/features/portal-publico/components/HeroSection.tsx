@@ -98,13 +98,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   return (
     <section className="relative min-h-[92vh] sm:min-h-screen flex items-center justify-center text-white overflow-hidden pt-20 pb-16 px-4 sm:px-6 lg:px-8">
-      {/* Carrusel de Fotografías de Fondo con Transición Suave */}
+      {/* Carrusel de Fotografías de Fondo con Transición Rápida (300ms) */}
       {slides.map((slide, index) => (
         <div
           key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            index === currentSlide ? 'opacity-100 z-0 scale-100' : 'opacity-0 -z-10 scale-105'
-          } transition-transform duration-[7000ms]`}
+          className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${
+            index === currentSlide ? 'opacity-100 z-0 scale-100' : 'opacity-0 -z-10 scale-100'
+          }`}
           style={{
             backgroundImage: `url(${slide.image})`,
             backgroundSize: 'cover',
