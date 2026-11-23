@@ -7,7 +7,6 @@ import {
   Calendar,
   FileCheck2,
   Brain,
-  FileText,
   ClipboardList,
   Building2,
   Shuffle,
@@ -21,7 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Heart,
-  Globe,
   UserCheck,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
@@ -80,8 +78,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       group: 'Admisión y Convocatoria',
       roles: ['ADMIN_PASTORAL', 'CATOLIDER', 'POSTULANTE'],
       items: [
-        { to: '/', label: 'Landing Convocatoria', icon: Globe },
-        { to: '/postulacion', label: 'Wizard Postulación', icon: FileText },
         {
           to: '/postulantes',
           label: 'Bandeja Postulantes',
