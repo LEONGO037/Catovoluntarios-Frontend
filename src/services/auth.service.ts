@@ -26,7 +26,7 @@ export const authService = {
       console.warn('Backend no disponible, ejecutando login simulado de contingencia:', error);
       const email = credentials.email.toLowerCase().trim();
 
-      if (email.includes('andrea') || email.includes('admin')) {
+      if (email.includes('andrea') || email.includes('admin') || email.includes('leonardo')) {
         return {
           accessToken: 'mock_token_admin_2026',
           tokenType: 'Bearer',
@@ -34,10 +34,10 @@ export const authService = {
           user: {
             id: 1,
             ci: '4892301LP',
-            email: 'andrea.moscoso@ucb.edu.bo',
-            nombres: 'Andrea',
-            primerApellido: 'Moscoso',
-            segundoApellido: 'Valdivia',
+            email: credentials.email,
+            nombres: 'Leonardo',
+            primerApellido: 'Delgado',
+            segundoApellido: 'Medrano',
             rol: 'ADMIN_PASTORAL',
             carrera: 'Pastoral Universitaria',
             telefono: '71523489',
