@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import type {
   VoluntarioAdmitido,
   ProyectoReceptor,
@@ -12,7 +12,7 @@ export function useMatching(
   selectedProyectoId: string
 ) {
   const [voluntarios, setVoluntarios] = useState<VoluntarioAdmitido[]>(() =>
-    proyectosService.getVoluntarios()
+    proyectosService.getVoluntariosSync()
   );
 
   const [filtros, setFiltros] = useState<FiltrosUbicacion>({
@@ -23,9 +23,18 @@ export function useMatching(
     searchTerm: '',
   });
 
-  const refreshVoluntarios = useCallback(() => {
-    setVoluntarios(proyectosService.getVoluntarios());
-  }, []);
+  const refreshVoluntarios = useCallback(async () => {
+    try {
+      const data = await proyectosService.fetchVoluntarios(proyectos);
+      setVoluntarios(data);
+    } catch (err) {
+      console.error('Error fetching voluntarios:', err);
+    }
+  }, [proyectos]);
+
+  useEffect(() => {
+    refreshVoluntarios();
+  }, [refreshVoluntarios]);
 
   const currentProyecto = useMemo(
     () => proyectos.find((p) => p.id === selectedProyectoId) || proyectos[0],
@@ -119,17 +128,17 @@ export function useMatching(
   }, [voluntarios, filtros]);
 
   const asignar = useCallback(
-    (voluntarioId: string, proyectoId: string) => {
-      proyectosService.asignarVoluntario(voluntarioId, proyectoId);
-      refreshVoluntarios();
+    async (voluntarioId: string, proyectoId: string) => {
+      await proyectosService.asignarVoluntario(voluntarioId, proyectoId);
+      await refreshVoluntarios();
     },
     [refreshVoluntarios]
   );
 
   const desasignar = useCallback(
-    (voluntarioId: string) => {
-      proyectosService.desasignarVoluntario(voluntarioId);
-      refreshVoluntarios();
+    async (voluntarioId: string) => {
+      await proyectosService.desasignarVoluntario(voluntarioId);
+      await refreshVoluntarios();
     },
     [refreshVoluntarios]
   );

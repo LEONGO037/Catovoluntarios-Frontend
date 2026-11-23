@@ -1,41 +1,56 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { ProyectoReceptor, CatoliderInfo } from '../types/proyectos.types';
 import { proyectosService } from '../services/proyectos.service';
 
 export function useProyectos() {
   const [proyectos, setProyectos] = useState<ProyectoReceptor[]>(() =>
-    proyectosService.getProyectos()
+    proyectosService.getProyectosSync()
   );
-  const [catolideres] = useState<CatoliderInfo[]>(() =>
-    proyectosService.getCatolideres()
+  const [catolideres, setCatolideres] = useState<CatoliderInfo[]>(() =>
+    proyectosService.getCatolideresSync()
   );
+  const [isLoading, setIsLoading] = useState(false);
 
-  const refreshProyectos = useCallback(() => {
-    setProyectos(proyectosService.getProyectos());
+  const refreshProyectos = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await proyectosService.fetchProyectos();
+      setProyectos(data);
+      const cats = await proyectosService.fetchCatolideres();
+      setCatolideres(cats);
+    } catch (err) {
+      console.error('Error fetching proyectos:', err);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    refreshProyectos();
+  }, [refreshProyectos]);
+
   const createProyecto = useCallback(
-    (data: Omit<ProyectoReceptor, 'id' | 'estado'>) => {
-      const created = proyectosService.createProyecto(data);
-      refreshProyectos();
+    async (data: Omit<ProyectoReceptor, 'id' | 'estado'>) => {
+      const created = await proyectosService.createProyecto(data);
+      await refreshProyectos();
       return created;
     },
     [refreshProyectos]
   );
 
   const updateProyecto = useCallback(
-    (id: string, data: Partial<ProyectoReceptor>) => {
-      const updated = proyectosService.updateProyecto(id, data);
-      refreshProyectos();
+    async (id: string, data: Partial<ProyectoReceptor>) => {
+      const updated = await proyectosService.updateProyecto(id, data);
+      await refreshProyectos();
       return updated;
     },
     [refreshProyectos]
   );
 
   const deleteProyecto = useCallback(
-    (id: string) => {
-      proyectosService.deleteProyecto(id);
-      refreshProyectos();
+    async (id: string) => {
+      await proyectosService.deleteProyecto(id);
+      await refreshProyectos();
     },
     [refreshProyectos]
   );
@@ -43,6 +58,7 @@ export function useProyectos() {
   return {
     proyectos,
     catolideres,
+    isLoading,
     refreshProyectos,
     createProyecto,
     updateProyecto,
