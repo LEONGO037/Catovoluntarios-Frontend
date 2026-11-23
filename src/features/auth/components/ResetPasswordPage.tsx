@@ -6,7 +6,6 @@ import { AlertBanner } from '../../../components/feedback/AlertBanner';
 import { authService } from '../../../services/auth.service';
 import {
   Heart,
-  KeyRound,
   Lock,
   Eye,
   EyeOff,
@@ -32,8 +31,9 @@ export const ResetPasswordPage: React.FC = () => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!token.trim()) {
-      setErrorMessage('El token de restablecimiento es requerido');
+    const activeToken = token.trim();
+    if (!activeToken) {
+      setErrorMessage('El código de verificación es requerido para cambiar tu contraseña');
       return;
     }
 
@@ -49,12 +49,12 @@ export const ResetPasswordPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await authService.resetPassword(token.trim(), newPassword);
+      await authService.resetPassword(activeToken, newPassword);
       setIsSuccess(true);
     } catch (err: unknown) {
       const errObj = err as Error;
       setErrorMessage(
-        errObj.message || 'Error al actualizar la contraseña. El token puede haber expirado.',
+        errObj.message || 'Error al actualizar la contraseña. El enlace puede haber expirado.',
       );
     } finally {
       setIsLoading(false);
@@ -76,7 +76,7 @@ export const ResetPasswordPage: React.FC = () => {
             Restablecer Contraseña
           </h2>
           <p className="text-xs text-cato-muted">
-            Ingresa tu nueva clave de acceso seguro.
+            Ingresa tu nueva clave de acceso para tu cuenta.
           </p>
         </div>
 
@@ -90,7 +90,7 @@ export const ResetPasswordPage: React.FC = () => {
                 ¡Contraseña Actualizada!
               </h3>
               <p className="text-xs text-cato-slate max-w-xs mx-auto leading-relaxed">
-                Tu clave ha sido modificada con éxito. Ya puedes iniciar sesión en la plataforma con tu nueva contraseña.
+                Tu contraseña ha sido actualizada con éxito. Ya puedes iniciar sesión con tu nueva clave.
               </p>
             </div>
             <Button
@@ -107,15 +107,22 @@ export const ResetPasswordPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {errorMessage && <AlertBanner type="danger">{errorMessage}</AlertBanner>}
 
-            <Input
-              label="Token de Verificación"
-              type="text"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="Pega el token aquí..."
-              required
-              leftIcon={<KeyRound className="w-4 h-4" />}
-            />
+            {/* Si ya tenemos el enlace del correo, mostrar confirmación visual amigable sin exponer cadenas técnicas */}
+            {tokenParam ? (
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Enlace de verificación de correo validado</span>
+              </div>
+            ) : (
+              <Input
+                label="Código de Verificación"
+                type="text"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder="Pega el código recibido por correo"
+                required
+              />
+            )}
 
             <Input
               label="Nueva Contraseña"
