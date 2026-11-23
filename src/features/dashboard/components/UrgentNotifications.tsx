@@ -81,11 +81,10 @@ export const UrgentNotifications: React.FC<UrgentNotificationsProps> = ({
                   <div className="flex items-center gap-2">
                     <h4 className="font-bold text-xs text-cato-navy">{notif.titulo}</h4>
                     <span
-                      className={`text-[9px] font-bold px-2 py-0.2 rounded-full uppercase tracking-wider ${
-                        notif.prioridad === 'ALTA'
+                      className={`text-[9px] font-bold px-2 py-0.2 rounded-full uppercase tracking-wider ${notif.prioridad === 'ALTA'
                           ? 'bg-rose-100 text-rose-700'
                           : 'bg-blue-100 text-blue-700'
-                      }`}
+                        }`}
                     >
                       {notif.prioridad}
                     </span>
