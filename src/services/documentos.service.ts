@@ -14,9 +14,32 @@ export const documentosService = {
     return await apiClient.get<VoluntarioExpediente>('/documentos/mis-documentos');
   },
 
-  // P-10: Subir un documento
-  async subirDocumento(data: Partial<DocumentoVoluntario>): Promise<DocumentoVoluntario> {
+  // P-10: Subir un documento (soporta archivo físico con FormData o datos directos)
+  async subirDocumento(
+    data: Partial<DocumentoVoluntario>,
+    file?: File,
+  ): Promise<DocumentoVoluntario> {
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (data.tipoDocumento) formData.append('tipoDocumento', data.tipoDocumento);
+      if (data.numeroPoliza) formData.append('numeroPoliza', data.numeroPoliza);
+      if (data.idPoliza) formData.append('idPoliza', data.idPoliza);
+      if (data.numeroCertificado) formData.append('numeroCertificado', data.numeroCertificado);
+      if (data.vigenciaInicio) formData.append('vigenciaInicio', data.vigenciaInicio);
+      if (data.vigenciaFin) formData.append('vigenciaFin', data.vigenciaFin);
+      if (data.asegurado) formData.append('asegurado', data.asegurado);
+      if (data.nombreArchivoOriginal) formData.append('nombreArchivoOriginal', data.nombreArchivoOriginal);
+
+      return await apiClient.upload<DocumentoVoluntario>('/documentos/upload', formData);
+    }
+
     return await apiClient.post<DocumentoVoluntario>('/documentos/upload', data);
+  },
+
+  // Eliminar un documento del expediente y del bucket R2
+  async eliminarDocumento(documentoId: number): Promise<{ mensaje: string; id: number }> {
+    return await apiClient.delete<{ mensaje: string; id: number }>(`/documentos/${documentoId}`);
   },
 
   // P-10: Descargar plantilla oficial

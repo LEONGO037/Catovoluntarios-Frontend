@@ -1,12 +1,17 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-function getHeaders(extraHeaders?: HeadersInit): HeadersInit {
+function getHeaders(body?: unknown, extraHeaders?: HeadersInit): HeadersInit {
   const token = localStorage.getItem('catovoluntarios_token');
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
+
+  // Solo agregar Content-Type: application/json si NO es FormData
+  if (!(body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   if (extraHeaders) {
     if (extraHeaders instanceof Headers) {
       extraHeaders.forEach((val, key) => {
@@ -27,7 +32,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
   const response = await fetch(url, {
     ...options,
-    headers: getHeaders(options.headers),
+    headers: getHeaders(options.body, options.headers),
   });
 
   if (response.status === 401 && !endpoint.includes('/auth/login')) {
@@ -61,10 +66,11 @@ export interface ApiClientFn {
   patch<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T>;
   put<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T>;
   delete<T>(endpoint: string, options?: RequestInit): Promise<T>;
+  upload<T>(endpoint: string, formData: FormData, options?: RequestInit): Promise<T>;
   baseUrl: string;
 }
 
-// Soporte dual: como función ejecutable (apiClient(endpoint, options)) y como cliente orientado a objetos (apiClient.get/post/patch/delete)
+// Soporte dual: como función ejecutable (apiClient(endpoint, options)) y como cliente orientado a objetos (apiClient.get/post/patch/delete/upload)
 export const apiClient: ApiClientFn = Object.assign(
   async function <T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     return request<T>(endpoint, options);
@@ -75,28 +81,38 @@ export const apiClient: ApiClientFn = Object.assign(
       return request<T>(endpoint, { ...options, method: 'GET' });
     },
     post<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
+      const isFormData = body instanceof FormData;
       return request<T>(endpoint, {
         ...options,
         method: 'POST',
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: isFormData ? (body as FormData) : body !== undefined ? JSON.stringify(body) : undefined,
       });
     },
     patch<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
+      const isFormData = body instanceof FormData;
       return request<T>(endpoint, {
         ...options,
         method: 'PATCH',
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: isFormData ? (body as FormData) : body !== undefined ? JSON.stringify(body) : undefined,
       });
     },
     put<T>(endpoint: string, body?: unknown, options: RequestInit = {}): Promise<T> {
+      const isFormData = body instanceof FormData;
       return request<T>(endpoint, {
         ...options,
         method: 'PUT',
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: isFormData ? (body as FormData) : body !== undefined ? JSON.stringify(body) : undefined,
       });
     },
     delete<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
       return request<T>(endpoint, { ...options, method: 'DELETE' });
+    },
+    upload<T>(endpoint: string, formData: FormData, options: RequestInit = {}): Promise<T> {
+      return request<T>(endpoint, {
+        ...options,
+        method: 'POST',
+        body: formData,
+      });
     },
   },
 );

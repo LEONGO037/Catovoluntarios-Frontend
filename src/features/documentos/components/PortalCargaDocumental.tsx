@@ -11,6 +11,7 @@ import {
   ArrowRight,
   FileCheck,
   Info,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
@@ -47,11 +48,11 @@ export const PortalCargaDocumental: React.FC = () => {
   // Campos de la póliza editables
   const [polizaData, setPolizaData] = useState({
     numeroPoliza: 'APC-7083',
-    idPoliza: 'POL-2026-0814',
-    numeroCertificado: 'CERT-11408',
-    vigenciaDesde: '2026-08-01',
-    vigenciaHasta: '2027-07-31',
-    asegurado: 'María Fernanda Rojas',
+    idPoliza: '',
+    numeroCertificado: '',
+    vigenciaDesde: '',
+    vigenciaHasta: '',
+    asegurado: '',
   });
 
   const cargarDatos = useCallback(async () => {
@@ -63,13 +64,20 @@ export const PortalCargaDocumental: React.FC = () => {
       if (poliza) {
         setPolizaData({
           numeroPoliza: poliza.numeroPoliza || 'APC-7083',
-          idPoliza: poliza.idPoliza || 'POL-2026-0814',
-          numeroCertificado: poliza.numeroCertificado || 'CERT-11408',
-          vigenciaDesde: poliza.vigenciaInicio || '2026-08-01',
-          vigenciaHasta: poliza.vigenciaFin || '2027-07-31',
+          idPoliza: poliza.idPoliza || '',
+          numeroCertificado: poliza.numeroCertificado || '',
+          vigenciaDesde: poliza.vigenciaInicio ? String(poliza.vigenciaInicio).substring(0, 10) : '',
+          vigenciaHasta: poliza.vigenciaFin ? String(poliza.vigenciaFin).substring(0, 10) : '',
           asegurado: poliza.asegurado || data.nombreCompleto,
         });
+      } else {
+        setPolizaData((prev) => ({
+          ...prev,
+          asegurado: data.nombreCompleto,
+        }));
       }
+    } catch (err: any) {
+      console.error('Error al cargar expediente:', err);
     } finally {
       setLoading(false);
     }
@@ -98,14 +106,15 @@ en mi condición de (Padre / Madre / Tutor Legal) __________________________,
 del/de la estudiante menor de edad:
 
 Nombre del Voluntario: ${expediente?.nombreCompleto || 'Estudiante Voluntario'}
-Cédula de Identidad (CI): ${expediente?.ci || 'Sin registrar'}
+Cédula de Identidad: ${expediente?.ci || 'C.I. Postulante'}
 Carrera: ${expediente?.carrera || 'Carrera Universitaria'}
-Proyecto Asignado: ${expediente?.proyectoAsignado || 'Sin asignar'}
 
-DECLARO Y AUTORIZO EXPRESAMENTE:
-1. Conocer los objetivos, actividades formativas y de voluntariado social que desarrollará en el marco del Programa Catovoluntarios de Pastoral UCB durante el semestre 2/2026.
-2. Autorizar su participación activa en campo en el proyecto receptor conveniado, sujeto a la cobertura de la Póliza Universitaria contra Accidentes Personales UCB (APC-7083).
-3. Adjuntar copia legible de mi Cédula de Identidad vigente en respaldo de la presente autorización.
+AUTORIZO EXPRESAMENTE su participación como voluntario activo en el Programa
+Catovoluntarios durante el semestre 2/2026, encomendado a la Pastoral Universitaria
+de la Universidad Católica Boliviana "San Pablo" Regional La Paz.
+
+Asimismo declaro conocer que el estudiante cuenta con el respaldo de la Póliza
+Universitaria de Accidentes Personales Estudiantiles (APC-7083).
 
 En constancia de conformidad, firmo al pie del presente documento:
 
@@ -137,8 +146,8 @@ PROGRAMA CATOVOLUNTARIOS
 COMPROMISO FORMAL DE VOLUNTARIADO (SEMESTRE 2/2026)
 ==================================================================
 
-Yo, ${expediente?.nombreCompleto || 'María Fernanda Rojas'}, con CI ${expediente?.ci || '9420187 LP'},
-estudiante regular de la carrera de ${expediente?.carrera || 'Psicología'},
+Yo, ${expediente?.nombreCompleto || 'Estudiante Voluntario'}, con CI ${expediente?.ci || 'CI Registrado'},
+estudiante regular de la carrera de ${expediente?.carrera || 'Carrera Universitaria'},
 asumo formalmente el presente compromiso ante Pastoral UCB:
 
 1. Cumplir con un mínimo de 4 horas semanales de servicio y acompañamiento en el proyecto receptor asignado.
@@ -162,47 +171,48 @@ Fecha: La Paz, _____ de _________________ de 2026
     setTimeout(() => setBannerSuccess(null), 4000);
   };
 
-  // Manejo de carga de archivos reales desde el explorador del usuario
+  // Manejo de carga de archivos reales con Cloudflare R2
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, tipo: any) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setSaving(true);
-    const fileUrl = URL.createObjectURL(file);
     const fileSizeMb = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
 
     try {
-      await documentosService.subirDocumento({
-        tipoDocumento: tipo,
-        nombreArchivoOriginal: file.name,
-        archivoUrl: fileUrl,
-        tamanio: fileSizeMb,
-        numeroPoliza: polizaData.numeroPoliza,
-        idPoliza: polizaData.idPoliza,
-        numeroCertificado: polizaData.numeroCertificado,
-        vigenciaInicio: polizaData.vigenciaDesde,
-        vigenciaFin: polizaData.vigenciaHasta,
-        asegurado: polizaData.asegurado,
-      });
-
-      // Actualizar estado local reactivo
-      if (expediente) {
-        const nuevosDocs = [...expediente.documentos];
-        const docIdx = nuevosDocs.findIndex((d) => d.tipoDocumento === tipo);
-        const docActualizado: DocumentoVoluntario = {
-          id: Date.now(),
+      const docGuardado = await documentosService.subirDocumento(
+        {
           tipoDocumento: tipo,
           nombreArchivoOriginal: file.name,
-          archivoUrl: fileUrl,
           tamanio: fileSizeMb,
-          fechaSubida: new Date().toLocaleDateString('es-BO'),
           numeroPoliza: polizaData.numeroPoliza,
           idPoliza: polizaData.idPoliza,
           numeroCertificado: polizaData.numeroCertificado,
           vigenciaInicio: polizaData.vigenciaDesde,
           vigenciaFin: polizaData.vigenciaHasta,
           asegurado: polizaData.asegurado,
-          estado: 'PENDIENTE',
+        },
+        file,
+      );
+
+      // Actualizar estado local reactivo
+      if (expediente) {
+        const nuevosDocs = [...expediente.documentos];
+        const docIdx = nuevosDocs.findIndex((d) => d.tipoDocumento === tipo);
+        const docActualizado: DocumentoVoluntario = {
+          id: docGuardado.id,
+          tipoDocumento: tipo,
+          nombreArchivoOriginal: docGuardado.nombreArchivoOriginal || file.name,
+          archivoUrl: docGuardado.archivoUrl,
+          tamanio: fileSizeMb,
+          fechaSubida: new Date().toLocaleDateString('es-BO'),
+          numeroPoliza: docGuardado.numeroPoliza || polizaData.numeroPoliza,
+          idPoliza: docGuardado.idPoliza || polizaData.idPoliza,
+          numeroCertificado: docGuardado.numeroCertificado || polizaData.numeroCertificado,
+          vigenciaInicio: polizaData.vigenciaDesde,
+          vigenciaFin: polizaData.vigenciaHasta,
+          asegurado: docGuardado.asegurado || polizaData.asegurado,
+          estado: docGuardado.estado || 'PENDIENTE',
         };
 
         if (docIdx >= 0) {
@@ -217,8 +227,35 @@ Fecha: La Paz, _____ de _________________ de 2026
         });
       }
 
-      setBannerSuccess(`¡Archivo "${file.name}" cargado exitosamente!`);
+      setBannerSuccess(`¡Archivo "${file.name}" cargado y resguardado exitosamente!`);
       setTimeout(() => setBannerSuccess(null), 4000);
+    } catch (err: any) {
+      alert(`Error al subir el archivo: ${err.message || 'Error del servidor'}`);
+    } finally {
+      setSaving(false);
+      e.target.value = '';
+    }
+  };
+
+  // Eliminación segura de archivo
+  const handleEliminarDocumento = async (tipo: string) => {
+    const doc = getDoc(tipo);
+    if (!doc) return;
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar este documento del expediente?`)) return;
+
+    try {
+      setSaving(true);
+      await documentosService.eliminarDocumento(doc.id);
+      if (expediente) {
+        setExpediente({
+          ...expediente,
+          documentos: expediente.documentos.filter((d) => d.id !== doc.id),
+        });
+      }
+      setBannerSuccess('Documento eliminado correctamente.');
+      setTimeout(() => setBannerSuccess(null), 3000);
+    } catch (err: any) {
+      alert(`Error al eliminar el documento: ${err.message || 'Error del servidor'}`);
     } finally {
       setSaving(false);
     }
@@ -234,38 +271,46 @@ Fecha: La Paz, _____ de _________________ de 2026
   };
 
   const abrirVisor = (title: string, docType: string, fileName: string, fileUrl?: string) => {
+    let resolvedUrl = fileUrl;
+    if (resolvedUrl && resolvedUrl.startsWith('/uploads/')) {
+      const baseUrl = import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL.replace('/api', '')
+        : 'http://localhost:3000';
+      resolvedUrl = `${baseUrl}${resolvedUrl}`;
+    }
+
     setViewerModal({
       isOpen: true,
       title,
       docType,
       fileName,
-      fileUrl,
+      fileUrl: resolvedUrl,
     });
   };
 
   // Descarga real desde el visor modal
   const handleDescargarArchivoModal = () => {
-    if (viewerModal.fileUrl && viewerModal.fileUrl.startsWith('blob:')) {
-      const a = document.createElement('a');
-      a.href = viewerModal.fileUrl;
-      a.download = viewerModal.fileName;
-      a.click();
-    } else {
-      const contenido = `COPIA OFICIAL RESGUARDADA POR PASTORAL UCB
+    if (viewerModal.fileUrl) {
+      window.open(viewerModal.fileUrl, '_blank');
+      setBannerSuccess(`¡Abriendo o descargando ${viewerModal.fileName}!`);
+      setTimeout(() => setBannerSuccess(null), 3000);
+      return;
+    }
+
+    const contenido = `COPIA OFICIAL RESGUARDADA POR PASTORAL UCB
 Archivo: ${viewerModal.fileName}
 Tipo de Documento: ${viewerModal.docType}
-Postulante: ${expediente?.nombreCompleto || 'María Fernanda Rojas'}
-CI: ${expediente?.ci || '9420187 LP'}
+Postulante: ${expediente?.nombreCompleto || 'Postulante'}
+CI: ${expediente?.ci || ''}
 Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
 
-      const blob = new Blob([contenido], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = viewerModal.fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+    const blob = new Blob([contenido], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = viewerModal.fileName;
+    a.click();
+    URL.revokeObjectURL(url);
 
     setBannerSuccess(`¡Archivo ${viewerModal.fileName} descargado a tu equipo!`);
     setTimeout(() => setBannerSuccess(null), 3000);
@@ -287,6 +332,8 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
   const ciDoc = getDoc('CI_ANVERSO_REVERSO');
   const cartaMenorDoc = getDoc('CARTA_AUTORIZACION_PADRES_MENOR');
   const ciPadreDoc = getDoc('CI_PADRE_TUTOR_MENOR');
+
+  const totalCargados = [polizaDoc, compromisoDoc, ciDoc, cartaMenorDoc].filter(Boolean).length;
 
   return (
     <div className="space-y-6">
@@ -348,7 +395,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
         </div>
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold self-start sm:self-center shadow-xs">
           <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-          {cartaMenorDoc ? '4 de 4 requisitos cargados' : '3 de 4 requisitos por completar'}
+          {totalCargados} requisitos cargados
         </div>
       </div>
 
@@ -398,7 +445,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
         </div>
       </div>
 
-      {/* Grid Principal (2 columnas izquierda, 1 columna lateral) */}
+      {/* Grid Principal */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Formulario de Requisitos Documentales */}
         <div className="lg:col-span-2 space-y-6">
@@ -414,12 +461,22 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                   Sube una imagen o PDF legible de tu póliza vigente (APC-7083).
                 </p>
               </div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                ● En revisión
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                  polizaDoc?.estado === 'APROBADO'
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    : polizaDoc?.estado === 'OBSERVADO'
+                      ? 'bg-red-100 text-red-800 border border-red-200'
+                      : polizaDoc
+                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                        : 'bg-slate-100 text-slate-700 border border-slate-200'
+                }`}
+              >
+                ● {polizaDoc?.estado || 'Pendiente de carga'}
               </span>
             </div>
 
-            {/* Archivo cargado con controles interactivos reales */}
+            {/* Archivo cargado con controles interactivos */}
             <div className="p-4 bg-cato-canvas border border-dashed border-cato-border rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded bg-red-100 text-red-600 flex items-center justify-center shrink-0 font-bold text-xs shadow-2xs">
@@ -427,29 +484,45 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-cato-navy truncate">
-                    {polizaDoc?.nombreArchivoOriginal || 'poliza_maria_rojas.pdf'}
+                    {polizaDoc?.nombreArchivoOriginal || 'Sin póliza cargada'}
                   </div>
                   <div className="text-[11px] text-cato-muted mt-0.5">
-                    {polizaDoc?.tamanio || '1.8 MB'} · Cargado el {polizaDoc?.fechaSubida || '08/09/2026'}
+                    {polizaDoc
+                      ? `${polizaDoc.tamanio || 'Archivo resguardado'} · Cargado el ${polizaDoc.fechaSubida || 'Reciente'}`
+                      : 'Formato permitido: PDF, JPG, PNG (máx 10 MB)'}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  leftIcon={<Eye className="w-3.5 h-3.5" />}
-                  onClick={() =>
-                    abrirVisor(
-                      'Póliza contra Accidentes UCB (APC-7083)',
-                      'POLIZA_ACCIDENTES_APC7083',
-                      polizaDoc?.nombreArchivoOriginal || 'poliza_maria_rojas.pdf',
-                      polizaDoc?.archivoUrl,
-                    )
-                  }
-                >
-                  Ver archivo
-                </Button>
+                {polizaDoc && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      leftIcon={<Eye className="w-3.5 h-3.5" />}
+                      onClick={() =>
+                        abrirVisor(
+                          'Póliza contra Accidentes UCB (APC-7083)',
+                          'POLIZA_ACCIDENTES_APC7083',
+                          polizaDoc.nombreArchivoOriginal,
+                          polizaDoc.archivoUrl,
+                        )
+                      }
+                    >
+                      Ver archivo
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 hover:bg-red-50"
+                      leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                      onClick={() => handleEliminarDocumento('POLIZA_ACCIDENTES_APC7083')}
+                      isLoading={saving}
+                    >
+                      Eliminar
+                    </Button>
+                  </>
+                )}
                 <Button
                   size="sm"
                   variant="primary"
@@ -457,7 +530,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                   onClick={() => polizaInputRef.current?.click()}
                   isLoading={saving}
                 >
-                  Subir / Reemplazar PDF
+                  {polizaDoc ? 'Reemplazar PDF' : 'Subir Póliza PDF'}
                 </Button>
               </div>
             </div>
@@ -481,7 +554,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                   value={polizaData.idPoliza}
                   onChange={(e) => setPolizaData({ ...polizaData, idPoliza: e.target.value })}
                   className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy text-cato-slate"
-                  placeholder="POL-2026-0814"
+                  placeholder="Ej. POL-2026-0814"
                 />
               </div>
               <div>
@@ -491,7 +564,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                   value={polizaData.numeroCertificado}
                   onChange={(e) => setPolizaData({ ...polizaData, numeroCertificado: e.target.value })}
                   className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy text-cato-slate"
-                  placeholder="CERT-11408"
+                  placeholder="Ej. CERT-11408"
                 />
               </div>
             </div>
@@ -540,8 +613,18 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                   Descarga la plantilla oficial, fírmala y vuelve a subir el documento escaneado.
                 </p>
               </div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                ● Aprobado
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                  compromisoDoc?.estado === 'APROBADO'
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    : compromisoDoc?.estado === 'OBSERVADO'
+                      ? 'bg-red-100 text-red-800 border border-red-200'
+                      : compromisoDoc
+                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                        : 'bg-slate-100 text-slate-700 border border-slate-200'
+                }`}
+              >
+                ● {compromisoDoc?.estado || 'Pendiente de carga'}
               </span>
             </div>
 
@@ -552,10 +635,12 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-cato-navy truncate">
-                    {compromisoDoc?.nombreArchivoOriginal || 'compromiso_firmado.pdf'}
+                    {compromisoDoc?.nombreArchivoOriginal || 'Sin compromiso cargado'}
                   </div>
                   <div className="text-[11px] text-cato-muted mt-0.5">
-                    {compromisoDoc?.tamanio || '620 KB'} · Documento validado por Pastoral
+                    {compromisoDoc
+                      ? `${compromisoDoc.tamanio || 'Archivo resguardado'} · Estado: ${compromisoDoc.estado}`
+                      : 'Descarga la plantilla, fírmala y adjúntala aquí.'}
                   </div>
                 </div>
               </div>
@@ -568,21 +653,35 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                 >
                   Descargar Modelo
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  leftIcon={<Eye className="w-3.5 h-3.5" />}
-                  onClick={() =>
-                    abrirVisor(
-                      'Compromiso de Voluntariado',
-                      'COMPROMISO_VOLUNTARIADO',
-                      compromisoDoc?.nombreArchivoOriginal || 'compromiso_firmado.pdf',
-                      compromisoDoc?.archivoUrl,
-                    )
-                  }
-                >
-                  Ver archivo
-                </Button>
+                {compromisoDoc && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      leftIcon={<Eye className="w-3.5 h-3.5" />}
+                      onClick={() =>
+                        abrirVisor(
+                          'Compromiso de Voluntariado',
+                          'COMPROMISO_VOLUNTARIADO',
+                          compromisoDoc.nombreArchivoOriginal,
+                          compromisoDoc.archivoUrl,
+                        )
+                      }
+                    >
+                      Ver archivo
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 hover:bg-red-50"
+                      leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                      onClick={() => handleEliminarDocumento('COMPROMISO_VOLUNTARIADO')}
+                      isLoading={saving}
+                    >
+                      Eliminar
+                    </Button>
+                  </>
+                )}
                 <Button
                   size="sm"
                   variant="primary"
@@ -590,7 +689,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                   onClick={() => compromisoInputRef.current?.click()}
                   isLoading={saving}
                 >
-                  Reemplazar
+                  {compromisoDoc ? 'Reemplazar' : 'Subir Compromiso'}
                 </Button>
               </div>
             </div>
@@ -608,8 +707,18 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                   Fotocopia legible anverso y reverso del CI vigente del postulante.
                 </p>
               </div>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                ● Aprobado
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                  ciDoc?.estado === 'APROBADO'
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    : ciDoc?.estado === 'OBSERVADO'
+                      ? 'bg-red-100 text-red-800 border border-red-200'
+                      : ciDoc
+                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                        : 'bg-slate-100 text-slate-700 border border-slate-200'
+                }`}
+              >
+                ● {ciDoc?.estado || 'Pendiente de carga'}
               </span>
             </div>
 
@@ -620,29 +729,45 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-bold text-cato-navy truncate">
-                    {ciDoc?.nombreArchivoOriginal || 'ci_anverso_reverso.pdf'}
+                    {ciDoc?.nombreArchivoOriginal || 'Sin CI adjunto'}
                   </div>
                   <div className="text-[11px] text-cato-muted mt-0.5">
-                    {ciDoc?.tamanio || '890 KB'} · Cédula: 9420187 LP
+                    {ciDoc
+                      ? `${ciDoc.tamanio || 'Archivo resguardado'} · CI: ${expediente?.ci || 'Registrado'}`
+                      : `Cédula: ${expediente?.ci || 'Registrada'}`}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  leftIcon={<Eye className="w-3.5 h-3.5" />}
-                  onClick={() =>
-                    abrirVisor(
-                      'Carnet de Identidad (Anverso/Reverso)',
-                      'CI_ANVERSO_REVERSO',
-                      ciDoc?.nombreArchivoOriginal || 'ci_anverso_reverso.pdf',
-                      ciDoc?.archivoUrl,
-                    )
-                  }
-                >
-                  Ver archivo
-                </Button>
+                {ciDoc && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      leftIcon={<Eye className="w-3.5 h-3.5" />}
+                      onClick={() =>
+                        abrirVisor(
+                          'Carnet de Identidad (Anverso/Reverso)',
+                          'CI_ANVERSO_REVERSO',
+                          ciDoc.nombreArchivoOriginal,
+                          ciDoc.archivoUrl,
+                        )
+                      }
+                    >
+                      Ver archivo
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 hover:bg-red-50"
+                      leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                      onClick={() => handleEliminarDocumento('CI_ANVERSO_REVERSO')}
+                      isLoading={saving}
+                    >
+                      Eliminar
+                    </Button>
+                  </>
+                )}
                 <Button
                   size="sm"
                   variant="primary"
@@ -650,7 +775,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                   onClick={() => ciInputRef.current?.click()}
                   isLoading={saving}
                 >
-                  Reemplazar CI
+                  {ciDoc ? 'Reemplazar CI' : 'Subir CI'}
                 </Button>
               </div>
             </div>
@@ -692,7 +817,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                 </div>
                 <div className="text-xs font-bold text-cato-navy">+ CI de padre/madre</div>
                 <div className="text-[11px] text-cato-muted mt-0.5">
-                  {ciPadreDoc ? `${ciPadreDoc.nombreArchivoOriginal} (${ciPadreDoc.tamanio || 'Cargado'})` : 'Clic para seleccionar PDF o Imagen'}
+                  {ciPadreDoc ? `${ciPadreDoc.nombreArchivoOriginal}` : 'Clic para seleccionar PDF o Imagen'}
                 </div>
               </div>
 
@@ -716,7 +841,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                 </div>
                 <div className="text-xs font-bold text-cato-navy">+ Carta firmada de autorización</div>
                 <div className="text-[11px] text-cato-muted mt-0.5">
-                  {cartaMenorDoc ? `${cartaMenorDoc.nombreArchivoOriginal} (${cartaMenorDoc.tamanio || 'Cargado'})` : 'Clic para subir carta firmada'}
+                  {cartaMenorDoc ? `${cartaMenorDoc.nombreArchivoOriginal}` : 'Clic para subir carta firmada'}
                 </div>
               </div>
             </div>
@@ -739,35 +864,59 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between py-2 border-b border-cato-border">
                 <span className="text-xs font-medium text-cato-slate">Compromiso firmado</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                  ● Aprobado
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
+                    compromisoDoc?.estado === 'APROBADO'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : compromisoDoc
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  ● {compromisoDoc?.estado || 'Pendiente'}
                 </span>
               </div>
 
               <div className="flex items-center justify-between py-2 border-b border-cato-border">
                 <span className="text-xs font-medium text-cato-slate">Póliza vigente</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                  ● En revisión
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
+                    polizaDoc?.estado === 'APROBADO'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : polizaDoc
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  ● {polizaDoc?.estado || 'Pendiente'}
                 </span>
               </div>
 
               <div className="flex items-center justify-between py-2 border-b border-cato-border">
                 <span className="text-xs font-medium text-cato-slate">Documentos de menor</span>
-                {cartaMenorDoc ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                    ● Cargado
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">
-                    ● Pendiente
-                  </span>
-                )}
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
+                    cartaMenorDoc?.estado === 'APROBADO'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : cartaMenorDoc
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-red-100 text-red-800'
+                  }`}
+                >
+                  ● {cartaMenorDoc?.estado || 'Requerido'}
+                </span>
               </div>
 
               <div className="flex items-center justify-between py-2">
                 <span className="text-xs font-medium text-cato-slate">Inducción inicial</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
-                  ● Por realizar
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
+                    expediente?.induccionCompletada
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-blue-100 text-blue-800'
+                  }`}
+                >
+                  ● {expediente?.induccionCompletada ? 'Completada' : 'Por realizar'}
                 </span>
               </div>
             </div>
@@ -835,7 +984,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                 <FileText className="w-16 h-16 text-cato-navy mb-3 opacity-80 mx-auto" />
                 <h4 className="text-base font-bold text-cato-navy">{viewerModal.fileName}</h4>
                 <p className="text-xs text-cato-muted mt-1 max-w-md">
-                  Vista previa oficial del documento cargado en el portal de Pastoral UCB. Documento digital resguardado institucionalmente.
+                  Vista previa oficial del documento cargado en el portal de Pastoral UCB. Documento digital resguardado en almacenamiento seguro.
                 </p>
                 <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -861,7 +1010,7 @@ Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}`;
                 leftIcon={<Download className="w-4 h-4" />}
                 onClick={handleDescargarArchivoModal}
               >
-                Descargar archivo
+                Descargar / Ver original
               </Button>
             </div>
           </div>

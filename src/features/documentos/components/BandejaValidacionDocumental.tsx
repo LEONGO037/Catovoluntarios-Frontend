@@ -26,10 +26,10 @@ export const BandejaValidacionDocumental: React.FC = () => {
 
   // KPIs
   const [kpis, setKpis] = useState({
-    pendientesRevision: 12,
-    observados: 4,
-    habilitadosEsteSemestre: 78,
-    polizasProximasVencer: 3,
+    pendientesRevision: 0,
+    observados: 0,
+    habilitadosEsteSemestre: 0,
+    polizasProximasVencer: 0,
   });
 
   const cargarBandeja = useCallback(async () => {
@@ -77,6 +77,19 @@ export const BandejaValidacionDocumental: React.FC = () => {
   };
 
   const handleAbrirOriginal = () => {
+    const fileUrl = currentDoc?.archivoUrl;
+    if (fileUrl && (fileUrl.startsWith('http://') || fileUrl.startsWith('https://'))) {
+      window.open(fileUrl, '_blank');
+      return;
+    }
+    if (fileUrl && fileUrl.startsWith('/uploads/')) {
+      const baseUrl = import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL.replace('/api', '')
+        : 'http://localhost:3000';
+      window.open(`${baseUrl}${fileUrl}`, '_blank');
+      return;
+    }
+
     const fileName = currentDoc?.nombreArchivoOriginal || 'documento_oficial.pdf';
     const contenido = `COPIA DIGITAL LEGALMENTE CERTIFICADA - PASTORAL UCB\nDocumento: ${fileName}\nVoluntario: ${selectedVoluntario?.nombreCompleto || 'Estudiante'}\nCédula de Identidad: ${selectedVoluntario?.ci || ''}\nCarrera: ${selectedVoluntario?.carrera || ''}\nProyecto: ${selectedVoluntario?.proyectoAsignado || ''}\nFecha de Verificación: ${new Date().toLocaleDateString('es-BO')}`;
 
