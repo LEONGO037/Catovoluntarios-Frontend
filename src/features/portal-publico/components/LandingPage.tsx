@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PublicNavbar } from '../../../components/layout/PublicNavbar';
 import { HeroSection } from './HeroSection';
 import { CicloEtapasSection } from './CicloEtapasSection';
+import { GaleriaComunitariaSection } from './GaleriaComunitariaSection';
 import { PoblacionesSection } from './PoblacionesSection';
 import { VideoSecradModal } from './VideoSecradModal';
 import { Heart, Mail, Phone, MapPin, Sparkles, ArrowRight, Play } from 'lucide-react';
@@ -50,6 +51,9 @@ export const LandingPage: React.FC = () => {
 
         {/* Ciclo Oficial de 4 Etapas */}
         <CicloEtapasSection />
+
+        {/* Galería Fotográfica de Impacto Real en Comunidad */}
+        <GaleriaComunitariaSection />
 
         {/* Poblaciones y Centros Conveniados */}
         <PoblacionesSection />

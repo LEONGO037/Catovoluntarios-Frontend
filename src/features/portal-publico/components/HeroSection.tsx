@@ -10,6 +10,7 @@ import {
   HandHeart,
   Smile,
   ShieldCheck,
+  Users,
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 
@@ -43,17 +44,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       tagIcon: <HandHeart className="w-4 h-4 text-cato-gold" />,
       title: 'Tu tiempo y tu corazón pueden transformar vidas enteras.',
       message:
-        'Súmate a la comunidad solidaria de la UCB La Paz. Sé la esperanza, la compañía y la alegría de quienes más lo necesitan en nuestra ciudad.',
+        'Súmate a la comunidad solidaria de la UCB La Paz. Sé la compañía, la dignidad y la alegría de quienes más lo necesitan en nuestra ciudad.',
       subphrase: '4 horas por semana que dejan una huella imborrable.',
     },
     {
       id: 2,
       image: '/images/voluntarios/voluntarios-2.jpg',
-      tag: 'Esperanza & Empatía',
+      tag: 'Esperanza & Cuidado Común',
       tagIcon: <Heart className="w-4 h-4 text-cato-gold fill-cato-gold" />,
-      title: 'Sembrando esperanza, afecto y dignidad en cada rincón.',
+      title: 'Sembrando esperanza, afecto y vida en cada rincón.',
       message:
-        'Acompaña a niños en hospitales, abuelitos en asilos y personas vulnerables en comedores comunitarios con el amor y carisma que te caracterizan.',
+        'Participa en proyectos de impacto ambiental, apoyo a niños en hospitales y acompañamiento a adultos mayores con la calidez que te caracteriza.',
       subphrase: 'Manos que ayudan, corazones que escuchan y transforman realidades.',
     },
     {
@@ -69,6 +70,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     {
       id: 4,
       image: '/images/voluntarios/voluntarios-4.jpg',
+      tag: 'Impacto Real en Campo',
+      tagIcon: <Users className="w-4 h-4 text-cato-gold" />,
+      title: 'Voluntariado activo y transformador en La Paz.',
+      message:
+        'Proyectos receptores en salud, geriatría, comedores populares y niñez vulnerable con acompañamiento continuo de Catolíderes.',
+      subphrase: 'Jóvenes comprometidos que marcan la diferencia cada semana.',
+    },
+    {
+      id: 5,
+      image: '/images/voluntarios/voluntarios-5.jpg',
       tag: 'Compromiso & Respaldo UCB',
       tagIcon: <ShieldCheck className="w-4 h-4 text-cato-gold" />,
       title: 'La fe se demuestra con obras: un voluntariado seguro y formativo.',
@@ -78,11 +89,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     },
   ];
 
-  // Cambio automático del carrusel cada 5.5 segundos
+  // Cambio automático del carrusel cada 6 segundos
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5500);
+    }, 6000);
     return () => clearInterval(timer);
   }, [slides.length]);
 
@@ -98,48 +109,48 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   return (
     <section className="relative min-h-[92vh] sm:min-h-screen flex items-center justify-center text-white overflow-hidden pt-20 pb-16 px-4 sm:px-6 lg:px-8">
-      {/* Carrusel de Fotografías de Fondo con Transición Rápida (300ms) */}
+      {/* Carrusel de Fotografías de Fondo con Transición Suave */}
       {slides.map((slide, index) => (
         <div
           key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${
-            index === currentSlide ? 'opacity-100 z-0 scale-100' : 'opacity-0 -z-10 scale-100'
+          className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+            index === currentSlide ? 'opacity-100 z-0 scale-100' : 'opacity-0 -z-10 scale-105'
           }`}
           style={{
             backgroundImage: `url(${slide.image})`,
             backgroundSize: 'cover',
-            backgroundPosition: 'center 35%',
+            backgroundPosition: 'center 40%',
           }}
           aria-hidden={index !== currentSlide}
         />
       ))}
 
-      {/* Capa de Gradiente Institucional Oscuro sobre las Fotos para Legibilidad Perfecta */}
-      <div className="absolute inset-0 bg-gradient-to-r from-cato-navy/95 via-cato-navy/85 to-[#001830]/80 z-10 backdrop-blur-[1px]" />
-      <div className="absolute inset-0 bg-radial from-transparent via-transparent to-black/40 z-10" />
+      {/* Capa Suave: Reduce la saturación azul para que las fotos de los voluntarios se aprecien con claridad y brillo natural */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#001830]/90 via-black/40 to-black/45 z-10" />
+      <div className="absolute inset-0 bg-cato-navy/15 mix-blend-multiply z-10 pointer-events-none" />
 
       {/* Contenido Central Inspirador y Minimalista */}
       <div className="relative z-20 max-w-4xl mx-auto text-center space-y-6 pt-6 sm:pt-10">
         {/* Badge Dinámico del Mensaje */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-cato-gold text-xs sm:text-sm font-semibold backdrop-blur-md shadow-sm">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/45 border border-white/25 text-cato-gold text-xs sm:text-sm font-semibold backdrop-blur-md shadow-md">
           {current.tagIcon}
-          <span>{current.tag}</span>
+          <span className="text-cato-gold font-bold">{current.tag}</span>
           <span className="text-white/40">·</span>
-          <span className="text-blue-100">Pastoral UCB 2/2026</span>
+          <span className="text-blue-100 font-medium">Pastoral UCB 2/2026</span>
         </div>
 
         {/* Título Principal de Esperanza */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-md">
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
           {current.title}
         </h1>
 
         {/* Mensaje Corto de Ayuda y Sensibilidad */}
-        <p className="text-base sm:text-xl text-blue-100/90 leading-relaxed max-w-2xl mx-auto font-normal drop-shadow-sm">
+        <p className="text-base sm:text-xl text-slate-100 leading-relaxed max-w-2xl mx-auto font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
           {current.message}
         </p>
 
         {/* Frase Destacada de Impacto */}
-        <div className="inline-block px-4 py-2 rounded-xl bg-cato-gold/15 border border-cato-gold/30 text-cato-gold text-xs sm:text-sm font-bold backdrop-blur-sm">
+        <div className="inline-block px-4 py-2 rounded-xl bg-black/40 border border-cato-gold/50 text-cato-gold text-xs sm:text-sm font-bold backdrop-blur-md shadow-md">
           ✨ {current.subphrase}
         </div>
 
@@ -150,7 +161,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             variant="cta"
             size="lg"
             onClick={() => navigate('/postulacion')}
-            className="w-full sm:w-auto text-base font-extrabold px-8 py-4 shadow-xl hover:shadow-cato-gold/40 hover:scale-105 transition-all"
+            className="w-full sm:w-auto text-base font-extrabold px-8 py-4 shadow-2xl hover:shadow-cato-gold/50 hover:scale-105 transition-all"
             rightIcon={<ArrowRight className="w-5 h-5 text-cato-navy" />}
           >
             ¡Postúlate Ahora!
@@ -161,7 +172,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             variant="outline"
             size="lg"
             onClick={onOpenVideo}
-            className="w-full sm:w-auto text-sm sm:text-base border-white/40 text-white bg-white/10 hover:bg-white/20 hover:text-cato-gold backdrop-blur-md px-6 py-4"
+            className="w-full sm:w-auto text-sm sm:text-base border-white/50 text-white bg-black/30 hover:bg-white/20 hover:text-cato-gold backdrop-blur-md px-6 py-4 shadow-lg"
             leftIcon={<Play className="w-5 h-5 text-cato-gold fill-cato-gold shrink-0" />}
           >
             Ver Video Catovoluntarios
@@ -171,7 +182,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <button
             onClick={onScrollToDetails}
             type="button"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm font-bold text-blue-200 hover:text-white px-5 py-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm font-bold text-white/90 hover:text-cato-gold px-5 py-3 rounded-lg bg-black/25 hover:bg-black/40 backdrop-blur-sm border border-white/10 transition-colors cursor-pointer"
           >
             <span>Saber Más</span>
             <ChevronDown className="w-4 h-4 text-cato-gold animate-bounce" />
@@ -183,7 +194,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <button
             onClick={handlePrev}
             type="button"
-            className="p-1.5 rounded-full bg-white/10 hover:bg-white/25 text-white/80 hover:text-white transition-colors"
+            className="p-2 rounded-full bg-black/40 hover:bg-black/60 border border-white/20 text-white hover:text-cato-gold transition-colors backdrop-blur-sm"
             aria-label="Foto anterior"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -195,8 +206,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 key={slide.id}
                 onClick={() => setCurrentSlide(idx)}
                 type="button"
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  idx === currentSlide ? 'w-8 bg-cato-gold' : 'w-2 bg-white/40 hover:bg-white/70'
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  idx === currentSlide
+                    ? 'w-9 bg-cato-gold shadow-md'
+                    : 'w-2.5 bg-white/50 hover:bg-white/80'
                 }`}
                 aria-label={`Ir a foto ${idx + 1}`}
               />
@@ -206,7 +219,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <button
             onClick={handleNext}
             type="button"
-            className="p-1.5 rounded-full bg-white/10 hover:bg-white/25 text-white/80 hover:text-white transition-colors"
+            className="p-2 rounded-full bg-black/40 hover:bg-black/60 border border-white/20 text-white hover:text-cato-gold transition-colors backdrop-blur-sm"
             aria-label="Siguiente foto"
           >
             <ChevronRight className="w-4 h-4" />
@@ -219,7 +232,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <button
           onClick={onScrollToDetails}
           type="button"
-          className="flex flex-col items-center gap-1 text-[11px] uppercase tracking-widest text-blue-200/80 hover:text-cato-gold font-bold transition-colors cursor-pointer"
+          className="flex flex-col items-center gap-1 text-[11px] uppercase tracking-widest text-white/80 hover:text-cato-gold font-bold transition-colors cursor-pointer"
         >
           <span>Conoce las etapas y proyectos</span>
           <ChevronDown className="w-4 h-4 animate-bounce text-cato-gold" />
