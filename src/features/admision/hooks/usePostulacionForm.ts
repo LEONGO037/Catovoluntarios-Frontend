@@ -2,10 +2,11 @@ import { useState, useMemo, useCallback } from 'react';
 import type { PostulacionFormData, TipoRelacionUcb } from '../types/postulacion.types';
 
 export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-export const CELULAR_REGEX = /^[67]\d{7}$/;
+export const CELULAR_REGEX = /^\d{7,15}$/;
 
 export const INITIAL_FORM_DATA: PostulacionFormData = {
   tipoRelacionUcb: 'Estudiante Regular',
+  tipoDocumento: 'CI',
   nombres: '',
   primerApellido: '',
   segundoApellido: '',
@@ -18,6 +19,7 @@ export const INITIAL_FORM_DATA: PostulacionFormData = {
   correoElectronico: '',
   carrera: 'Ingeniería de Sistemas',
   zonaResidencia: 'Centro / San Jorge / Sopocachi',
+  semestre: '2/2026',
 
   numeroMaterias: 5,
   tieneMateriasPesadas: false,
@@ -28,6 +30,7 @@ export const INITIAL_FORM_DATA: PostulacionFormData = {
   experienciaVoluntariadoPrevia: false,
   detalleExperiencia: '',
   habilidadesDestacadas: [],
+  habilidadesOtras: '',
   conocimientoComputacion: true,
   tresPalabrasPersonalidad: ['', '', ''],
   alergiasCondicionesMedicas: '',
@@ -103,6 +106,14 @@ export function usePostulacionForm() {
           }
         }
 
+        if (campo === 'tipoDocumento') {
+          if (valor === 'PASAPORTE') {
+            updated.expedido = 'N/A';
+          } else if (prev.expedido === 'N/A') {
+            updated.expedido = 'LP';
+          }
+        }
+
         if (campo === 'fechaNacimiento' && typeof valor === 'string') {
           const edadCalculada = calcularEdadDesdeFecha(valor);
           updated.edad = edadCalculada;
@@ -130,11 +141,14 @@ export function usePostulacionForm() {
           mensaje: 'Por favor, ingresa tus nombres y primer apellido para continuar.',
         };
       }
-      if (!formData.ci.trim() || formData.ci.trim().length < 5) {
+      if (!formData.ci.trim() || !/^[a-zA-Z0-9-]{5,25}$/.test(formData.ci.trim())) {
         return {
           valido: false,
           titulo: 'Documento de Identidad',
-          mensaje: 'El Carnet de Identidad debe contener al menos 5 caracteres válidos.',
+          mensaje:
+            formData.tipoDocumento === 'PASAPORTE'
+              ? 'El número de pasaporte debe contener entre 5 y 25 caracteres alfanuméricos válidos.'
+              : 'El Carnet de Identidad debe contener al menos 5 caracteres válidos.',
         };
       }
       if (!formData.fechaNacimiento) {
@@ -148,7 +162,7 @@ export function usePostulacionForm() {
         return {
           valido: false,
           titulo: 'Número Celular Inválido',
-          mensaje: 'El celular debe tener 8 dígitos y comenzar con 6 o 7 para contacto de WhatsApp.',
+          mensaje: 'Ingresa un número de celular válido (entre 7 y 15 dígitos).',
         };
       }
       if (!EMAIL_REGEX.test(formData.correoElectronico.trim())) {
@@ -201,6 +215,16 @@ export function usePostulacionForm() {
           valido: false,
           titulo: 'Palabras de Personalidad',
           mensaje: 'Completa las 3 palabras que mejor describan tu personalidad o forma de ser.',
+        };
+      }
+      if (
+        formData.habilidadesDestacadas.includes('Otros') &&
+        !formData.habilidadesOtras?.trim()
+      ) {
+        return {
+          valido: false,
+          titulo: 'Habilidades Adicionales',
+          mensaje: 'Por favor, especifica tus habilidades adicionales en el campo de texto.',
         };
       }
       return { valido: true };

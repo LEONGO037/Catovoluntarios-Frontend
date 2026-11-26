@@ -26,6 +26,7 @@ export const Step1Identificacion: React.FC<Step1Props> = ({
 }) => {
   const [tocadoEmail, setTocadoEmail] = useState(false);
   const [tocadoCelular, setTocadoCelular] = useState(false);
+  const [codigoPais, setCodigoPais] = useState('+591');
 
   const emailValido = EMAIL_REGEX.test(formData.correoElectronico.trim());
   const celularValido = CELULAR_REGEX.test(formData.celular);
@@ -114,37 +115,60 @@ export const Step1Identificacion: React.FC<Step1Props> = ({
           />
         </div>
 
-        {/* Carnet de Identidad y Expedición */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="col-span-2">
-            <label className="block text-xs font-semibold text-cato-slate uppercase mb-1">
-              Carnet de Identidad (C.I.) *
+        {/* Tipo de Documento, Número y Expedición */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+          <div className="sm:col-span-3">
+            <label className="block text-xs font-semibold text-cato-slate uppercase mb-1 whitespace-nowrap">
+              Tipo Doc. *
+            </label>
+            <select
+              value={formData.tipoDocumento || 'CI'}
+              onChange={(e) =>
+                updateField('tipoDocumento', e.target.value as 'CI' | 'PASAPORTE')
+              }
+              className="cato-input bg-white text-xs font-semibold"
+            >
+              <option value="CI">C.I.</option>
+              <option value="PASAPORTE">Pasaporte</option>
+            </select>
+          </div>
+          <div className={formData.tipoDocumento === 'PASAPORTE' ? 'sm:col-span-9' : 'sm:col-span-6'}>
+            <label className="block text-xs font-semibold text-cato-slate uppercase mb-1 whitespace-nowrap truncate">
+              {formData.tipoDocumento === 'PASAPORTE'
+                ? 'N° Pasaporte *'
+                : 'N° de C.I. *'}
             </label>
             <input
               type="text"
               value={formData.ci}
-              onChange={(e) => updateField('ci', e.target.value.replace(/\s+/g, ''))}
-              placeholder="Ej. 8421455"
+              onChange={(e) =>
+                updateField('ci', e.target.value.replace(/\s+/g, '').toUpperCase())
+              }
+              placeholder={
+                formData.tipoDocumento === 'PASAPORTE' ? 'Ej. PA894512B' : 'Ej. 8421455'
+              }
               className="cato-input"
               required
             />
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-cato-slate uppercase mb-1">
-              Expedido *
-            </label>
-            <select
-              value={formData.expedido}
-              onChange={(e) => updateField('expedido', e.target.value)}
-              className="cato-input bg-white text-xs font-semibold"
-            >
-              {EXPEDIDOS_CI.map((item) => (
-                <option key={item.code} value={item.code}>
-                  {item.code}
-                </option>
-              ))}
-            </select>
-          </div>
+          {formData.tipoDocumento !== 'PASAPORTE' && (
+            <div className="sm:col-span-3">
+              <label className="block text-xs font-semibold text-cato-slate uppercase mb-1 whitespace-nowrap">
+                Expedido *
+              </label>
+              <select
+                value={formData.expedido}
+                onChange={(e) => updateField('expedido', e.target.value)}
+                className="cato-input bg-white text-xs font-semibold"
+              >
+                {EXPEDIDOS_CI.map((item) => (
+                  <option key={item.code} value={item.code}>
+                    {item.code}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Fecha de Nacimiento y Edad Autocalculada */}
@@ -179,23 +203,31 @@ export const Step1Identificacion: React.FC<Step1Props> = ({
           )}
         </div>
 
-        {/* Celular WhatsApp con Validación */}
+        {/* Celular WhatsApp con Validación Flexible (Nacional / Internacional) */}
         <div>
           <label className="block text-xs font-semibold text-cato-slate uppercase mb-1 flex items-center gap-1.5">
             <Phone className="w-3.5 h-3.5 text-slate-400" />
             Celular (WhatsApp de Contacto) *
           </label>
           <div className="flex">
-            <span className="inline-flex items-center px-3 text-xs text-slate-600 bg-slate-100 border border-r-0 border-cato-input rounded-l-md font-semibold">
-              +591
-            </span>
+            <input
+              type="text"
+              maxLength={5}
+              value={codigoPais}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9+]/g, '');
+                setCodigoPais(val.startsWith('+') ? val : `+${val}`);
+              }}
+              aria-label="Código de país"
+              className="w-16 text-center px-2 text-xs text-slate-700 bg-slate-100 border border-r-0 border-cato-input rounded-l-md font-semibold focus:outline-none focus:bg-white"
+            />
             <input
               type="tel"
-              maxLength={8}
+              maxLength={15}
               value={formData.celular}
               onBlur={() => setTocadoCelular(true)}
               onChange={(e) => updateField('celular', e.target.value.replace(/\D/g, ''))}
-              placeholder="70000000"
+              placeholder="Ej. 70000000 o 56981236"
               className={`cato-input rounded-l-none ${
                 tocadoCelular && !celularValido && formData.celular
                   ? 'border-red-400 bg-red-50/30'
@@ -206,7 +238,7 @@ export const Step1Identificacion: React.FC<Step1Props> = ({
           </div>
           {tocadoCelular && !celularValido && formData.celular && (
             <p className="text-[11px] text-red-600 mt-1">
-              Ingresa un número válido de 8 dígitos que inicie con 6 o 7.
+              Ingresa un número de celular válido (entre 7 y 15 dígitos).
             </p>
           )}
         </div>

@@ -12,9 +12,12 @@ export type EstadoPostulacion =
   | 'OBSERVADO_SOBRECARGA'
   | 'DESCARTADO';
 
+export type TipoDocumento = 'CI' | 'PASAPORTE';
+
 export interface PostulacionFormData {
   // Paso 1: Identificación
   tipoRelacionUcb: TipoRelacionUcb;
+  tipoDocumento: TipoDocumento;
   nombres: string;
   primerApellido: string;
   segundoApellido?: string;
@@ -39,6 +42,8 @@ export interface PostulacionFormData {
   experienciaVoluntariadoPrevia: boolean;
   detalleExperiencia?: string;
   habilidadesDestacadas: string[];
+  habilidadesOtras?: string;
+  semestre?: string;
   conocimientoComputacion: boolean;
   tresPalabrasPersonalidad: [string, string, string];
   alergiasCondicionesMedicas?: string;
@@ -53,6 +58,7 @@ export interface PostulacionFormData {
 export interface Postulacion extends PostulacionFormData {
   id: number;
   codigoPostulacion: string;
+  edadCalculada?: number;
   estado: EstadoPostulacion;
   observacionesPostulacion?: string;
   userId?: number;
@@ -73,6 +79,7 @@ export interface FilterPostulacionesParams {
   carrera?: string;
   zonaResidencia?: string;
   estado?: EstadoPostulacion | '';
+  semestre?: string;
   page?: number;
   limit?: number;
 }
