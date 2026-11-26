@@ -2,6 +2,7 @@ export type UserRole =
   | 'ADMIN_PASTORAL'
   | 'CATOLIDER'
   | 'VOLUNTARIO'
+  | 'ENCARGADO_RECEPTOR'
   | 'POSTULANTE'
   | 'INTERESADO';
 
@@ -15,6 +16,8 @@ export interface User {
   rol: UserRole;
   carrera?: string;
   telefono?: string;
+  proyectoAsignadoId?: number;
+  proyectoNombre?: string;
 }
 
 export interface AuthState {

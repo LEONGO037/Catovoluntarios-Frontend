@@ -8,6 +8,7 @@ export interface RoleConfig {
   textHex: string;
   dotColor: string;
   description: string;
+  defaultRoute: string;
 }
 
 export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
@@ -19,6 +20,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     textHex: '#065F46',
     dotColor: '#10B981',
     description: 'Coordinación ejecutiva y gestión global de Pastoral UCB',
+    defaultRoute: '/dashboard',
   },
   CATOLIDER: {
     label: 'Catolíder',
@@ -28,6 +30,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     textHex: '#991B1B',
     dotColor: '#EF4444',
     description: 'Líder estudiantil a cargo de centro receptor y entrevistas',
+    defaultRoute: '/asistencias',
   },
   VOLUNTARIO: {
     label: 'Catovoluntario Activo',
@@ -37,6 +40,17 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     textHex: '#854D0E',
     dotColor: '#EAB308',
     description: 'Estudiante voluntario activo con horas en campo',
+    defaultRoute: '/portal-voluntario',
+  },
+  ENCARGADO_RECEPTOR: {
+    label: 'Encargado Receptor',
+    badgeClass: 'bg-purple-100 text-purple-800 border border-purple-200',
+    pillColor: 'bg-purple-500',
+    bgHex: '#F3E8FF',
+    textHex: '#6B21A8',
+    dotColor: '#A855F7',
+    description: 'Supervisor de institución receptora para control de asistencia y certificados',
+    defaultRoute: '/receptor-asistencia',
   },
   POSTULANTE: {
     label: 'Postulante en Proceso',
@@ -46,6 +60,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     textHex: '#1E40AF',
     dotColor: '#2563EB',
     description: 'Aspirante en fase de admisión y evaluación',
+    defaultRoute: '/login',
   },
   INTERESADO: {
     label: 'Interesado / Visitante',
@@ -55,5 +70,11 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     textHex: '#0369A1',
     dotColor: '#0EA5E9',
     description: 'Visitante explorando la convocatoria de Pastoral',
+    defaultRoute: '/',
   },
 };
+
+export function getDefaultRouteForRole(rol?: UserRole): string {
+  if (!rol) return '/login';
+  return ROLE_CONFIGS[rol]?.defaultRoute || '/login';
+}

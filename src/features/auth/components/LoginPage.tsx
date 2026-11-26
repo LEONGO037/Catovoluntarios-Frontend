@@ -5,6 +5,8 @@ import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { AlertBanner } from '../../../components/feedback/AlertBanner';
 import { PasswordRecoveryModal } from './PasswordRecoveryModal';
+import { getDefaultRouteForRole } from '../../../constants/roles';
+import mockUsers from '../../../data/mockUsers.json';
 import {
   Heart,
   Eye,
@@ -13,6 +15,7 @@ import {
   Lock,
   ArrowRight,
   Sparkles,
+  UserCheck,
 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
@@ -51,13 +54,13 @@ export const LoginPage: React.FC = () => {
       const savedUserStr = localStorage.getItem('catovoluntarios_user');
       const loggedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
 
-      // El rol se obtiene automáticamente del sistema / base de datos
+      // El rol se obtiene del JSON de usuarios locales
       if (loggedUser?.rol === 'POSTULANTE') {
         setPostulanteNotice(
           'Tu postulación se encuentra registrada. Conforme a la normativa de Pastoral UCB, el acceso al panel operativo se habilitará una vez completadas las etapas de selección e inducción.',
         );
       } else {
-        navigate('/dashboard');
+        navigate(getDefaultRouteForRole(loggedUser?.rol));
       }
     } catch (err: unknown) {
       const errObj = err as Error;
@@ -242,6 +245,51 @@ export const LoginPage: React.FC = () => {
               Ingresar al Sistema
             </Button>
           </form>
+
+          {/* Accesos Rápidos de Usuarios JSON */}
+          <div className="bg-blue-50/70 border border-blue-200/80 rounded-xl p-4 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-cato-navy flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-cato-gold" />
+                Acceso Rápido por Rol (JSON Local)
+              </span>
+              <span className="text-[10px] text-cato-muted font-medium">Sin BD</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {mockUsers.map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  onClick={async () => {
+                    setEmail(u.email);
+                    setPassword(u.password);
+                    setErrorMessage(null);
+                    setIsLoading(true);
+                    try {
+                      await login({ email: u.email, password: u.password });
+                      navigate(getDefaultRouteForRole(u.rol as any));
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="text-left p-2 rounded-lg bg-white hover:bg-cato-navy hover:text-white border border-blue-100 hover:border-cato-navy transition-all group cursor-pointer shadow-xs"
+                >
+                  <p className="text-[11px] font-bold truncate">
+                    {u.rol === 'ADMIN_PASTORAL'
+                      ? 'Administrador'
+                      : u.rol === 'CATOLIDER'
+                        ? 'Catolíder'
+                        : u.rol === 'VOLUNTARIO'
+                          ? 'Catovoluntario'
+                          : 'Encargado Receptor'}
+                  </p>
+                  <p className="text-[10px] text-cato-muted group-hover:text-blue-200 truncate">
+                    {u.email}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Enlace al Portal Público */}
           <div className="text-center text-xs text-cato-muted pt-4 border-t border-cato-border">

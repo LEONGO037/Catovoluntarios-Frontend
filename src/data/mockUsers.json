@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "ci": "4829104",
+    "email": "admin@ucb.edu.bo",
+    "password": "password123",
+    "nombres": "Lic. Andrea",
+    "primerApellido": "Mendoza",
+    "segundoApellido": "Vargas",
+    "rol": "ADMIN_PASTORAL",
+    "carrera": "Coordinación Pastoral Universitaria",
+    "telefono": "70112233"
+  },
+  {
+    "id": 2,
+    "ci": "6712390",
+    "email": "catolider@ucb.edu.bo",
+    "password": "password123",
+    "nombres": "Camila",
+    "primerApellido": "Rojas",
+    "segundoApellido": "Quispe",
+    "rol": "CATOLIDER",
+    "carrera": "Psicología",
+    "telefono": "71554433",
+    "proyectoAsignadoId": 1,
+    "proyectoNombre": "Hogar San Ramón"
+  },
+  {
+    "id": 3,
+    "ci": "8392011",
+    "email": "voluntario@ucb.edu.bo",
+    "password": "password123",
+    "nombres": "Mateo",
+    "primerApellido": "Flores",
+    "segundoApellido": "Aliaga",
+    "rol": "VOLUNTARIO",
+    "carrera": "Ingeniería de Sistemas",
+    "telefono": "72998877",
+    "proyectoAsignadoId": 1,
+    "proyectoNombre": "Hogar San Ramón"
+  },
+  {
+    "id": 4,
+    "ci": "3918274",
+    "email": "receptor@ucb.edu.bo",
+    "password": "password123",
+    "nombres": "Sor Elena",
+    "primerApellido": "Paredes",
+    "segundoApellido": "Guzmán",
+    "rol": "ENCARGADO_RECEPTOR",
+    "carrera": "Dirección Institucional — Hogar San Ramón",
+    "telefono": "76543210",
+    "proyectoAsignadoId": 1,
+    "proyectoNombre": "Hogar San Ramón"
+  }
+]

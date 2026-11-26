@@ -21,9 +21,12 @@ import {
   ChevronRight,
   Heart,
   UserCheck,
+  Trophy,
+  UploadCloud,
 } from 'lucide-react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import { RoleBadge } from '../feedback/RoleBadge';
+import type { UserRole } from '../../types/auth.types';
 import { cn } from '../../utils/cn';
 
 interface NavItem {
@@ -31,12 +34,12 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
-  roles?: string[];
+  roles: UserRole[];
 }
 
 interface NavGroup {
   group: string;
-  roles?: string[];
+  roles: UserRole[];
   items: NavItem[];
 }
 
@@ -64,29 +67,78 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navGroups: NavGroup[] = [
     {
       group: 'Principal',
-      roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
+      roles: ['ADMIN_PASTORAL'],
       items: [
         {
           to: '/dashboard',
           label: 'Dashboard Ejecutivo',
           icon: LayoutDashboard,
           badge: 'Pastoral',
+          roles: ['ADMIN_PASTORAL'],
+        },
+      ],
+    },
+    {
+      group: 'Mi Voluntariado',
+      roles: ['VOLUNTARIO'],
+      items: [
+        {
+          to: '/portal-voluntario',
+          label: 'Mis Voluntariados y Horas',
+          icon: Smile,
+          roles: ['VOLUNTARIO'],
+        },
+        {
+          to: '/documentos',
+          label: 'Carga de Documentos',
+          icon: FileCheck2,
+          roles: ['VOLUNTARIO'],
+        },
+        {
+          to: '/mis-pasajes',
+          label: 'Mi Planilla de Pasajes',
+          icon: Coins,
+          roles: ['VOLUNTARIO'],
+        },
+        {
+          to: '/podio',
+          label: 'Podio de Excelencia',
+          icon: Trophy,
+          roles: ['VOLUNTARIO'],
+        },
+      ],
+    },
+    {
+      group: 'Centro Receptor',
+      roles: ['ENCARGADO_RECEPTOR'],
+      items: [
+        {
+          to: '/receptor-asistencia',
+          label: 'Asistencia Voluntarios',
+          icon: Clock,
+          roles: ['ENCARGADO_RECEPTOR'],
+        },
+        {
+          to: '/receptor-certificados',
+          label: 'Subir Certificados',
+          icon: UploadCloud,
+          roles: ['ENCARGADO_RECEPTOR'],
         },
       ],
     },
     {
       group: 'Admisión y Convocatoria',
-      roles: ['ADMIN_PASTORAL', 'CATOLIDER', 'POSTULANTE'],
+      roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
       items: [
         {
           to: '/postulantes',
-          label: 'Bandeja Postulantes',
+          label: 'Bandeja de Postulantes',
           icon: Users,
           roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
         },
         {
           to: '/catolideres',
-          label: 'Selección Catolíderes',
+          label: 'Selección de Catolíderes',
           icon: UserCheck,
           roles: ['ADMIN_PASTORAL'],
         },
@@ -94,57 +146,115 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       group: 'Entrevistas y Psicología',
-      roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
+      roles: ['CATOLIDER'],
       items: [
-        { to: '/entrevistas', label: 'Turnos Entrevista', icon: Calendar },
-        { to: '/ficha-entrevista', label: 'Ficha Digital', icon: ClipboardList },
-        { to: '/psicologia', label: 'Psicología E-SRE', icon: Brain, roles: ['ADMIN_PASTORAL'] },
+        {
+          to: '/entrevistas',
+          label: 'Agendar Citas y Turnos',
+          icon: Calendar,
+          roles: ['CATOLIDER'],
+        },
+        {
+          to: '/ficha-entrevista',
+          label: 'Ficha de Entrevista',
+          icon: ClipboardList,
+          roles: ['CATOLIDER'],
+        },
+        {
+          to: '/psicologia',
+          label: 'Citas Psicológicas E-SRE',
+          icon: Brain,
+          roles: ['CATOLIDER'],
+        },
       ],
     },
     {
-      group: 'Habilitación Documental',
-      roles: ['ADMIN_PASTORAL', 'CATOLIDER', 'VOLUNTARIO'],
+      group: 'Documentación',
+      roles: ['ADMIN_PASTORAL'],
       items: [
-        { to: '/documentos', label: 'Carga Documental', icon: FileCheck2 },
         {
           to: '/validacion-documental',
-          label: 'Validar Pólizas',
+          label: 'Validar Documentos',
           icon: ShieldCheck,
           roles: ['ADMIN_PASTORAL'],
         },
-        { to: '/induccion', label: 'Control Inducción', icon: Award, roles: ['ADMIN_PASTORAL', 'CATOLIDER'] },
       ],
     },
     {
       group: 'Proyectos y Ubicación',
-      roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
+      roles: ['ADMIN_PASTORAL'],
       items: [
-        { to: '/proyectos', label: 'Proyectos Receptores', icon: Building2 },
-        { to: '/ubicacion', label: 'Ubicación Balanceada', icon: Shuffle, roles: ['ADMIN_PASTORAL'] },
-        { to: '/reasignaciones', label: 'Reasignaciones', icon: Shuffle, roles: ['ADMIN_PASTORAL'] },
+        {
+          to: '/proyectos',
+          label: 'Proyectos Receptores',
+          icon: Building2,
+          roles: ['ADMIN_PASTORAL'],
+        },
+        {
+          to: '/ubicacion',
+          label: 'Ubicación Voluntarios',
+          icon: Shuffle,
+          roles: ['ADMIN_PASTORAL'],
+        },
+        {
+          to: '/reasignaciones',
+          label: 'Reasignaciones',
+          icon: Shuffle,
+          roles: ['ADMIN_PASTORAL'],
+        },
       ],
     },
     {
       group: 'Campo, Horas y Finanzas',
-      roles: ['ADMIN_PASTORAL', 'CATOLIDER', 'VOLUNTARIO'],
+      roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
       items: [
-        { to: '/asistencias', label: 'Control Asistencias', icon: Clock },
-        { to: '/pasajes', label: 'Planillas Pasajes', icon: Coins, roles: ['ADMIN_PASTORAL'] },
-        { to: '/portal-voluntario', label: 'Portal Catovoluntario', icon: Smile, roles: ['VOLUNTARIO', 'ADMIN_PASTORAL'] },
+        {
+          to: '/asistencias',
+          label: 'Asistencia Proyectos',
+          icon: Clock,
+          roles: ['CATOLIDER'],
+        },
+        {
+          to: '/pasajes',
+          label: 'Planillas de Pasajes',
+          icon: Coins,
+          roles: ['ADMIN_PASTORAL'],
+        },
       ],
     },
     {
-      group: 'Desempeño y Cierre',
+      group: 'Desempeño, Podio y Cierre',
       roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
       items: [
-        { to: '/semaforos', label: 'Semáforos Mensuales', icon: Activity },
-        { to: '/base-madre', label: 'Base Madre y Podio', icon: Award, roles: ['ADMIN_PASTORAL'] },
-        { to: '/certificados', label: 'Feedback y Certificados', icon: FileBadge, roles: ['ADMIN_PASTORAL'] },
+        {
+          to: '/semaforos',
+          label: 'Semáforo de Rendimiento',
+          icon: Activity,
+          roles: ['CATOLIDER'],
+        },
+        {
+          to: '/base-madre',
+          label: 'Base Madre',
+          icon: Award,
+          roles: ['ADMIN_PASTORAL'],
+        },
+        {
+          to: '/certificados',
+          label: 'Certificados',
+          icon: FileBadge,
+          roles: ['ADMIN_PASTORAL'],
+        },
+        {
+          to: '/podio',
+          label: 'Podio y Premiación',
+          icon: Trophy,
+          roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
+        },
       ],
     },
   ];
 
-  const userRole = user?.rol || 'ADMIN_PASTORAL';
+  const userRole: UserRole = user?.rol || 'INTERESADO';
 
   return (
     <aside
@@ -199,20 +309,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      {/* 2. Lista de Navegación Scrolleable */}
+      {/* 2. Lista de Navegación Dinámica por Rol */}
       <div className="flex-1 overflow-y-auto py-3 px-2 space-y-4 scrollbar-thin scrollbar-thumb-white/20">
         {navGroups
-          .filter((g) => !g.roles || g.roles.includes(userRole))
-          .map((group, idx) => (
-            <div key={idx} className="space-y-1">
-              {!isCollapsed && (
-                <p className="px-3 text-[10px] uppercase font-bold text-blue-300/80 tracking-wider">
-                  {group.group}
-                </p>
-              )}
-              {group.items
-                .filter((item) => !item.roles || item.roles.includes(userRole))
-                .map((item) => (
+          .filter((g) => g.roles.includes(userRole))
+          .map((group, idx) => {
+            const visibleItems = group.items.filter((item) => item.roles.includes(userRole));
+            if (visibleItems.length === 0) return null;
+
+            return (
+              <div key={idx} className="space-y-1">
+                {!isCollapsed && (
+                  <p className="px-3 text-[10px] uppercase font-bold text-blue-300/80 tracking-wider">
+                    {group.group}
+                  </p>
+                )}
+                {visibleItems.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
@@ -231,8 +343,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {!isCollapsed && <span className="truncate">{item.label}</span>}
                   </NavLink>
                 ))}
-            </div>
-          ))}
+              </div>
+            );
+          })}
       </div>
 
       {/* 3. Footer de Usuario y Logout */}
@@ -250,7 +363,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
             <div className="flex items-center justify-between pt-1">
-              <RoleBadge rol={user?.rol || 'ADMIN_PASTORAL'} />
+              <RoleBadge rol={user?.rol || 'INTERESADO'} />
               <button
                 onClick={handleLogout}
                 type="button"

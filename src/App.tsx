@@ -5,7 +5,6 @@ import { LoginPage } from './features/auth/components/LoginPage';
 import { ResetPasswordPage } from './features/auth/components/ResetPasswordPage';
 import { DashboardPastoral } from './features/dashboard/components/DashboardPastoral';
 import { AppShell } from './components/layout/AppShell';
-import { TeammateModulePlaceholder } from './components/layout/TeammateModulePlaceholder';
 
 // M03: Entrevistas y Psicología — Marvin Larry Mollo Ramirez
 import { RutaPorRol } from './features/entrevistas/components/RutaPorRol';
@@ -23,60 +22,80 @@ import { SeleccionCatolideres } from './features/admision/components/SeleccionCa
 // M04: Habilitación Documental y Seguro — Christian Coronel
 import { PortalCargaDocumental } from './features/documentos/components/PortalCargaDocumental';
 import { BandejaValidacionDocumental } from './features/documentos/components/BandejaValidacionDocumental';
-import { ControlInduccion } from './features/documentos/components/ControlInduccion';
 
 // M05: Proyectos y Ubicación — Kael Lopez
 import { P13ReceptorCatalog } from './features/proyectos/components/P13ReceptorCatalog/P13ReceptorCatalog';
 import { P14MatchingBoard } from './features/proyectos/components/P14MatchingBoard/P14MatchingBoard';
 import { P15TransferManager } from './features/proyectos/components/P15TransferManager/P15TransferManager';
 
+// M06: Asistencia, Pasajes y Portal Voluntario
+import { PortalVoluntarioPage } from './features/asistencia/components/PortalVoluntarioPage';
+import { MisPasajesPage } from './features/asistencia/components/MisPasajesPage';
+import { AsistenciaProyectosPage } from './features/asistencia/components/AsistenciaProyectosPage';
+import { PlanillasPasajesAdminPage } from './features/asistencia/components/PlanillasPasajesAdminPage';
+
 // M07: Semáforos, Base Madre y Feedback — Leandro Colque
 import { P19SemaforoReporte } from './features/semaforos/components/P19SemaforoReporte/P19SemaforoReporte';
 import { P20BaseMadre } from './features/semaforos/components/P20BaseMadre/P20BaseMadre';
 import { P21FeedbackCertificados } from './features/semaforos/components/P21FeedbackCertificados/P21FeedbackCertificados';
+
+// Nuevas Vistas Segmentadas: Podio de Excelencia y Encargado Proyecto Receptor
+import { PodioExcelenciaPage } from './features/podio/components/PodioExcelenciaPage';
+import { ReceptorAsistenciaPage } from './features/receptor/components/ReceptorAsistenciaPage';
+import { ReceptorCertificadosPage } from './features/receptor/components/ReceptorCertificadosPage';
 
 export function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* M01: Portal Público, Auth & Dashboard — Leonardo Delgado */}
+          {/* Portal Público y Auth */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/postulacion" element={<PostulacionWizard />} />
+
+          {/* ADMIN_PASTORAL: Dashboard Ejecutivo */}
           <Route
             path="/dashboard"
             element={
-              <AppShell>
-                <DashboardPastoral />
-              </AppShell>
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <DashboardPastoral />
+                </AppShell>
+              </RutaPorRol>
             }
           />
 
-          {/* M02: Admisión y Postulación — Alan Flores */}
-          <Route path="/postulacion" element={<PostulacionWizard />} />
+          {/* ADMIN_PASTORAL y CATOLIDER: Bandeja de Postulantes */}
           <Route
             path="/postulantes"
             element={
-              <AppShell>
-                <BandejaPostulantes />
-              </AppShell>
-            }
-          />
-          <Route
-            path="/catolideres"
-            element={
-              <AppShell>
-                <SeleccionCatolideres />
-              </AppShell>
+              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER']}>
+                <AppShell>
+                  <BandejaPostulantes />
+                </AppShell>
+              </RutaPorRol>
             }
           />
 
-          {/* M03: Entrevistas y Psicología — Marvin Larry Mollo Ramirez */}
+          {/* ADMIN_PASTORAL: Selección de Catolíderes */}
+          <Route
+            path="/catolideres"
+            element={
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <SeleccionCatolideres />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+
+          {/* CATOLIDER: Agendar y Realizar Entrevistas / Citas Psicológicas */}
           <Route
             path="/entrevistas"
             element={
-              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER', 'POSTULANTE']}>
+              <RutaPorRol roles={['CATOLIDER']}>
                 <P07AgendaEntrevistas />
               </RutaPorRol>
             }
@@ -84,7 +103,7 @@ export function App() {
           <Route
             path="/ficha-entrevista"
             element={
-              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER']}>
+              <RutaPorRol roles={['CATOLIDER']}>
                 <AppShell>
                   <ListaFichasEntrevista />
                 </AppShell>
@@ -94,7 +113,7 @@ export function App() {
           <Route
             path="/ficha-entrevista/:entrevistaId"
             element={
-              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER']}>
+              <RutaPorRol roles={['CATOLIDER']}>
                 <AppShell>
                   <P08FichaEntrevista />
                 </AppShell>
@@ -104,7 +123,7 @@ export function App() {
           <Route
             path="/psicologia"
             element={
-              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+              <RutaPorRol roles={['CATOLIDER']}>
                 <AppShell>
                   <ListaPostulantesEvaluables />
                 </AppShell>
@@ -114,7 +133,7 @@ export function App() {
           <Route
             path="/psicologia/:postulacionId"
             element={
-              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+              <RutaPorRol roles={['CATOLIDER']}>
                 <AppShell>
                   <P09EvaluacionEsre />
                 </AppShell>
@@ -122,167 +141,169 @@ export function App() {
             }
           />
 
-          {/* M04: Habilitación Documental y Seguro — Christian Coronel */}
+          {/* VOLUNTARIO: Carga de Documentos */}
           <Route
             path="/documentos"
             element={
-              <AppShell>
-                <PortalCargaDocumental />
-              </AppShell>
-            }
-          />
-          <Route
-            path="/validacion-documental"
-            element={
-              <AppShell>
-                <BandejaValidacionDocumental />
-              </AppShell>
-            }
-          />
-          <Route
-            path="/induccion"
-            element={
-              <AppShell>
-                <ControlInduccion />
-              </AppShell>
+              <RutaPorRol roles={['VOLUNTARIO']}>
+                <AppShell>
+                  <PortalCargaDocumental />
+                </AppShell>
+              </RutaPorRol>
             }
           />
 
-          {/* M05: Proyectos y Ubicación — Kael Lopez */}
+          {/* ADMIN_PASTORAL: Validar Documentos */}
+          <Route
+            path="/validacion-documental"
+            element={
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <BandejaValidacionDocumental />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+
+          {/* ADMIN_PASTORAL: Proyectos, Ubicación y Reasignaciones */}
           <Route
             path="/proyectos"
             element={
-              <AppShell>
-                <P13ReceptorCatalog />
-              </AppShell>
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <P13ReceptorCatalog />
+                </AppShell>
+              </RutaPorRol>
             }
           />
           <Route
             path="/ubicacion"
             element={
-              <AppShell>
-                <P14MatchingBoard />
-              </AppShell>
-            }
-          />
-          <Route
-            path="/traslados"
-            element={
-              <AppShell>
-                <P15TransferManager />
-              </AppShell>
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <P14MatchingBoard />
+                </AppShell>
+              </RutaPorRol>
             }
           />
           <Route
             path="/reasignaciones"
             element={
-              <AppShell>
-                <P15TransferManager />
-              </AppShell>
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <P15TransferManager />
+                </AppShell>
+              </RutaPorRol>
             }
           />
 
-          {/* M06: Asistencia, Pasajes y Portal Voluntario — Juan José Cordeiro (Pendiente) */}
-          <Route
-            path="/asistencia"
-            element={
-              <TeammateModulePlaceholder
-                screenId="MÓDULO 06"
-                title="Registro Mensual de Asistencia y Planilla de Pasajes"
-                responsible="Juan José Cordeiro"
-                sprint="Sprint 4 (Semana 4)"
-                description="Control de asistencia en campo con días efectivos y cálculo automático de pasajes según tarifa pactada con la institución receptora."
-                requirements={[
-                  'RF-14: Registro de asistencia semanal de 4 horas mínimas',
-                  'RF-16: Cálculo automático de reposición de pasajes por día asistido',
-                  'Pestaña de conciliación mensual previa a la liquidación',
-                ]}
-              />
-            }
-          />
-          <Route
-            path="/asistencias"
-            element={
-              <TeammateModulePlaceholder
-                screenId="MÓDULO 06"
-                title="Registro Mensual de Asistencia y Planilla de Pasajes"
-                responsible="Juan José Cordeiro"
-                sprint="Sprint 4 (Semana 4)"
-                description="Control de asistencia en campo con días efectivos y cálculo automático de pasajes según tarifa pactada con la institución receptora."
-                requirements={[
-                  'RF-14: Registro de asistencia semanal de 4 horas mínimas',
-                  'RF-16: Cálculo automático de reposición de pasajes por día asistido',
-                  'Pestaña de conciliación mensual previa a la liquidación',
-                ]}
-              />
-            }
-          />
-          <Route
-            path="/pasajes"
-            element={
-              <TeammateModulePlaceholder
-                screenId="MÓDULO 06"
-                title="Generador de Planillas de Reposición de Pasajes"
-                responsible="Juan José Cordeiro"
-                sprint="Sprint 4 (Semana 4)"
-                description="Exportación de planilla contable mensual lista para firma de beneficiarios y descargo administrativo Pastoral."
-                requirements={[
-                  'RF-17: Generación de planilla oficial con desglose de monto en Bs',
-                  'Exportación en formato PDF y Excel con firmas reglamentarias',
-                  'Historial de liquidaciones por centro y semestre',
-                ]}
-              />
-            }
-          />
+          {/* VOLUNTARIO: Portal de Voluntariados, Registro de Horas y Mi Planilla de Pasajes */}
           <Route
             path="/portal-voluntario"
             element={
-              <TeammateModulePlaceholder
-                screenId="MÓDULO 06"
-                title="Portal Operativo del Catovoluntario"
-                responsible="Juan José Cordeiro"
-                sprint="Sprint 4 (Semana 4)"
-                description="Vista personalizada para el voluntario con sus datos de proyecto asignado, horarios comprometidos y registro de asistencias."
-                requirements={[
-                  'RF-15: Visualización de horas acumuladas y estado de seguro',
-                  'Datos de contacto de su Catolíder y supervisor de centro',
-                  'Historial de asistencias registradas',
-                ]}
-              />
+              <RutaPorRol roles={['VOLUNTARIO']}>
+                <AppShell>
+                  <PortalVoluntarioPage />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+          <Route
+            path="/mis-pasajes"
+            element={
+              <RutaPorRol roles={['VOLUNTARIO']}>
+                <AppShell>
+                  <MisPasajesPage />
+                </AppShell>
+              </RutaPorRol>
             }
           />
 
-          {/* M07: Semáforos, Base Madre y Feedback — Leandro Colque */}
+          {/* CATOLIDER: Asistencia de sus proyectos y Semáforo */}
+          <Route
+            path="/asistencias"
+            element={
+              <RutaPorRol roles={['CATOLIDER']}>
+                <AppShell>
+                  <AsistenciaProyectosPage />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
           <Route
             path="/semaforos"
             element={
-              <AppShell>
-                <P19SemaforoReporte />
-              </AppShell>
+              <RutaPorRol roles={['CATOLIDER']}>
+                <AppShell>
+                  <P19SemaforoReporte />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+
+          {/* ADMIN_PASTORAL: Planillas de Pasajes, Base Madre y Certificados */}
+          <Route
+            path="/pasajes"
+            element={
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <PlanillasPasajesAdminPage />
+                </AppShell>
+              </RutaPorRol>
             }
           />
           <Route
             path="/base-madre"
             element={
-              <AppShell>
-                <P20BaseMadre />
-              </AppShell>
-            }
-          />
-          <Route
-            path="/feedback-certificados"
-            element={
-              <AppShell>
-                <P21FeedbackCertificados />
-              </AppShell>
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <P20BaseMadre />
+                </AppShell>
+              </RutaPorRol>
             }
           />
           <Route
             path="/certificados"
             element={
-              <AppShell>
-                <P21FeedbackCertificados />
-              </AppShell>
+              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+                <AppShell>
+                  <P21FeedbackCertificados />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+
+          {/* ADMIN_PASTORAL, CATOLIDER y VOLUNTARIO: Nueva Pantalla de Podio y Premiación */}
+          <Route
+            path="/podio"
+            element={
+              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER', 'VOLUNTARIO']}>
+                <AppShell>
+                  <PodioExcelenciaPage />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+
+          {/* ENCARGADO_RECEPTOR: Solo ver asistencia y subir certificados en formato de su fundación */}
+          <Route
+            path="/receptor-asistencia"
+            element={
+              <RutaPorRol roles={['ENCARGADO_RECEPTOR']}>
+                <AppShell>
+                  <ReceptorAsistenciaPage />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+          <Route
+            path="/receptor-certificados"
+            element={
+              <RutaPorRol roles={['ENCARGADO_RECEPTOR']}>
+                <AppShell>
+                  <ReceptorCertificadosPage />
+                </AppShell>
+              </RutaPorRol>
             }
           />
 
