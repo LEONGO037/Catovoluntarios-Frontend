@@ -9,7 +9,6 @@ export type TipoDocumento =
   | 'OTRO_RESPALDO';
 
 export type EstadoDocumento = 'PENDIENTE' | 'APROBADO' | 'OBSERVADO' | 'RECHAZADO';
-
 export type EstadoInduccion = 'COMPLETADA' | 'EN_PROCESO' | 'PENDIENTE' | 'REPROGRAMAR';
 
 export interface DocumentoVoluntario {
@@ -17,8 +16,7 @@ export interface DocumentoVoluntario {
   tipoDocumento: TipoDocumento;
   archivoUrl: string;
   nombreArchivoOriginal: string;
-  tamanio?: string;
-  fechaSubida: string;
+  enviadoRevisionEn: string | null;
   numeroPoliza?: string;
   idPoliza?: string;
   numeroCertificado?: string;
@@ -26,45 +24,58 @@ export interface DocumentoVoluntario {
   vigenciaFin?: string;
   asegurado?: string;
   estado: EstadoDocumento;
-  observacionesValidacion?: string;
+  observacionesValidacion?: string | null;
 }
 
 export interface VoluntarioExpediente {
   id: number;
   ci: string;
   nombreCompleto: string;
-  nombres: string;
-  primerApellido: string;
-  segundoApellido?: string;
-  email: string;
-  telefono: string;
-  carrera: string;
-  semestreCarrera?: string;
-  edad: number;
+  carrera?: string;
   esMenor: boolean;
-  rol: UserRole;
-  proyectoAsignado: string;
+  proyectoAsignado?: string;
   catoliderAsignado?: string;
-  polizaValidada: boolean;
   induccionCompletada: boolean;
   habilitadoCampo: boolean;
   documentos: DocumentoVoluntario[];
-  estadoGeneral: 'PENDIENTE' | 'APROBADO' | 'OBSERVADO';
+  estadoGeneral: EstadoDocumento;
+}
+
+export interface BandejaDocumental {
+  kpis: {
+    pendientesRevision: number;
+    observados: number;
+    habilitadosEsteSemestre: number;
+    polizasProximasVencer: number;
+  };
+  voluntarios: VoluntarioExpediente[];
 }
 
 export interface ParticipanteInduccion {
-  id: number;
+  id: number | null;
+  sesionId: number | null;
   userId: number;
   nombreCompleto: string;
   ci: string;
   rol: UserRole;
-  catolider: string;
   documentosHabilitados: boolean;
-  fechaCharla?: string;
-  recorridoSitio?: string;
+  asistio: boolean;
+  fechaCharla?: string | null;
+  recorridoSitio?: string | null;
   estadoInduccion: EstadoInduccion;
-  proyectoNombre: string;
+  proyectoId?: number | null;
+  proyectoAsignado: string;
   observaciones?: string;
+}
+
+export interface ParticipantesInduccion {
+  kpis: {
+    voluntariosHabilitados: number;
+    induccionCompletada: number;
+    pendientesInduccion: number;
+    reprogramarAsistencia: number;
+  };
+  participantes: ParticipanteInduccion[];
 }
 
 export interface SesionInduccion {
@@ -72,8 +83,7 @@ export interface SesionInduccion {
   titulo: string;
   fechaHora: string;
   modalidad: 'PRESENCIAL' | 'VIRTUAL';
-  lugarEnlace: string;
-  facilitador: string;
-  proyectoNombre?: string;
-  semana: string;
+  lugarEnlace?: string;
+  facilitador?: string;
+  proyectoId?: number;
 }

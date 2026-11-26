@@ -1,126 +1,97 @@
 import { apiClient } from './api.client';
 import type {
-  VoluntarioExpediente,
-  ParticipanteInduccion,
-  SesionInduccion,
+  BandejaDocumental,
   DocumentoVoluntario,
   EstadoDocumento,
   EstadoInduccion,
+  ParticipantesInduccion,
+  SesionInduccion,
+  VoluntarioExpediente,
 } from '../types/documentos.types';
 
+function enSemestre(path: string, semestre: string) {
+  return `/documentos${path}?${new URLSearchParams({ semestre })}`;
+}
+
 export const documentosService = {
-  // P-10: Obtener expediente de usuario actual
-  async getMisDocumentos(): Promise<VoluntarioExpediente> {
-    return await apiClient.get<VoluntarioExpediente>('/documentos/mis-documentos');
+  getMisDocumentos(semestre: string, signal?: AbortSignal) {
+    return apiClient.get<VoluntarioExpediente>(enSemestre('/mis-documentos', semestre), { signal });
   },
 
-  // P-10: Subir un documento (soporta archivo físico con FormData o datos directos)
-  async subirDocumento(
-    data: Partial<DocumentoVoluntario>,
-    file?: File,
-  ): Promise<DocumentoVoluntario> {
-    if (file) {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (data.tipoDocumento) formData.append('tipoDocumento', data.tipoDocumento);
-      if (data.numeroPoliza) formData.append('numeroPoliza', data.numeroPoliza);
-      if (data.idPoliza) formData.append('idPoliza', data.idPoliza);
-      if (data.numeroCertificado) formData.append('numeroCertificado', data.numeroCertificado);
-      if (data.vigenciaInicio) formData.append('vigenciaInicio', data.vigenciaInicio);
-      if (data.vigenciaFin) formData.append('vigenciaFin', data.vigenciaFin);
-      if (data.asegurado) formData.append('asegurado', data.asegurado);
-      if (data.nombreArchivoOriginal) formData.append('nombreArchivoOriginal', data.nombreArchivoOriginal);
-
-      return await apiClient.upload<DocumentoVoluntario>('/documentos/upload', formData);
+  subirDocumento(semestre: string, data: Partial<DocumentoVoluntario>, file: File) {
+    const form = new FormData();
+    form.set('file', file);
+    form.set('nombreArchivoOriginal', file.name);
+    for (const [field, value] of Object.entries(data)) {
+      if (typeof value === 'string' && value.trim()) form.set(field, value.trim());
     }
-
-    return await apiClient.post<DocumentoVoluntario>('/documentos/upload', data);
+    return apiClient.upload<DocumentoVoluntario>(enSemestre('/upload', semestre), form);
   },
 
-  // Eliminar un documento del expediente y del bucket R2
-  async eliminarDocumento(documentoId: number): Promise<{ mensaje: string; id: number }> {
-    return await apiClient.delete<{ mensaje: string; id: number }>(`/documentos/${documentoId}`);
+  eliminarDocumento(semestre: string, documentoId: number) {
+    return apiClient.delete(enSemestre(`/${documentoId}`, semestre));
   },
 
-  // P-10: Descargar plantilla oficial
-  async descargarModeloCartaMenores(): Promise<{ url: string; nombre: string }> {
-    return await apiClient.get<{ url: string; nombre: string }>('/documentos/modelo-carta-menores');
+  enviarRevision(semestre: string, documentoIds: number[]) {
+    return apiClient.post<{ documentos: DocumentoVoluntario[] }>(
+      enSemestre('/enviar-revision', semestre),
+      { documentoIds },
+    );
   },
 
-  // P-11: Obtener bandeja de validación para Pastoral
-  async getBandejaValidacion(): Promise<{
-    kpis: {
-      pendientesRevision: number;
-      observados: number;
-      habilitadosEsteSemestre: number;
-      polizasProximasVencer: number;
-    };
-    voluntarios: VoluntarioExpediente[];
-  }> {
-    return await apiClient.get<{
-      kpis: {
-        pendientesRevision: number;
-        observados: number;
-        habilitadosEsteSemestre: number;
-        polizasProximasVencer: number;
-      };
-      voluntarios: VoluntarioExpediente[];
-    }>('/documentos/bandeja-validacion');
+  getBandejaValidacion(semestre: string, signal?: AbortSignal) {
+    return apiClient.get<BandejaDocumental>(enSemestre('/bandeja-validacion', semestre), { signal });
   },
 
-  // P-11: Validar un documento específico u observar
-  async validarDocumento(
+  validarDocumento(
+    semestre: string,
     documentoId: number,
-    estado: EstadoDocumento,
-    observaciones?: string,
-  ): Promise<DocumentoVoluntario> {
-    return await apiClient.patch<DocumentoVoluntario>(`/documentos/${documentoId}/validar`, {
-      estado,
-      observacionesValidacion: observaciones,
+    estado: Exclude<EstadoDocumento, 'PENDIENTE'>,
+    enviadoRevisionEn: string | null,
+    observacionesValidacion?: string,
+  ) {
+    return apiClient.patch<DocumentoVoluntario>(
+      enSemestre(`/${documentoId}/validar`, semestre),
+      { estado, enviadoRevisionEn: enviadoRevisionEn ?? undefined, observacionesValidacion },
+    );
+  },
+
+  async obtenerArchivo(semestre: string, documentoId: number, signal: AbortSignal) {
+    const token = localStorage.getItem('catovoluntarios_token');
+    const response = await fetch(`${apiClient.baseUrl}${enSemestre(`/${documentoId}/archivo`, semestre)}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      signal,
     });
+    if (!response.ok) throw new Error('No se pudo abrir el archivo original.');
+    return response.blob();
   },
 
-  // P-12: Participantes de inducción
-  async getParticipantesInduccion(proyecto = ''): Promise<{
-    kpis: {
-      voluntariosHabilitados: number;
-      induccionCompletada: number;
-      pendientesInduccion: number;
-      reprogramarAsistencia: number;
-    };
-    participantes: ParticipanteInduccion[];
-  }> {
-    return await apiClient.get<{
-      kpis: {
-        voluntariosHabilitados: number;
-        induccionCompletada: number;
-        pendientesInduccion: number;
-        reprogramarAsistencia: number;
-      };
-      participantes: ParticipanteInduccion[];
-    }>(`/documentos/induccion/participantes?proyecto=${encodeURIComponent(proyecto)}`);
+  getProyectosInduccion(semestre: string, signal: AbortSignal) {
+    return apiClient.get<{ id: number; nombre: string }[]>(enSemestre('/induccion/proyectos', semestre), { signal });
   },
 
-  // P-12: Registrar asistencia a inducción
-  async registrarAsistenciaInduccion(
-    participanteId: number,
+  getParticipantesInduccion(semestre: string, signal?: AbortSignal) {
+    return apiClient.get<ParticipantesInduccion>(enSemestre('/induccion/participantes', semestre), { signal });
+  },
+
+  registrarAsistenciaInduccion(
+    semestre: string,
+    participante: { asistenciaId: number } | { userId: number; sesionId: number },
     data: {
-      asistioCharla: boolean;
-      fechaCharla?: string;
-      asistioRecorrido: boolean;
-      fechaRecorrido?: string;
+      asistio: boolean;
+      fechaCharla?: string | null;
+      recorridoSitio?: string | null;
       estadoInduccion: EstadoInduccion;
       observaciones?: string;
     },
-  ): Promise<ParticipanteInduccion> {
-    return await apiClient.post<ParticipanteInduccion>('/documentos/induccion/asistencia', {
-      asistenciaId: participanteId,
+  ) {
+    return apiClient.post(enSemestre('/induccion/asistencia', semestre), {
+      ...participante,
       ...data,
     });
   },
 
-  // P-12: Crear nueva sesión de inducción
-  async crearSesionInduccion(sesion: Partial<SesionInduccion>): Promise<SesionInduccion> {
-    return await apiClient.post<SesionInduccion>('/documentos/induccion/sesiones', sesion);
+  crearSesionInduccion(semestre: string, sesion: Omit<SesionInduccion, 'id'>) {
+    return apiClient.post<SesionInduccion>(enSemestre('/induccion/sesiones', semestre), sesion);
   },
 };

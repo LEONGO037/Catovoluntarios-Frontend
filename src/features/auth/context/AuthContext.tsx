@@ -7,6 +7,9 @@ import { AuthContext } from './auth-context-def';
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>(() => {
     const savedToken = localStorage.getItem('catovoluntarios_token');
+    if (savedToken?.startsWith('local-json-token-')) {
+      return { user: null, token: null, isAuthenticated: false, isLoading: false };
+    }
     const savedUserStr = localStorage.getItem('catovoluntarios_user');
     let savedUser: User | null = null;
     if (savedUserStr) {

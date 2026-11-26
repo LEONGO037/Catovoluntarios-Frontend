@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 interface TopbarProps {
   selectedSemestre: string;
+  semestres: string[];
   onSelectSemestre: (semestre: string) => void;
   urgentCount?: number;
   onOpenNotifications?: () => void;
@@ -13,6 +14,7 @@ interface TopbarProps {
 
 export const Topbar: React.FC<TopbarProps> = ({
   selectedSemestre,
+  semestres,
   onSelectSemestre,
   urgentCount = 0,
   onOpenNotifications,
@@ -43,30 +45,32 @@ export const Topbar: React.FC<TopbarProps> = ({
           <CalendarDays className="w-3.5 h-3.5 text-cato-navy shrink-0" />
           <span className="text-[11px] font-medium text-cato-slate">Período:</span>
           <select
+            aria-label="Gestión en la barra superior"
             value={selectedSemestre}
             onChange={(e) => onSelectSemestre(e.target.value)}
             className="bg-transparent font-bold text-cato-navy text-xs focus:outline-none cursor-pointer"
           >
-            <option value="2/2026">Gestión 2/2026 (Activo)</option>
-            <option value="1/2026">Gestión 1/2026</option>
-            <option value="2/2025">Gestión 2/2025</option>
+            {semestres.map((semestre) => (
+              <option key={semestre} value={semestre}>Gestión {semestre}</option>
+            ))}
           </select>
         </div>
 
         {/* Notificaciones Urgentes */}
-        <button
+        {onOpenNotifications && <button
           onClick={onOpenNotifications}
           type="button"
           className="relative p-2 rounded-lg text-cato-muted hover:text-cato-navy hover:bg-cato-canvas transition-colors"
-          title="Notificaciones urgentes de Pastoral"
+          title="Notificaciones"
+          aria-label={urgentCount ? `Notificaciones, ${urgentCount} sin leer` : 'Notificaciones'}
         >
           <Bell className="w-5 h-5" />
           {urgentCount > 0 && (
             <span className="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
-              {urgentCount}
+              {urgentCount > 9 ? '9+' : urgentCount}
             </span>
           )}
-        </button>
+        </button>}
 
         {/* Ver Portal Público */}
         <Link

@@ -47,6 +47,7 @@ interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   selectedSemestre: string;
+  semestres: string[];
   onSelectSemestre: (semestre: string) => void;
 }
 
@@ -54,6 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   onToggleCollapse,
   selectedSemestre,
+  semestres,
   onSelectSemestre,
 }) => {
   const { user, logout } = useAuth();
@@ -170,13 +172,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       group: 'Documentación',
-      roles: ['ADMIN_PASTORAL'],
+      roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
       items: [
         {
           to: '/validacion-documental',
           label: 'Validar Documentos',
           icon: ShieldCheck,
           roles: ['ADMIN_PASTORAL'],
+        },
+        {
+          to: '/induccion',
+          label: 'Control de Inducción',
+          icon: UserCheck,
+          roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
         },
       ],
     },
@@ -297,13 +305,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Semestre Activo
             </span>
             <select
+              aria-label="Gestión en el menú lateral"
               value={selectedSemestre}
               onChange={(e) => onSelectSemestre(e.target.value)}
               className="bg-cato-navy-dark border border-white/20 text-cato-gold text-xs font-semibold rounded-md px-2 py-0.5 focus:outline-none cursor-pointer"
             >
-              <option value="2/2026">Gestión 2/2026</option>
-              <option value="1/2026">Gestión 1/2026</option>
-              <option value="2/2025">Gestión 2/2025</option>
+              {semestres.map((semestre) => (
+                <option key={semestre} value={semestre}>Gestión {semestre}</option>
+              ))}
             </select>
           </div>
         )}

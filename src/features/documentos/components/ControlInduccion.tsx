@@ -1,725 +1,293 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  CheckCircle2,
-  Plus,
-  Download,
-  ShieldCheck,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
+import { useActiveSemester } from '../../../components/layout/active-semester';
 import { documentosService } from '../../../services/documentos.service';
-import type { ParticipanteInduccion, EstadoInduccion } from '../../../types/documentos.types';
-import type { UserRole } from '../../../types/auth.types';
+import type { EstadoInduccion, ParticipanteInduccion, ParticipantesInduccion } from '../../../types/documentos.types';
+import { useAuth } from '../../auth/hooks/useAuth';
+import { mensajeError } from './documentos-ui';
 
-export const ControlInduccion: React.FC = () => {
-  const [participantes, setParticipantes] = useState<ParticipanteInduccion[]>([]);
+const estados: Record<EstadoInduccion, string> = {
+  PENDIENTE: 'Pendiente',
+  EN_PROCESO: 'En proceso',
+  COMPLETADA: 'Completada',
+  REPROGRAMAR: 'Reprogramar',
+};
+
+const roles = {
+  VOLUNTARIO: ['Catovoluntario', 'bg-amber-100 text-amber-900'],
+  CATOLIDER: ['Catolíder', 'bg-red-100 text-red-900'],
+  POSTULANTE: ['Postulante', 'bg-blue-100 text-blue-900'],
+  INTERESADO: ['Interesado', 'bg-sky-100 text-sky-900'],
+  ADMIN_PASTORAL: ['Administración', 'bg-emerald-100 text-emerald-900'],
+  ENCARGADO_RECEPTOR: ['Encargado receptor', 'bg-slate-100 text-slate-900'],
+} as const;
+
+const campo = 'w-full rounded-lg border border-cato-border bg-white px-3 py-2 text-sm';
+const etiqueta = 'grid gap-1 text-sm font-medium text-cato-navy';
+
+function mostrarFecha(fecha?: string | null) {
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}/.test(fecha)) return '—';
+  const [year, month, day] = fecha.slice(0, 10).split('-');
+  return `${day}/${month}/${year}`;
+}
+
+export function ControlInduccion() {
+  const semestre = useActiveSemester();
+  const { user } = useAuth();
+  return <ControlPorSemestre key={semestre} semestre={semestre} esAdmin={user?.rol === 'ADMIN_PASTORAL'} />;
+}
+
+function ControlPorSemestre({ semestre, esAdmin }: { semestre: string; esAdmin: boolean }) {
+  const [data, setData] = useState<ParticipantesInduccion>();
+  const [proyectos, setProyectos] = useState<{ id: number; nombre: string }[]>([]);
+  const [proyectoId, setProyectoId] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('');
+  const [participante, setParticipante] = useState<ParticipanteInduccion>();
+  const [nuevaSesion, setNuevaSesion] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [selectedProyecto, setSelectedProyecto] = useState('Todos');
-  const [filtroEstado, setFiltroEstado] = useState('TODOS');
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-
-  // Modal para registrar asistencia a inducción
-  const [modalRegistro, setModalRegistro] = useState<{
-    isOpen: boolean;
-    participante: ParticipanteInduccion | null;
-    asistioCharla: boolean;
-    fechaCharla: string;
-    asistioRecorrido: boolean;
-    fechaRecorrido: string;
-    estadoInduccion: EstadoInduccion;
-    observaciones: string;
-  }>({
-    isOpen: false,
-    participante: null,
-    asistioCharla: true,
-    fechaCharla: '2026-09-08',
-    asistioRecorrido: true,
-    fechaRecorrido: '2026-09-09',
-    estadoInduccion: 'COMPLETADA',
-    observaciones: '',
-  });
-
-  // Modal para nueva sesión de inducción
-  const [modalNuevaSesion, setModalNuevaSesion] = useState<{
-    isOpen: boolean;
-    titulo: string;
-    fechaHora: string;
-    modalidad: 'PRESENCIAL' | 'VIRTUAL';
-    lugarEnlace: string;
-    facilitador: string;
-    proyecto: string;
-  }>({
-    isOpen: false,
-    titulo: '',
-    fechaHora: '',
-    modalidad: 'PRESENCIAL',
-    lugarEnlace: '',
-    facilitador: '',
-    proyecto: '',
-  });
-
-  // KPIs
-  const [kpis, setKpis] = useState({
-    voluntariosHabilitados: 0,
-    induccionCompletada: 0,
-    pendientesInduccion: 0,
-    reprogramarAsistencia: 0,
-  });
-
-  const cargarDatos = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await documentosService.getParticipantesInduccion(selectedProyecto);
-      setParticipantes(res.participantes);
-      setKpis(res.kpis);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedProyecto]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [errorModal, setErrorModal] = useState('');
+  const [success, setSuccess] = useState('');
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    cargarDatos();
-  }, [cargarDatos]);
-
-  const handleAbrirRegistro = (p: ParticipanteInduccion) => {
-    const isCharlaOk = p.fechaCharla && p.fechaCharla !== 'No asistió' && p.fechaCharla !== 'Pendiente';
-    const isRecorridoOk = p.recorridoSitio && p.recorridoSitio !== 'Por registrar' && p.recorridoSitio !== '—' && p.recorridoSitio !== 'Pendiente';
-
-    setModalRegistro({
-      isOpen: true,
-      participante: p,
-      asistioCharla: Boolean(isCharlaOk),
-      fechaCharla: isCharlaOk ? '2026-09-08' : '',
-      asistioRecorrido: Boolean(isRecorridoOk),
-      fechaRecorrido: isRecorridoOk ? '2026-09-09' : '',
-      estadoInduccion: p.estadoInduccion,
-      observaciones: p.observaciones || '',
+    const controller = new AbortController();
+    Promise.all([
+      documentosService.getParticipantesInduccion(semestre, controller.signal),
+      documentosService.getProyectosInduccion(semestre, controller.signal),
+    ]).then(([participantes, listaProyectos]) => {
+      if (controller.signal.aborted) return;
+      setData(participantes);
+      setProyectos(listaProyectos);
+    }).catch((failure: unknown) => {
+      if (!controller.signal.aborted) setError(mensajeError(failure));
+    }).finally(() => {
+      if (!controller.signal.aborted) setLoading(false);
     });
-  };
+    return () => controller.abort();
+  }, [semestre, reload]);
 
-  const handleGuardarAsistencia = async () => {
-    if (!modalRegistro.participante) return;
-
-    // Calcular estado automático si marca ambos
-    let estadoFinal = modalRegistro.estadoInduccion;
-    if (modalRegistro.asistioCharla && modalRegistro.asistioRecorrido) {
-      estadoFinal = 'COMPLETADA';
-    } else if (modalRegistro.asistioCharla && !modalRegistro.asistioRecorrido) {
-      estadoFinal = 'EN_PROCESO';
-    }
-
-    await documentosService.registrarAsistenciaInduccion(modalRegistro.participante.id, {
-      asistioCharla: modalRegistro.asistioCharla,
-      fechaCharla: modalRegistro.fechaCharla || '08/09/2026',
-      asistioRecorrido: modalRegistro.asistioRecorrido,
-      fechaRecorrido: modalRegistro.fechaRecorrido || '09/09/2026',
-      estadoInduccion: estadoFinal,
-      observaciones: modalRegistro.observaciones,
-    });
-
-    setModalRegistro({ ...modalRegistro, isOpen: false });
-    setActionSuccess(`¡Asistencia de ${modalRegistro.participante.nombreCompleto} actualizada a ${estadoFinal}!`);
-    await cargarDatos();
-    setTimeout(() => setActionSuccess(null), 4000);
-  };
-
-  const handleCrearSesion = async () => {
-    await documentosService.crearSesionInduccion({
-      titulo: modalNuevaSesion.titulo,
-      fechaHora: modalNuevaSesion.fechaHora,
-      modalidad: modalNuevaSesion.modalidad,
-      lugarEnlace: modalNuevaSesion.lugarEnlace,
-      facilitador: modalNuevaSesion.facilitador,
-      proyectoNombre: modalNuevaSesion.proyecto,
-    });
-
-    setModalNuevaSesion({ ...modalNuevaSesion, isOpen: false });
-    setActionSuccess(`¡Sesión de inducción "${modalNuevaSesion.titulo}" agendada exitosamente!`);
-    setTimeout(() => setActionSuccess(null), 4000);
-  };
-
-  const handleExportarLista = () => {
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      'ID,Nombre Completo,CI,Rol,Catolider,Documentos Habilitados,Fecha Charla,Recorrido Sitio,Estado Induccion\n' +
-      participantes
-        .map(
-          (p) =>
-            `"${p.id}","${p.nombreCompleto}","${p.ci}","${p.rol}","${p.catolider}","${p.documentosHabilitados}","${p.fechaCharla || ''}","${p.recorridoSitio || ''}","${p.estadoInduccion}"`,
-        )
-        .join('\n');
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Induccion_${selectedProyecto.replace(/\s+/g, '_')}_2_2026.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const participantesFiltrados = participantes.filter((p) => {
-    if (filtroEstado === 'TODOS') return true;
-    return p.estadoInduccion === filtroEstado;
-  });
-
-  // OBSERVACIÓN CLAVE CUMPLIDA: Asignación cromática estricta para cada rol
-  const renderRoleBadge = (rol: UserRole | string) => {
-    switch (rol) {
-      case 'VOLUNTARIO':
-        // Cato voluntario - amarillo
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FEF9C3] text-[#854D0E] border border-amber-300 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#EAB308]" />
-            Catovoluntario
-          </span>
-        );
-      case 'CATOLIDER':
-        // Catolider - rojo
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FEE2E2] text-[#991B1B] border border-red-300 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
-            Catolíder
-          </span>
-        );
-      case 'POSTULANTE':
-        // Postulante - azul
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#DBEAFE] text-[#1E40AF] border border-blue-300 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />
-            Postulante
-          </span>
-        );
-      case 'INTERESADO':
-        // Interesado - celeste
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#E0F2FE] text-[#0369A1] border border-sky-300 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9]" />
-            Interesado
-          </span>
-        );
-      case 'ADMIN_PASTORAL':
-      default:
-        // Administración - verde
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#D1FAE5] text-[#065F46] border border-emerald-300 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
-            Administración
-          </span>
-        );
-    }
-  };
-
-  const completadosCount = participantes.filter((p) => p.estadoInduccion === 'COMPLETADA').length;
-  const totalCount = participantes.length;
-  const porcentajeAvance = totalCount > 0 ? Math.round((completadosCount / totalCount) * 100) : 0;
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-cato-navy mx-auto mb-3" />
-          <p className="text-sm text-cato-muted">Cargando control de inducción...</p>
-        </div>
-      </div>
-    );
+  function actualizar() {
+    setLoading(true);
+    setError('');
+    setReload((value) => value + 1);
   }
 
+  async function guardar(action: () => Promise<void>) {
+    setSaving(true);
+    setErrorModal('');
+    setSuccess('');
+    try {
+      await action();
+      setParticipante(undefined);
+      setNuevaSesion(false);
+      actualizar();
+    } catch (failure) {
+      setErrorModal(mensajeError(failure));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function registrarAsistencia(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!participante) return;
+    const referencia = participante.id != null ? { asistenciaId: participante.id }
+      : participante.sesionId != null ? { userId: participante.userId, sesionId: participante.sesionId } : null;
+    if (!referencia) return;
+
+    const form = new FormData(event.currentTarget);
+    const fechaCharla = String(form.get('fechaCharla') ?? '') || null;
+    const recorridoSitio = String(form.get('recorridoSitio') ?? '') || null;
+    const estadoInduccion = fechaCharla && recorridoSitio ? 'COMPLETADA'
+      : fechaCharla || recorridoSitio ? 'EN_PROCESO'
+        : form.has('reprogramar') ? 'REPROGRAMAR' : 'PENDIENTE';
+    void guardar(async () => {
+      await documentosService.registrarAsistenciaInduccion(semestre, referencia, {
+        asistio: Boolean(fechaCharla),
+        fechaCharla,
+        recorridoSitio,
+        estadoInduccion,
+        observaciones: String(form.get('observaciones') ?? '').trim(),
+      });
+      setSuccess(`Asistencia de ${participante.nombreCompleto} guardada.`);
+    });
+  }
+
+  function agendarSesion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const titulo = String(form.get('titulo') ?? '').trim();
+    const fechaHora = String(form.get('fechaHora') ?? '');
+    const proyecto = String(form.get('proyectoId') ?? '');
+    const modalidad = form.get('modalidad') === 'VIRTUAL' ? 'VIRTUAL' : 'PRESENCIAL';
+    if (!titulo || !fechaHora) {
+      setErrorModal('Ingresa el título y la fecha de la sesión.');
+      return;
+    }
+    void guardar(async () => {
+      await documentosService.crearSesionInduccion(semestre, {
+        titulo,
+        fechaHora: new Date(`${fechaHora}-04:00`).toISOString(),
+        modalidad,
+        lugarEnlace: String(form.get('lugarEnlace') ?? '').trim() || undefined,
+        facilitador: String(form.get('facilitador') ?? '').trim() || undefined,
+        proyectoId: proyecto ? Number(proyecto) : undefined,
+      });
+      setSuccess(`Sesión de inducción «${titulo}» agendada.`);
+    });
+  }
+
+  const participantes = data?.participantes.filter((persona) =>
+    (!proyectoId || String(persona.proyectoId) === proyectoId) && (!filtroEstado || persona.estadoInduccion === filtroEstado),
+  ) ?? [];
+  const kpis = data && [
+    ['Voluntarios habilitados', data.kpis.voluntariosHabilitados],
+    ['Inducción completada', data.kpis.induccionCompletada],
+    ['Pendientes de inducción', data.kpis.pendientesInduccion],
+    ['Reprogramar asistencia', data.kpis.reprogramarAsistencia],
+  ];
+
+  function exportar() {
+    const escapar = (value: string | null | undefined) => {
+      const texto = value ?? '';
+      const seguro = /^[=+@-]|^[\t\r\n]/.test(texto) ? "'" + texto : texto;
+      return '"' + seguro.replaceAll('"', '""') + '"';
+    };
+    const filas = participantes.map((persona) => [
+      persona.nombreCompleto, persona.ci, persona.rol, persona.proyectoAsignado,
+      persona.fechaCharla, persona.recorridoSitio, estados[persona.estadoInduccion],
+    ].map(escapar).join(','));
+    const encabezado = '\uFEFFNombre,CI,Rol,Proyecto,Fecha de charla,Fecha de recorrido,Estado de inducción\r\n';
+    const csv = new Blob([encabezado, filas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(csv);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Induccion_${semestre.replace('/', '_')}.csv`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  const selectorProyectos = proyectos.map((proyecto) => <option key={proyecto.id} value={proyecto.id}>{proyecto.nombre}</option>);
+
   return (
-    <div className="space-y-6">
-      {/* Alerta de acción completada */}
-      {actionSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center gap-3 text-emerald-800 shadow-sm animate-fadeIn">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-          <span className="text-sm font-medium">{actionSuccess}</span>
+    <div className="space-y-5">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-cato-navy">Control de inducción</h1>
+          <p className="text-sm text-cato-muted">Gestión {semestre} · Charla y recorrido inicial</p>
         </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" isLoading={loading} onClick={actualizar}>Actualizar</Button>
+          {esAdmin && <Button disabled={loading} onClick={() => { setErrorModal(''); setNuevaSesion(true); }}>Registrar sesión</Button>}
+        </div>
+      </header>
+
+      {error && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-800">{error}</p>}
+      {success && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">{success}</p>}
+      {loading && !data && <p role="status" className="text-sm text-cato-muted">Cargando participantes…</p>}
+      {kpis && (
+        <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {kpis.map(([label, value]) => (
+            <div key={label} className="rounded-xl border border-cato-border bg-white p-3">
+              <dt className="text-xs text-cato-muted">{label}</dt>
+              <dd className="mt-1 text-xl font-bold text-cato-navy">{value}</dd>
+            </div>
+          ))}
+        </dl>
       )}
 
-      {/* Cabecera Principal */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="text-xs font-semibold text-cato-navy tracking-wider uppercase mb-1">
-            PRIMERA SEMANA EN PROYECTO
+      {data && (
+        <section className="space-y-3 rounded-xl border border-cato-border bg-white p-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <label className={etiqueta}>
+              Proyecto
+              <select className={campo} value={proyectoId} onChange={(event) => setProyectoId(event.target.value)}>
+                <option value="">Todos los proyectos</option>{selectorProyectos}
+              </select>
+            </label>
+            <label className={etiqueta}>
+              Estado
+              <select className={campo} value={filtroEstado} onChange={(event) => setFiltroEstado(event.target.value)}>
+                <option value="">Todos los estados</option>
+                {Object.entries(estados).map(([estado, label]) => <option key={estado} value={estado}>{label}</option>)}
+              </select>
+            </label>
+            <Button variant="outline" disabled={!participantes.length} onClick={exportar}>Exportar lista</Button>
           </div>
-          <h1 className="text-2xl font-bold text-cato-navy">Control de inducción</h1>
-          <p className="text-sm text-cato-muted mt-0.5">
-            Registra la charla y el recorrido inicial de voluntarios documentalmente habilitados.
-          </p>
-        </div>
-        <Button
-          variant="primary"
-          leftIcon={<Plus className="w-4 h-4" />}
-          onClick={() => setModalNuevaSesion({ ...modalNuevaSesion, isOpen: true })}
-        >
-          Registrar sesión de inducción
-        </Button>
-      </div>
-
-      {/* Tarjetas KPI */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-cato-border shadow-sm">
-          <div className="text-xs text-cato-muted font-medium">Voluntarios habilitados</div>
-          <div className="text-2xl font-bold text-cato-navy mt-1">{kpis.voluntariosHabilitados}</div>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-cato-border shadow-sm">
-          <div className="text-xs text-cato-muted font-medium">Inducción completada</div>
-          <div className="text-2xl font-bold text-emerald-600 mt-1">{kpis.induccionCompletada}</div>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-cato-border shadow-sm">
-          <div className="text-xs text-cato-muted font-medium">Pendientes de inducción</div>
-          <div className="text-2xl font-bold text-amber-600 mt-1">{kpis.pendientesInduccion}</div>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-cato-border shadow-sm">
-          <div className="text-xs text-cato-muted font-medium">Reprogramar asistencia</div>
-          <div className="text-2xl font-bold text-red-600 mt-1">{kpis.reprogramarAsistencia}</div>
-        </div>
-      </div>
-
-      {/* Barra de Filtros y Acciones */}
-      <div className="bg-white rounded-xl border border-cato-border p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <span className="text-xs font-semibold text-cato-muted">Filtrar por:</span>
-          <select
-            value={selectedProyecto}
-            onChange={(e) => setSelectedProyecto(e.target.value)}
-            className="px-3 py-1.5 text-xs bg-cato-canvas border border-cato-border rounded-lg font-semibold text-cato-navy focus:outline-none focus:border-cato-navy"
-          >
-            <option value="Todos">Todos los Proyectos</option>
-          </select>
-
-          <select className="px-3 py-1.5 text-xs bg-cato-canvas border border-cato-border rounded-lg font-semibold text-cato-slate focus:outline-none focus:border-cato-navy">
-            <option>Septiembre 2026</option>
-            <option>Agosto 2026</option>
-            <option>Octubre 2026</option>
-          </select>
-
-          <select
-            value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value)}
-            className="px-3 py-1.5 text-xs bg-cato-canvas border border-cato-border rounded-lg font-semibold text-cato-slate focus:outline-none focus:border-cato-navy"
-          >
-            <option value="TODOS">Todos los estados</option>
-            <option value="COMPLETADA">Completada</option>
-            <option value="EN_PROCESO">En proceso</option>
-            <option value="PENDIENTE">Pendiente</option>
-            <option value="REPROGRAMAR">Reprogramar</option>
-          </select>
-        </div>
-
-        <Button
-          size="sm"
-          variant="outline"
-          leftIcon={<Download className="w-3.5 h-3.5" />}
-          onClick={handleExportarLista}
-        >
-          Exportar lista
-        </Button>
-      </div>
-
-      {/* Card Principal: Tabla de Control de Inducción */}
-      <div className="bg-white rounded-xl border border-cato-border shadow-sm overflow-hidden">
-        {/* Cabecera del bloque */}
-        <div className="p-5 border-b border-cato-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-cato-canvas/40">
-          <div>
-            <h3 className="text-base font-bold text-cato-navy">
-              {selectedProyecto} · Inducción inicial
-            </h3>
-            <p className="text-xs text-cato-muted mt-0.5">
-              Charla de bienvenida y recorrido en sitio · {participantes.length} voluntarios en este proyecto
-            </p>
-          </div>
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-cato-navy text-white self-start sm:self-center shadow-xs">
-            ● Semana 1 · 7–13 sep
-          </span>
-        </div>
-
-        {/* Tabla Responsiva */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-cato-canvas text-cato-muted font-bold uppercase tracking-wider border-b border-cato-border">
-              <tr>
-                <th className="py-3 px-4">Voluntario</th>
-                <th className="py-3 px-4">Documentos</th>
-                <th className="py-3 px-4">Fecha de Charla</th>
-                <th className="py-3 px-4">Recorrido en Sitio</th>
-                <th className="py-3 px-4">Inducción</th>
-                <th className="py-3 px-4 text-right">Acción</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-cato-border">
-              {participantesFiltrados.map((p) => {
-                return (
-                  <tr key={p.id} className="hover:bg-cato-canvas/60 transition">
-                    {/* Voluntario + Badge de Rol Oficial */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
-                          {p.nombreCompleto.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="font-bold text-cato-navy">{p.nombreCompleto}</div>
-                          <div className="text-[11px] text-cato-muted">CI: {p.ci}</div>
-                          <div className="flex items-center gap-2 mt-1">
-                            {/* ROL CROMÁTICO OFICIAL */}
-                            {renderRoleBadge(p.rol)}
-                            <span className="text-[11px] text-cato-muted">
-                              Líder: {p.catolider}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Documentos */}
-                    <td className="py-3.5 px-4">
-                      {p.documentosHabilitados ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                          ● Habilitado
+          <div className="overflow-x-auto">
+            <table className="min-w-[640px] w-full border-collapse text-left text-sm">
+              <thead className="bg-slate-50 text-cato-navy">
+                <tr>{['Voluntario', 'Proyecto', 'Documentos', 'Charla', 'Recorrido', 'Estado', 'Acción'].map((label) =>
+                  <th key={label} className="p-2 font-semibold">{label}</th>)}</tr>
+              </thead>
+              <tbody>
+                {participantes.map((persona) => (
+                  <tr key={persona.id ?? `usuario-${persona.userId}`} className="border-b border-cato-border">
+                    <th scope="row" className="p-2 font-medium text-cato-navy">
+                      {persona.nombreCompleto}
+                      <span className="block text-xs text-cato-muted">CI {persona.ci}</span>
+                      {roles[persona.rol] && (
+                        <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs ${roles[persona.rol][1]}`}>
+                          {roles[persona.rol][0]}
                         </span>
+                      )}
+                    </th>
+                    <td className="p-2">{persona.proyectoAsignado}</td>
+                    <td className="p-2">{persona.documentosHabilitados ? 'Habilitados' : 'Pendientes'}</td>
+                    <td className="p-2">{mostrarFecha(persona.fechaCharla)}</td>
+                    <td className="p-2">{mostrarFecha(persona.recorridoSitio)}</td>
+                    <td className="p-2">{estados[persona.estadoInduccion]}</td>
+                    <td className="p-2">
+                      {persona.id == null && persona.sesionId == null ? (
+                        <span className="text-xs text-cato-muted">Sin sesión programada</span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                          ● En revisión
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Fecha Charla */}
-                    <td className="py-3.5 px-4 text-cato-slate font-medium">
-                      {p.fechaCharla === 'No asistió' ? (
-                        <span className="text-red-600 font-bold">No asistió</span>
-                      ) : (
-                        p.fechaCharla || 'Pendiente'
-                      )}
-                    </td>
-
-                    {/* Recorrido Sitio */}
-                    <td className="py-3.5 px-4 text-cato-slate font-medium">
-                      {p.recorridoSitio === 'Por registrar' ? (
-                        <span className="text-amber-600 italic">Por registrar</span>
-                      ) : (
-                        p.recorridoSitio || '—'
-                      )}
-                    </td>
-
-                    {/* Estado Inducción */}
-                    <td className="py-3.5 px-4">
-                      {p.estadoInduccion === 'COMPLETADA' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                          ● Completada
-                        </span>
-                      )}
-                      {p.estadoInduccion === 'EN_PROCESO' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                          ● En proceso
-                        </span>
-                      )}
-                      {p.estadoInduccion === 'PENDIENTE' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                          ● Pendiente
-                        </span>
-                      )}
-                      {p.estadoInduccion === 'REPROGRAMAR' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                          ● Reprogramar
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Acciones */}
-                    <td className="py-3.5 px-4 text-right">
-                      {p.estadoInduccion === 'COMPLETADA' ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleAbrirRegistro(p)}
-                        >
-                          Ver registro
-                        </Button>
-                      ) : p.estadoInduccion === 'REPROGRAMAR' ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-300 text-red-700 hover:bg-red-50"
-                          onClick={() => handleAbrirRegistro(p)}
-                        >
-                          Reprogramar
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="primary"
-                          onClick={() => handleAbrirRegistro(p)}
-                        >
-                          Registrar
+                        <Button size="sm" variant="outline" disabled={loading} onClick={() => { setErrorModal(''); setParticipante(persona); }}>
+                          {persona.id == null ? 'Registrar' : 'Editar asistencia'}
                         </Button>
                       )}
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer de Paginación */}
-        <div className="p-4 border-t border-cato-border flex items-center justify-between text-xs text-cato-muted bg-cato-canvas/20">
-          <div>Mostrando {participantesFiltrados.length} de {participantes.length} voluntarios</div>
-          <div className="flex gap-1">
-            <button className="px-2 py-1 rounded bg-white border border-cato-border text-cato-slate hover:bg-cato-canvas disabled:opacity-50" disabled>
-              ‹ Anterior
-            </button>
-            <button className="px-2.5 py-1 rounded bg-cato-navy text-white font-bold">1</button>
-            <button className="px-2 py-1 rounded bg-white border border-cato-border text-cato-slate hover:bg-cato-canvas disabled:opacity-50" disabled>
-              Siguiente ›
-            </button>
+                ))}
+                {participantes.length === 0 && <tr><td colSpan={7} className="p-4 text-center text-cato-muted">No hay participantes para estos filtros.</td></tr>}
+              </tbody>
+            </table>
           </div>
-        </div>
-      </div>
+        </section>
+      )}
 
-      {/* Bloque Inferior Informativo y de Avance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Regla de Oro Pastoral */}
-        <div className="bg-white rounded-xl border border-cato-border p-5 shadow-sm space-y-2">
-          <h4 className="text-sm font-bold text-cato-navy flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-cato-navy" />
-            Regla de habilitación institucional
-          </h4>
-          <p className="text-xs text-cato-muted leading-relaxed">
-            Solo los voluntarios con documentos aprobados pueden figurar en esta lista. Cuando un voluntario tiene marcados{' '}
-            <strong className="text-cato-navy">Póliza Validada = TRUE</strong> e{' '}
-            <strong className="text-cato-navy">Inducción Completada = TRUE</strong>, su estado cambia automáticamente a{' '}
-            <span className="font-bold text-emerald-700">HABILITADO PARA CAMPO</span>, desbloqueando el registro de horas de voluntariado.
-          </p>
-        </div>
-
-        {/* Avance del Proyecto */}
-        <div className="bg-white rounded-xl border border-cato-border p-5 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-cato-navy">Avance del proyecto</h4>
-            <span className="text-xs font-bold text-cato-navy">{porcentajeAvance}%</span>
-          </div>
-          <p className="text-xs text-cato-muted">
-            {completadosCount} de {totalCount} voluntarios completaron la inducción inicial.
-          </p>
-          <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-            <div
-              className="bg-cato-gold h-full rounded-full transition-all duration-500"
-              style={{ width: `${porcentajeAvance}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Modal para Registrar/Editar Asistencia */}
-      <Modal
-        isOpen={modalRegistro.isOpen}
-        onClose={() => setModalRegistro({ ...modalRegistro, isOpen: false })}
-        title={`Registro de Inducción: ${modalRegistro.participante?.nombreCompleto || ''}`}
-        subtitle={`CI: ${modalRegistro.participante?.ci || ''} · Proyecto: ${selectedProyecto}`}
-        maxWidth="lg"
-      >
-        <div className="space-y-4">
-          <div className="bg-slate-50 p-3 rounded-lg border border-cato-border space-y-2">
-            <div className="text-xs font-bold text-cato-navy uppercase tracking-wider">
-              Control de Habilitación Pre-Campo
-            </div>
-            <div className="space-y-2 pt-1">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={modalRegistro.asistioCharla}
-                  onChange={(e) =>
-                    setModalRegistro({ ...modalRegistro, asistioCharla: e.target.checked })
-                  }
-                  className="rounded text-cato-navy focus:ring-cato-navy w-4 h-4"
-                />
-                <span className="text-xs font-semibold text-cato-slate">
-                  Asistió a la Charla Institucional de Bienvenida
-                </span>
-              </label>
-
-              {modalRegistro.asistioCharla && (
-                <div className="pl-6">
-                  <label className="block text-[11px] text-cato-muted mb-0.5">Fecha de Charla</label>
-                  <input
-                    type="date"
-                    value={modalRegistro.fechaCharla}
-                    onChange={(e) =>
-                      setModalRegistro({ ...modalRegistro, fechaCharla: e.target.value })
-                    }
-                    className="px-2.5 py-1 text-xs bg-white border border-cato-border rounded focus:outline-none focus:border-cato-navy"
-                  />
-                </div>
-              )}
-
-              <label className="flex items-center gap-2 cursor-pointer pt-2">
-                <input
-                  type="checkbox"
-                  checked={modalRegistro.asistioRecorrido}
-                  onChange={(e) =>
-                    setModalRegistro({ ...modalRegistro, asistioRecorrido: e.target.checked })
-                  }
-                  className="rounded text-cato-navy focus:ring-cato-navy w-4 h-4"
-                />
-                <span className="text-xs font-semibold text-cato-slate">
-                  Completó el Recorrido en Sitio / Instalaciones
-                </span>
-              </label>
-
-              {modalRegistro.asistioRecorrido && (
-                <div className="pl-6">
-                  <label className="block text-[11px] text-cato-muted mb-0.5">Fecha de Recorrido</label>
-                  <input
-                    type="date"
-                    value={modalRegistro.fechaRecorrido}
-                    onChange={(e) =>
-                      setModalRegistro({ ...modalRegistro, fechaRecorrido: e.target.value })
-                    }
-                    className="px-2.5 py-1 text-xs bg-white border border-cato-border rounded focus:outline-none focus:border-cato-navy"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-cato-slate mb-1">
-              Estado de la Inducción
-            </label>
-            <select
-              value={modalRegistro.estadoInduccion}
-              onChange={(e) =>
-                setModalRegistro({
-                  ...modalRegistro,
-                  estadoInduccion: e.target.value as EstadoInduccion,
-                })
-              }
-              className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy font-semibold text-cato-navy"
-            >
-              <option value="COMPLETADA">Completada (Desbloquea horas si la póliza está aprobada)</option>
-              <option value="EN_PROCESO">En proceso (Falta charla o recorrido)</option>
-              <option value="PENDIENTE">Pendiente</option>
-              <option value="REPROGRAMAR">Reprogramar (Justificado por examen/salud)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-cato-slate mb-1">
-              Observaciones o justificación
-            </label>
-            <textarea
-              rows={2}
-              value={modalRegistro.observaciones}
-              onChange={(e) =>
-                setModalRegistro({ ...modalRegistro, observaciones: e.target.value })
-              }
-              placeholder="Ej: Cumplió ambas etapas satisfactoriamente..."
-              className="w-full p-2.5 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy resize-none"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-cato-border">
-            <Button
-              variant="outline"
-              onClick={() => setModalRegistro({ ...modalRegistro, isOpen: false })}
-            >
-              Cancelar
-            </Button>
-            <Button variant="primary" onClick={handleGuardarAsistencia}>
-              Guardar y actualizar
-            </Button>
-          </div>
-        </div>
+      <Modal title="Registrar asistencia" subtitle={participante?.nombreCompleto} isOpen={Boolean(participante)}
+        onClose={() => { if (!saving) setParticipante(undefined); }}>
+        {participante && (
+          <form onSubmit={registrarAsistencia} className="space-y-3">
+            {errorModal && <p role="alert" className="text-sm text-rose-800">{errorModal}</p>}
+            <p className="text-sm text-cato-muted">Completa la fecha de cada actividad realizada.</p>
+            <label className={etiqueta}>Fecha de charla<input name="fechaCharla" type="date" className={campo} defaultValue={participante.fechaCharla?.slice(0, 10)} /></label>
+            <label className={etiqueta}>Fecha de recorrido<input name="recorridoSitio" type="date" className={campo} defaultValue={participante.recorridoSitio?.slice(0, 10)} /></label>
+            <label className="flex items-center gap-2 text-sm"><input name="reprogramar" type="checkbox" defaultChecked={participante.estadoInduccion === 'REPROGRAMAR'} /> Reprogramar si ambas actividades están pendientes</label>
+            <label className={etiqueta}>Observaciones<textarea name="observaciones" className={campo} defaultValue={participante.observaciones} /></label>
+            <Button type="submit" isLoading={saving}>Guardar asistencia</Button>
+          </form>
+        )}
       </Modal>
 
-      {/* Modal para Crear Nueva Sesión de Inducción */}
-      <Modal
-        isOpen={modalNuevaSesion.isOpen}
-        onClose={() => setModalNuevaSesion({ ...modalNuevaSesion, isOpen: false })}
-        title="Agendar Nueva Sesión de Inducción"
-        subtitle="Programa el taller institucional previo al inicio de campo"
-        maxWidth="lg"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-cato-slate mb-1">Título de la Sesión</label>
-            <input
-              type="text"
-              value={modalNuevaSesion.titulo}
-              onChange={(e) =>
-                setModalNuevaSesion({ ...modalNuevaSesion, titulo: e.target.value })
-              }
-              className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-cato-slate mb-1">Fecha y Hora</label>
-              <input
-                type="datetime-local"
-                value={modalNuevaSesion.fechaHora}
-                onChange={(e) =>
-                  setModalNuevaSesion({ ...modalNuevaSesion, fechaHora: e.target.value })
-                }
-                className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-cato-slate mb-1">Modalidad</label>
-              <select
-                value={modalNuevaSesion.modalidad}
-                onChange={(e) =>
-                  setModalNuevaSesion({
-                    ...modalNuevaSesion,
-                    modalidad: e.target.value as 'PRESENCIAL' | 'VIRTUAL',
-                  })
-                }
-                className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy"
-              >
-                <option value="PRESENCIAL">Presencial</option>
-                <option value="VIRTUAL">Virtual</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-cato-slate mb-1">Lugar o Enlace Meet/Zoom</label>
-            <input
-              type="text"
-              value={modalNuevaSesion.lugarEnlace}
-              onChange={(e) =>
-                setModalNuevaSesion({ ...modalNuevaSesion, lugarEnlace: e.target.value })
-              }
-              className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-cato-slate mb-1">Facilitador / Expositor</label>
-            <input
-              type="text"
-              value={modalNuevaSesion.facilitador}
-              onChange={(e) =>
-                setModalNuevaSesion({ ...modalNuevaSesion, facilitador: e.target.value })
-              }
-              className="w-full px-3 py-2 text-xs bg-cato-canvas border border-cato-border rounded-lg focus:outline-none focus:border-cato-navy"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-cato-border">
-            <Button
-              variant="outline"
-              onClick={() => setModalNuevaSesion({ ...modalNuevaSesion, isOpen: false })}
-            >
-              Cancelar
-            </Button>
-            <Button variant="primary" onClick={handleCrearSesion}>
-              Agendar Sesión
-            </Button>
-          </div>
-        </div>
+      <Modal title="Agendar sesión de inducción" isOpen={nuevaSesion} onClose={() => { if (!saving) setNuevaSesion(false); }}>
+        <form onSubmit={agendarSesion} className="space-y-3">
+          {errorModal && <p role="alert" className="text-sm text-rose-800">{errorModal}</p>}
+          <label className={etiqueta}>Título<input name="titulo" required className={campo} /></label>
+          <label className={etiqueta}>Fecha y hora (Bolivia)<input name="fechaHora" type="datetime-local" required className={campo} /></label>
+          <label className={etiqueta}>Modalidad<select name="modalidad" className={campo}><option value="PRESENCIAL">Presencial</option><option value="VIRTUAL">Virtual</option></select></label>
+          <label className={etiqueta}>Proyecto<select name="proyectoId" className={campo} defaultValue={proyectoId}>
+            <option value="">Sesión institucional para todos los proyectos</option>{selectorProyectos}
+          </select></label>
+          <label className={etiqueta}>Lugar o enlace<input name="lugarEnlace" className={campo} /></label>
+          <label className={etiqueta}>Facilitador<input name="facilitador" className={campo} /></label>
+          <Button type="submit" isLoading={saving}>Agendar sesión</Button>
+        </form>
       </Modal>
     </div>
   );
-};
+}

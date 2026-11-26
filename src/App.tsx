@@ -22,6 +22,7 @@ import { SeleccionCatolideres } from './features/admision/components/SeleccionCa
 // M04: Habilitación Documental y Seguro — Christian Coronel
 import { PortalCargaDocumental } from './features/documentos/components/PortalCargaDocumental';
 import { BandejaValidacionDocumental } from './features/documentos/components/BandejaValidacionDocumental';
+import { ControlInduccion } from './features/documentos/components/ControlInduccion';
 
 // M05: Proyectos y Ubicación — Kael Lopez
 import { P13ReceptorCatalog } from './features/proyectos/components/P13ReceptorCatalog/P13ReceptorCatalog';
@@ -160,6 +161,18 @@ export function App() {
               <RutaPorRol roles={['ADMIN_PASTORAL']}>
                 <AppShell>
                   <BandejaValidacionDocumental />
+                </AppShell>
+              </RutaPorRol>
+            }
+          />
+
+          {/* ADMIN_PASTORAL y CATOLIDER: Control de Inducción */}
+          <Route
+            path="/induccion"
+            element={
+              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER']}>
+                <AppShell>
+                  <ControlInduccion />
                 </AppShell>
               </RutaPorRol>
             }
