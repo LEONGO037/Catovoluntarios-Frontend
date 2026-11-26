@@ -162,6 +162,22 @@ export const Step3PerfilMotivacion: React.FC<Step3Props> = ({
             );
           })}
         </div>
+
+        {formData.habilidadesDestacadas.includes('Otros') && (
+          <div className="mt-3 p-4 rounded-xl bg-slate-50 border border-slate-200 animate-in fade-in duration-150">
+            <label className="block text-xs font-semibold text-cato-slate uppercase mb-1">
+              Especifica tus otras habilidades o talentos adicionales: *
+            </label>
+            <input
+              type="text"
+              value={formData.habilidadesOtras || ''}
+              onChange={(e) => updateField('habilidadesOtras', e.target.value)}
+              placeholder="Ej. Confección de pelucas, robótica educativa, lengua de señas..."
+              className="cato-input text-xs"
+              required
+            />
+          </div>
+        )}
       </div>
 
       {/* 3 Palabras de Personalidad */}

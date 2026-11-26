@@ -3,6 +3,7 @@ import type {
   Postulacion,
   EstadoPostulacion,
 } from '../types/postulacion.types';
+import { calcularEdadDesdeFecha } from '../hooks/usePostulacionForm';
 import {
   X,
   User,
@@ -75,7 +76,11 @@ export const ExpedientePostulanteDrawer: React.FC<ExpedienteDrawerProps> = ({
 
   const esCatolider = userRol === 'CATOLIDER';
   const tieneSobrecarga = postulacion.numeroMaterias > 6;
-  const esMenor = postulacion.edad < 18;
+  const edadReal =
+    postulacion.edad ??
+    postulacion.edadCalculada ??
+    calcularEdadDesdeFecha(postulacion.fechaNacimiento);
+  const esMenor = edadReal < 18;
 
   const handleGuardarCambios = async (estadoParaGuardar?: EstadoPostulacion) => {
     if (esCatolider) return;
@@ -123,14 +128,17 @@ export const ExpedientePostulanteDrawer: React.FC<ExpedienteDrawerProps> = ({
                 {postulacion.codigoPostulacion}
               </span>
               <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-white/10 text-white">
-                Gestión 2/2026
+                Gestión {postulacion.semestre || '2/2026'}
               </span>
             </div>
             <h2 className="text-2xl font-black text-white tracking-tight">
               {postulacion.nombres} {postulacion.primerApellido} {postulacion.segundoApellido || ''}
             </h2>
             <p className="text-xs text-slate-300 flex items-center gap-3">
-              <span>C.I.: {postulacion.ci} {postulacion.expedido}</span>
+              <span>
+                {postulacion.tipoDocumento === 'PASAPORTE' ? 'Pasaporte' : 'C.I.'}: {postulacion.ci}{' '}
+                {postulacion.tipoDocumento === 'PASAPORTE' ? '' : postulacion.expedido}
+              </span>
               <span>•</span>
               <span>{postulacion.carrera}</span>
               <span>•</span>
@@ -186,7 +194,7 @@ export const ExpedientePostulanteDrawer: React.FC<ExpedienteDrawerProps> = ({
                   <User className="w-3.5 h-3.5 text-slate-600" />
                 )}
                 <span>
-                  {postulacion.edad} años{' '}
+                  {edadReal} años{' '}
                   {esMenor
                     ? postulacion.autorizacionPadresConfirmada
                       ? '(Menor con autorización)'
@@ -277,7 +285,7 @@ export const ExpedientePostulanteDrawer: React.FC<ExpedienteDrawerProps> = ({
                   <div>
                     <span className="text-slate-400 block text-[10px] uppercase font-bold">Fecha de Nacimiento</span>
                     <span className="font-semibold text-slate-900">
-                      {postulacion.fechaNacimiento} ({postulacion.edad} años)
+                      {postulacion.fechaNacimiento} ({edadReal} años)
                     </span>
                   </div>
                   <div>
@@ -395,6 +403,16 @@ export const ExpedientePostulanteDrawer: React.FC<ExpedienteDrawerProps> = ({
                     <span className="text-slate-400 italic">No especificadas</span>
                   )}
                 </div>
+                {postulacion.habilidadesOtras && (
+                  <div className="mt-3 pt-3 border-t border-slate-200">
+                    <span className="text-[11px] font-bold text-cato-slate uppercase block mb-1">
+                      Otras habilidades especificadas:
+                    </span>
+                    <p className="text-xs text-slate-800 bg-white p-3 rounded-xl border border-slate-200">
+                      {postulacion.habilidadesOtras}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* 3 Palabras */}

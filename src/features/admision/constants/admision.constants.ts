@@ -41,6 +41,7 @@ export const HABILIDADES_DISPONIBLES: string[] = [
   'Primeros Auxilios Básicos',
   'Fotografía y Creación de Contenido',
   'Liderazgo y Oratoria',
+  'Otros',
 ];
 
 export const TIPOS_RELACION_UCB = [
