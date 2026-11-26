@@ -1,118 +1,65 @@
-# Documentación Técnica Frontend - Módulo 07: Evaluación de Desempeño, Base Madre y Reconocimiento / Cierre
+# Documentación Técnica Frontend - Módulo 07: Evaluación de Desempeño, Base Madre, Podio y Certificación
 
 **Responsable:** Leandro Baldur Colque Palacios (`leandrobaldur`)  
 **Proyecto:** Sistema de Gestión de Voluntariado Católico (Catovoluntarios) - Pastoral Universitaria UCB  
 **Repositorio:** `Catovoluntarios-Frontend`  
 **Rama:** `leandro`  
-**Versión:** 1.0.0  
+**Versión:** 2.0.0 (Actualización Plan de Cierre y Producción)  
 
 ---
 
-## 1. Resumen de la Implementación Frontend
+## 1. Resumen de Cierre de Pantallas y Cero Mocks
 
-Para el Módulo 07 se construyeron e integraron las tres interfaces completas de usuario (P-19, P-20 y P-21) siguiendo la identidad visual institucional de Pastoral Universitaria UCB, utilizando **React 18, TypeScript, Tailwind CSS, Lucide React e integración de rutas con AppShell**.
+En cumplimiento de las directrices obligatorias del plan de cierre, todas las vistas del Módulo 07 han sido conectadas a los endpoints reales de PostgreSQL a través de `apiClient`:
 
-### Pantallas Implementadas:
-1. **P-19: Reporte Mensual y Semáforo Cualitativo de Desempeño (`/semaforos`)**
-2. **P-20: Base Madre Histórica Multi-Semestre & Ranking/Podio de Destacados (`/base-madre`)**
-3. **P-21: Feedback Semestral de Proyectos Receptores y Plantilla de Certificados (`/certificados`)**
+### 1.1 Rediseño Total de Pantalla de Certificados (`P21FeedbackCertificados.tsx` — Exclusivo Admin)
+- **Barra de Selección Superior:**
+  - Selector de Gestión / Semestre dinámico (integrado con `useActiveSemester()`).
+  - Selector de Proyecto Receptor (cargado en vivo desde la base de datos).
+  - Buscador en tiempo real de Catovoluntarios por nombre, CI o carrera.
+- **Pestaña 1 - Certificado Oficial Pastoral UCB:**
+  - **Panel de Selección:** Lista de Catovoluntarios acreditados con horas auditadas y nivel.
+  - **Diploma Oficial UCB:** Vista previa de alta resolución con ribetes dorados, membrete oficial de la UCB Regional La Paz, departamento de Pastoral Universitaria, mención de destacado/premio y firmas de autoridades.
+  - **Acciones:**
+    - Botón **"Imprimir / Guardar en PDF"** con layout optimizado para diplomas.
+    - Botón **"Descargar TXT"** con formato estructurado.
+    - Botón **"Copiar Texto"** con confirmación reactiva.
+- **Pestaña 2 - Certificados de Fundación:**
+  - Muestra todos los certificados PDF que las instituciones externas (`ENCARGADO_RECEPTOR`) han subido en el semestre.
+  - Enlaces directos para abrir o descargar el PDF de cada fundación.
+- **Pestaña 3 - Feedback y Cierre Institucional:**
+  - Cuestionario semestral de los centros con calificaciones cuantitativas y el **Bloque 4 libre obligatorio** que reemplaza informes físicos.
 
----
+### 1.2 Conexión de Subida de Certificados PDF para Encargado Receptor (`ReceptorCertificadosPage.tsx`)
+- Eliminación total de datos mockeados.
+- Consulta de los voluntarios asignados al centro y de los certificados subidos en la gestión activa.
+- Carga de archivos PDF/imagen mediante `FormData` hacia `/api/certificados/fundacion/upload`.
+- Persistencia real en la tabla `certificados_fundacion` y notificación inmediata al `ADMIN_PASTORAL`.
+- Opciones de visualización externa y eliminación de archivos.
 
-## 2. Estructura de Componentes y Módulos
+### 1.3 Conexión Integral del Podio de Excelencia (`PodioExcelenciaPage.tsx`)
+- Eliminación total de datos mockeados.
+- Consumo del algoritmo RF-22 (`/api/base-madre/ranking`) y de distinciones (`premios_historicos`).
+- Podio visual Top 3 (Oro, Plata, Bronce) y cuadro general de honor.
+- Modal de premiación para `ADMIN_PASTORAL` y `CATOLIDER` con persistencia en BD y notificación al Catovoluntario premiado.
+- Banner personalizado de honor para el rol `VOLUNTARIO` informándole de su posición y medallas.
 
-```
-src/features/semaforos/
-├── components/
-│   ├── P19SemaforoReporte/
-│   │   └── P19SemaforoReporte.tsx
-│   ├── P20BaseMadre/
-│   │   └── P20BaseMadre.tsx
-│   └── P21FeedbackCertificados/
-│       └── P21FeedbackCertificados.tsx
-├── services/
-│   ├── semaforos.mock.ts
-│   └── semaforos.service.ts
-└── types/
-    └── semaforo.types.ts
-```
-
----
-
-## 3. Detalle Funcional de Pantallas
-
-### 3.1 P-19: Reporte Mensual y Semáforo Cualitativo de Desempeño (RF-18 & RF-19)
-- **Ruta:** `/semaforos`
-- **Componente:** `P19SemaforoReporte.tsx`
-- **Capacidades:**
-  - **Selector de Proyecto y Mes:** Selector de periodo y centro receptor para filtrar la nómina de voluntarios.
-  - **Matriz de Semáforos Interactiva:** Tabla responsiva con columnas para Voluntario, Horas del Mes, Semáforo, Justificación Obligatoria y Alerta de Abandono.
-  - **Cuatro Colores Semafóricos con Badges:**
-    - 🟢 **Verde:** Cumplimiento óptimo y asistencia completa.
-    - 🟡 **Amarillo:** Llegadas tarde o inconsistencias menores.
-    - 🔴 **Rojo:** Inasistencias reiteradas o faltas graves.
-    - 🟣 **Morado:** Liderazgo excepcional y entrega pastoral destacada.
-  - **Justificación Obligatoria:** Campo de texto interactivo con contador de caracteres; bloquea el envío si algún semáforo no posee justificación cualitativa explícita (regla de Pastoral).
-  - **Checkbox de Alerta de Abandono:** Notificación directa para el equipo de coordinación central cuando un voluntario acumula ausencias críticas.
-  - **Barra de Resumen de KPIs:** Muestra en tiempo real la distribución de semáforos verdes, amarillos, rojos y morados del proyecto.
-
-### 3.2 P-20: Base Madre Histórica Multi-Semestre y Ranking de Destacados (RF-20, RF-21 & RF-22)
-- **Ruta:** `/base-madre`
-- **Componente:** `P20BaseMadre.tsx`
-- **Pestaña 1 - Base Madre Histórica:**
-  - **KPIs Superiores:** Total de voluntarios registrados, suma de horas históricas, voluntarios distinguidos `SUPER_PRO` y total de multas activas.
-  - **Filtros Avanzados:** Búsqueda por texto (nombre, carnet de identidad, carrera) y filtrado por nivel del voluntario (`JUNIOR`, `PRO`, `SUPER_PRO`).
-  - **Recálculo de Niveles Dinámico (RF-21):** Botón que revalida las horas acumuladas de todos los voluntarios y asigna el nivel automáticamente:
-    - `JUNIOR`: 0 - 39 horas
-    - `PRO`: 40 - 59 horas
-    - `SUPER_PRO`: 60+ horas
-  - **Exportación CSV:** Descarga con un solo clic de la matriz completa con codificación UTF-8 para análisis administrativo.
-  - **Modal de Historial de Premios:** Visualización del palmarés de cada voluntario (premios, semestres, categorías y descripciones).
-- **Pestaña 2 - Podio & Ranking de Destacados (RF-22):**
-  - **Tarjeta Explicativa del Algoritmo:** Muestra la fórmula matemática ponderada oficial:
-    $$\text{Score} = (\text{Horas Semestre} \times 0.4) + (\text{Semáforos Morados} \times 15) + (\text{Eval Institución} \times 5) + (\text{Bonus SuperPro}: 10)$$
-  - **Podio Visual de Honor:** Tarjetas destacadas con laureles dorados, plateados y de bronce para el 1er, 2do y 3er puesto.
-  - **Tabla Completa de Posiciones:** Desglose del desglose de puntaje por horas, morados acumulados y bonificaciones.
-  - **Modal de Asignación de Reconocimientos:** Permite al equipo de Pastoral otorgar formalmente distinciones institucionales a cualquier voluntario del ranking.
-
-### 3.3 P-21: Feedback Semestral de Proyectos Receptores y Certificados (RF-23)
-- **Ruta:** `/certificados`
-- **Componente:** `P21FeedbackCertificados.tsx`
-- **Pestaña 1 - Feedback Institucional de Centros:**
-  - **Formulario Estructurado por Bloques:**
-    - *Bloque 1:* Cumplimiento de compromisos, puntualidad y asistencia (escala de 1 a 5 estrellas).
-    - *Bloque 2:* Integración comunitaria, trato humano y valores pastorales (escala de 1 a 5 estrellas).
-    - *Bloque 3:* Coordinación y comunicación con la Pastoral Universitaria (escala de 1 a 5 estrellas).
-    - *Bloque 4 (Campo Libre Obligatorio):* Observaciones, sugerencias de mejora y evaluación cualitativa en texto libre (sustituye informes físicos tradicionales según Pastoral).
-  - **Promedio Automático:** Cálculo visual inmediato del puntaje de satisfacción general de la institución.
-- **Pestaña 2 - Plantilla y Generador de Certificados de Conclusión:**
-  - **Selector de Voluntario:** Permite buscar y seleccionar a cualquier voluntario apto con horas concluidas.
-  - **Vista Previa de la Plantilla:** Muestra el formato oficial predefinido listo para impresión o emisión.
-  - **Herramientas de Productividad:**
-    - Botón **Copiar Plantilla:** Copia el texto formateado al portapapeles con confirmación visual interactiva.
-    - Botón **Descargar .txt:** Descarga el archivo de texto estructurado para almacenamiento o procesamiento por lotes en diplomas oficiales.
+### 1.4 Semáforos (`P-19`) y Base Madre (`P-20`) con Gestión Activa
+- Vinculados al selector global de semestres (`useActiveSemester()`).
+- Disparo de notificación a Pastoral ante semáforos Rojos o alertas de abandono.
+- Base Madre histórica con recálculo dinámico de nivel RF-21 y exportación CSV.
 
 ---
 
-## 4. Servicios y Capa de Datos (`semaforos.service.ts`)
+## 2. Control de Calidad y Compilación
 
-El servicio frontend cuenta con integración bidireccional:
-- Realiza llamadas HTTP a la API NestJS (`/api/semaforos`, `/api/base-madre`, `/api/proyectos`, `/api/certificados`).
-- Implementa **modo resiliente con fallback transparente a mock data** (`semaforos.mock.ts`), permitiendo realizar pruebas funcionales completas y demostraciones aún si el backend estuviera en mantenimiento o sin base de datos activa.
-- Incluye utilidad de exportación a archivo CSV con cabeceras correctas.
-
----
-
-## 5. Control de Calidad y Pruebas
-
-Se ejecutaron las herramientas de compilación estricta y linter del proyecto:
-1. **Linter (`oxlint`):**
-   ```bash
-   npm run lint
-   # Resultado: 0 warnings, 0 errors en 45 archivos analizados.
-   ```
-2. **Compilador TypeScript & Bundler Vite:**
+1. **Compilación TypeScript & Vite:**
    ```bash
    npm run build
-   # Resultado: tsc -b && vite build completado exitosamente sin errores de tipos.
+   # tsc -b && vite build completado exitosamente con 0 errores.
+   ```
+2. **Linter (`oxlint`):**
+   ```bash
+   npm run lint
+   # 0 errores en todos los módulos de M07.
    ```

@@ -7,6 +7,7 @@ import type {
   PlantillaCertificado,
   ColorSemaforo,
   VoluntarioBaseMadre,
+  CertificadoFundacionItem,
 } from '../types/semaforo.types';
 
 export interface GuardarReporteDTO {
@@ -91,6 +92,58 @@ class SemaforosService {
     return await apiClient.get<PlantillaCertificado>(
       `/certificados/plantilla-datos/${usuarioId}?semestre=${encodeURIComponent(semestre)}`,
     );
+  }
+
+  async obtenerCertificadosLote(
+    proyectoId?: number,
+    semestre: string = '2/2026',
+  ): Promise<any[]> {
+    const qs = new URLSearchParams();
+    if (proyectoId) qs.append('proyectoId', String(proyectoId));
+    if (semestre) qs.append('semestre', semestre);
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+    return await apiClient.get<any[]>(`/certificados/lote${query}`);
+  }
+
+  // ==========================================
+  // Certificados de Fundación (Instituciones)
+  // ==========================================
+
+  async subirCertificadoFundacion(formData: FormData): Promise<CertificadoFundacionItem> {
+    return await apiClient.upload<CertificadoFundacionItem>('/certificados/fundacion/upload', formData);
+  }
+
+  async obtenerCertificadosFundacionPorProyecto(
+    proyectoId: number,
+    semestre: string = '2/2026',
+  ): Promise<CertificadoFundacionItem[]> {
+    return await apiClient.get<CertificadoFundacionItem[]>(
+      `/certificados/fundacion/proyecto/${proyectoId}?semestre=${encodeURIComponent(semestre)}`,
+    );
+  }
+
+  async obtenerCertificadosFundacionPorUsuario(
+    usuarioId: number,
+    semestre: string = '2/2026',
+  ): Promise<CertificadoFundacionItem[]> {
+    return await apiClient.get<CertificadoFundacionItem[]>(
+      `/certificados/fundacion/usuario/${usuarioId}?semestre=${encodeURIComponent(semestre)}`,
+    );
+  }
+
+  async listarTodosCertificadosFundacion(
+    semestre?: string,
+    proyectoId?: number,
+  ): Promise<CertificadoFundacionItem[]> {
+    const params = new URLSearchParams();
+    if (semestre) params.append('semestre', semestre);
+    if (proyectoId) params.append('proyectoId', String(proyectoId));
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return await apiClient.get<CertificadoFundacionItem[]>(`/certificados/fundacion${qs}`);
+  }
+
+  async eliminarCertificadoFundacion(id: number): Promise<{ success: boolean; message: string }> {
+    return await apiClient.delete<{ success: boolean; message: string }>(`/certificados/fundacion/${id}`);
   }
 
   exportarBaseMadreCSV(voluntarios: VoluntarioBaseMadre[]) {

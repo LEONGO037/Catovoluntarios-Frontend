@@ -11,6 +11,7 @@ import {
   Sparkles,
   Phone,
 } from 'lucide-react';
+import { useActiveSemester } from '../../../../components/layout/active-semester';
 import { semaforosService } from '../../services/semaforos.service';
 import { dashboardService } from '../../../../services/dashboard.service';
 import type {
@@ -19,6 +20,8 @@ import type {
 } from '../../types/semaforo.types';
 
 export const P19SemaforoReporte: React.FC = () => {
+  const semestreActivo = useActiveSemester();
+  const anioActivo = parseInt(semestreActivo.split('/')[1] || '2026', 10);
   const [proyectoId, setProyectoId] = useState<number>(1);
   const [listaProyectos, setListaProyectos] = useState<{ id: number; nombre: string }[]>([]);
   const [mesSeleccionado, setMesSeleccionado] = useState<string>('Septiembre');
@@ -49,7 +52,7 @@ export const P19SemaforoReporte: React.FC = () => {
       const data = await semaforosService.obtenerReportesProyecto(
         proyectoId,
         mesSeleccionado,
-        2026,
+        anioActivo,
       );
       setVoluntarios(data.voluntarios);
     } catch (error) {
@@ -57,7 +60,7 @@ export const P19SemaforoReporte: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [proyectoId, mesSeleccionado]);
+  }, [proyectoId, mesSeleccionado, anioActivo]);
 
   useEffect(() => {
     void cargarDatos();
@@ -110,7 +113,7 @@ export const P19SemaforoReporte: React.FC = () => {
           await semaforosService.guardarReporteSemaforo({
             idAsignacion: v.idAsignacion,
             mes: mesSeleccionado,
-            anio: 2026,
+            anio: anioActivo,
             colorSemaforo: v.colorSemaforo,
             observacionesDesempeno: v.observacionesDesempeno,
             notificarAbandono: v.notificarAbandono,
@@ -150,7 +153,7 @@ export const P19SemaforoReporte: React.FC = () => {
         await semaforosService.guardarReporteSemaforo({
           idAsignacion: v.idAsignacion,
           mes: mesSeleccionado,
-          anio: 2026,
+          anio: anioActivo,
           colorSemaforo: v.colorSemaforo,
           observacionesDesempeno: v.observacionesDesempeno,
           notificarAbandono: v.notificarAbandono,

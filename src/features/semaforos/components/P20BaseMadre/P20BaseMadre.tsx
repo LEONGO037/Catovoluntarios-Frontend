@@ -14,6 +14,7 @@ import {
   PlusCircle,
   Building2,
 } from 'lucide-react';
+import { useActiveSemester } from '../../../../components/layout/active-semester';
 import { semaforosService } from '../../services/semaforos.service';
 import type { GuardarPremioDTO } from '../../services/semaforos.service';
 import type {
@@ -23,15 +24,16 @@ import type {
 } from '../../types/semaforo.types';
 
 export const P20BaseMadre: React.FC = () => {
+  const semestreActivo = useActiveSemester();
   const [activeTab, setActiveTab] = useState<'base-madre' | 'ranking'>('base-madre');
 
   // Estados Base Madre
   const [voluntarios, setVoluntarios] = useState<VoluntarioBaseMadre[]>([]);
   const [kpis, setKpis] = useState({
-    totalHistoricos: 418,
-    horasSocialesCertificadas: 18640,
-    totalSuperPro: 94,
-    activosSemestreActual: 104,
+    totalHistoricos: 0,
+    horasSocialesCertificadas: 0,
+    totalSuperPro: 0,
+    activosSemestreActual: 0,
   });
   const [busqueda, setBusqueda] = useState<string>('');
   const [nivelFiltro, setNivelFiltro] = useState<string>('TODOS');
@@ -47,7 +49,7 @@ export const P20BaseMadre: React.FC = () => {
   const [showNuevoPremioModal, setShowNuevoPremioModal] = useState<boolean>(false);
   const [premioForm, setPremioForm] = useState<GuardarPremioDTO>({
     idUsuario: 1,
-    semestre: '2/2026',
+    semestre: semestreActivo,
     nombrePremio: 'Catovoluntario Destacado',
     categoria: 'Liderazgo en Campo',
     descripcion: '',
@@ -62,25 +64,26 @@ export const P20BaseMadre: React.FC = () => {
         busqueda,
         nivel: nivelFiltro,
         carrera: carreraFiltro,
+        semestre: semestreActivo,
       });
       setVoluntarios(data.voluntarios);
       setKpis(data.kpis);
     } catch (e) {
       console.error('Error cargando Base Madre:', e);
     }
-  }, [busqueda, nivelFiltro, carreraFiltro]);
+  }, [busqueda, nivelFiltro, carreraFiltro, semestreActivo]);
 
   // Cargar ranking
   const cargarRanking = useCallback(async () => {
     try {
-      const data = await semaforosService.obtenerRankingDestacados('2/2026');
+      const data = await semaforosService.obtenerRankingDestacados(semestreActivo);
       setRanking(data.rankingCompleto);
       setPodio(data.podio);
       setFormula(data.formula);
     } catch (e) {
       console.error('Error cargando ranking:', e);
     }
-  }, []);
+  }, [semestreActivo]);
 
   useEffect(() => {
     void cargarBaseMadre();

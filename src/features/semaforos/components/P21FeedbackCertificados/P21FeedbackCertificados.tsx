@@ -1,109 +1,205 @@
 /* oxlint-disable react/set-state-in-effect */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   FileBadge,
   Building2,
   CheckCircle2,
   Copy,
+  Printer,
   Download,
   Star,
   Send,
-  Users,
   AlertCircle,
   FileText,
+  ExternalLink,
+  Trophy,
+  Sparkles,
+  Search,
+  RefreshCw,
+  Loader2,
+  Medal,
 } from 'lucide-react';
+import { useActiveSemester } from '../../../../components/layout/active-semester';
+import { Button } from '../../../../components/ui/Button';
 import { semaforosService } from '../../services/semaforos.service';
+import { proyectosService } from '../../../proyectos/services/proyectos.service';
 import type {
   FeedbackInstitucion,
   PlantillaCertificado,
+  CertificadoFundacionItem,
+  VoluntarioBaseMadre,
 } from '../../types/semaforo.types';
 
 export const P21FeedbackCertificados: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'feedback' | 'certificados'>('feedback');
+  const semestreActivo = useActiveSemester();
 
-  // Estados Feedback
+  // Pestañas principales
+  const [activeTab, setActiveTab] = useState<'oficial' | 'fundacion' | 'feedback'>('oficial');
+
+  // Filtros de selección
+  const [semestre, setSemestre] = useState<string>(semestreActivo);
+  const [proyectos, setProyectos] = useState<{ id: number; nombre: string }[]>([]);
+  const [proyectoFiltro, setProyectoFiltro] = useState<string>('TODOS');
+  const [busquedaVoluntario, setBusquedaVoluntario] = useState<string>('');
+
+  // Voluntarios disponibles
+  const [voluntarios, setVoluntarios] = useState<VoluntarioBaseMadre[]>([]);
+  const [voluntarioSeleccionadoId, setVoluntarioSeleccionadoId] = useState<number | null>(null);
+
+  // Certificado Oficial Seleccionado
+  const [certificadoOficial, setCertificadoOficial] = useState<PlantillaCertificado | null>(null);
+  const [cargandoCertificado, setCargandoCertificado] = useState<boolean>(false);
+  const [copiado, setCopiado] = useState<boolean>(false);
+
+  // Certificados de Fundación
+  const [certsFundacion, setCertsFundacion] = useState<CertificadoFundacionItem[]>([]);
+
+  // Feedback Semestral Institucional
   const [feedback, setFeedback] = useState<FeedbackInstitucion>({
     proyectoId: 1,
     nombreProyecto: 'Proyecto Receptor',
-    semestre: '2/2026',
+    semestre: semestreActivo,
     voluntariosRecibidos: 0,
     voluntariosCulminados: 0,
     bajasAbandonos: 0,
     calificacionGrupo: 5,
     calificacionCatolider: 5,
     solicitaContinuidadConvenio: true,
-    cuposSolicitadosProximoSemestre: 0,
+    cuposSolicitadosProximoSemestre: 20,
     bloque4ObservacionesSugerenciasLibres: '',
     nombreResponsableLlenado: '',
     cargoResponsable: '',
   });
+  const [guardandoFeedback, setGuardandoFeedback] = useState<boolean>(false);
 
   const [notificacion, setNotificacion] = useState<{
-    tipo: 'success' | 'warning';
+    tipo: 'success' | 'warning' | 'error';
     mensaje: string;
   } | null>(null);
 
-  // Estados Certificados
-  const [certificado, setCertificado] = useState<PlantillaCertificado | null>(null);
-  const [copiado, setCopiado] = useState<boolean>(false);
-  const [usuarioCertificadoId, setUsuarioCertificadoId] = useState<number>(1);
-  const [voluntariosCertificado, setVoluntariosCertificado] = useState<
-    { id: number; nombre: string; ci: string; horas: number }[]
-  >([]);
-  const [evaluacionesVoluntarios] = useState<any[]>([]);
-
-  // Cargar datos de feedback
-  const cargarFeedback = useCallback(async () => {
+  // 1. Cargar proyectos y voluntarios al montar o cambiar semestre
+  const cargarDatosIniciales = useCallback(async () => {
     try {
-      const data = await semaforosService.obtenerFeedbackProyecto(1, '2/2026');
-      setFeedback(data);
-    } catch (e) {
-      console.error('Error cargando feedback:', e);
-    }
-  }, []);
+      // Cargar lista de proyectos
+      const proys = await proyectosService.fetchProyectos();
+      const proysMapeados = proys.map((p: any) => ({
+        id: Number(p.id),
+        nombre: p.nombre_proyecto || 'Proyecto',
+      }));
+      setProyectos(proysMapeados);
 
-  // Cargar lista de voluntarios para certificados
-  useEffect(() => {
-    semaforosService
-      .obtenerBaseMadre({})
-      .then((res) => {
-        if (res && res.voluntarios && res.voluntarios.length > 0) {
-          setVoluntariosCertificado(
-            res.voluntarios.map((v) => ({
-              id: v.id,
-              nombre: v.nombreCompleto,
-              ci: v.ci,
-              horas: v.horasTotalesHistoricas || 0,
-            })),
-          );
-          setUsuarioCertificadoId(res.voluntarios[0].id);
+      // Cargar voluntarios desde Base Madre
+      const resBaseMadre = await semaforosService.obtenerBaseMadre({ semestre });
+      if (resBaseMadre?.voluntarios) {
+        setVoluntarios(resBaseMadre.voluntarios);
+        if (resBaseMadre.voluntarios.length > 0 && !voluntarioSeleccionadoId) {
+          setVoluntarioSeleccionadoId(resBaseMadre.voluntarios[0].id);
         }
-      })
-      .catch((err) => console.error('Error cargando base madre para certificados:', err));
-  }, []);
+      }
 
-  // Cargar certificado
-  const cargarCertificado = useCallback(async () => {
-    try {
-      const cert = await semaforosService.generarPlantillaCertificado(
-        usuarioCertificadoId,
-        '2/2026',
-      );
-      setCertificado(cert);
+      // Cargar certificados de fundación
+      const fundCerts = await semaforosService.listarTodosCertificadosFundacion(semestre);
+      setCertsFundacion(fundCerts);
     } catch (e) {
-      console.error('Error cargando certificado:', e);
+      console.error('Error al cargar datos en centro de certificados:', e);
     }
-  }, [usuarioCertificadoId]);
+  }, [semestre, voluntarioSeleccionadoId]);
 
   useEffect(() => {
-    void cargarFeedback();
-  }, [cargarFeedback]);
+    void cargarDatosIniciales();
+  }, [cargarDatosIniciales]);
+
+  // Actualizar semestre si cambia el contexto global
+  useEffect(() => {
+    setSemestre(semestreActivo);
+  }, [semestreActivo]);
+
+  // 2. Cargar detalle del certificado oficial cuando cambia el voluntario seleccionado
+  const cargarDetalleCertificado = useCallback(async (userId: number) => {
+    setCargandoCertificado(true);
+    try {
+      const data = await semaforosService.generarPlantillaCertificado(userId, semestre);
+      setCertificadoOficial(data);
+    } catch (err) {
+      console.error('Error cargando certificado oficial:', err);
+    } finally {
+      setCargandoCertificado(false);
+    }
+  }, [semestre]);
 
   useEffect(() => {
-    void cargarCertificado();
-  }, [cargarCertificado]);
+    if (voluntarioSeleccionadoId) {
+      void cargarDetalleCertificado(voluntarioSeleccionadoId);
+    }
+  }, [voluntarioSeleccionadoId, cargarDetalleCertificado]);
 
-  // Guardar / Enviar Feedback
+  // 3. Cargar Feedback institucional si se cambia a la pestaña de feedback
+  const cargarFeedbackProyecto = useCallback(async (proyId: number) => {
+    try {
+      const data = await semaforosService.obtenerFeedbackProyecto(proyId, semestre);
+      setFeedback(data);
+    } catch (err) {
+      console.error('Error cargando feedback:', err);
+    }
+  }, [semestre]);
+
+  useEffect(() => {
+    if (activeTab === 'feedback') {
+      const pId = proyectoFiltro !== 'TODOS' ? Number(proyectoFiltro) : 1;
+      void cargarFeedbackProyecto(pId);
+    }
+  }, [activeTab, proyectoFiltro, cargarFeedbackProyecto]);
+
+  // Filtrado de voluntarios según proyecto y término de búsqueda
+  const voluntariosFiltrados = useMemo(() => {
+    return voluntarios.filter((v) => {
+      const coincideBusqueda =
+        v.nombreCompleto.toLowerCase().includes(busquedaVoluntario.toLowerCase()) ||
+        v.ci.toLowerCase().includes(busquedaVoluntario.toLowerCase()) ||
+        v.carrera.toLowerCase().includes(busquedaVoluntario.toLowerCase());
+
+      const coincideProyecto =
+        proyectoFiltro === 'TODOS' ||
+        v.proyectoReciente.toLowerCase().includes(
+          (proyectos.find((p) => String(p.id) === proyectoFiltro)?.nombre || '').toLowerCase(),
+        );
+
+      return coincideBusqueda && coincideProyecto;
+    });
+  }, [voluntarios, busquedaVoluntario, proyectoFiltro, proyectos]);
+
+  // Copiar plantilla textual al portapapeles
+  const handleCopiarPlantilla = async () => {
+    if (!certificadoOficial?.textoPreformateadoCopiar) return;
+    try {
+      await navigator.clipboard.writeText(certificadoOficial.textoPreformateadoCopiar);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 3000);
+    } catch {
+      // Fallback si clipboard API no está permitida
+    }
+  };
+
+  // Imprimir / Guardar en PDF oficial mediante ventana de impresión
+  const handleImprimirPDF = () => {
+    window.print();
+  };
+
+  // Descargar archivo plano con la plantilla
+  const handleDescargarTxt = () => {
+    if (!certificadoOficial) return;
+    const blob = new Blob([certificadoOficial.textoPreformateadoCopiar], {
+      type: 'text/plain;charset=utf-8',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Certificado_UCB_${certificadoOficial.nombreCompleto.replace(/\s+/g, '_')}_${semestre.replace('/', '-')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Guardar evaluación / feedback de institución receptora
   const handleGuardarFeedback = async () => {
     if (
       !feedback.bloque4ObservacionesSugerenciasLibres ||
@@ -111,104 +207,168 @@ export const P21FeedbackCertificados: React.FC = () => {
     ) {
       setNotificacion({
         tipo: 'warning',
-        mensaje:
-          'El Bloque 4 de observaciones y sugerencias libres es obligatorio según Pastoral.',
+        mensaje: 'El Bloque 4 libre de observaciones y sugerencias es obligatorio según directriz de Pastoral.',
       });
       return;
     }
 
+    setGuardandoFeedback(true);
     try {
       await semaforosService.guardarFeedbackProyecto(feedback);
       setNotificacion({
         tipo: 'success',
-        mensaje:
-          '¡Informe semestral del centro y Bloque 4 libre registrado exitosamente para Pastoral!',
+        mensaje: 'Evaluación y feedback semestral de la institución guardados exitosamente.',
       });
       setTimeout(() => setNotificacion(null), 5000);
-    } catch (err: any) {
-      alert(err.message || 'Error guardando feedback');
+    } catch (e: any) {
+      setNotificacion({
+        tipo: 'error',
+        mensaje: e.message || 'Error al guardar el feedback del proyecto.',
+      });
+    } finally {
+      setGuardandoFeedback(false);
     }
-  };
-
-  // Copiar plantilla de certificado al portapapeles
-  const handleCopiarCertificado = () => {
-    if (!certificado) return;
-    navigator.clipboard.writeText(certificado.textoPreformateadoCopiar);
-    setCopiado(true);
-    setNotificacion({
-      tipo: 'success',
-      mensaje:
-        '¡Datos oficiales del certificado copiados al portapapeles! Listo para pegar en Word o documento oficial.',
-    });
-    setTimeout(() => {
-      setCopiado(false);
-      setNotificacion(null);
-    }, 4000);
-  };
-
-  // Descargar plantilla
-  const handleDescargarPlantilla = () => {
-    if (!certificado) return;
-    const element = document.createElement('a');
-    const file = new Blob([certificado.textoPreformateadoCopiar], {
-      type: 'text/plain;charset=utf-8',
-    });
-    element.href = URL.createObjectURL(file);
-    element.download = `Certificado_${certificado.ci.replace(/\s+/g, '_')}_2-2026.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
   };
 
   return (
     <div className="space-y-6">
-      {/* 1. Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-cato-border">
+      {/* 1. Encabezado Oficial */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-800 font-semibold text-xs">
-              Cierre de Gestión
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-100 px-3 py-1 rounded-full border border-amber-200 inline-flex items-center gap-1.5">
+              <Trophy className="w-3.5 h-3.5 text-amber-600" />
+              Pastoral Universitaria UCB · Gestión {semestre}
+            </span>
+            <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+              Panel Exclusivo Admin
             </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-cato-navy mt-1 tracking-tight flex items-center gap-2">
-            <FileBadge className="w-6 h-6 text-cato-navy" />
-            Feedback Semestral de Centros y Emisión de Certificados
+          <h1 className="text-2xl sm:text-3xl font-black text-cato-navy mt-2">
+            Centro de Certificados y Cierre Semestral
           </h1>
-          <p className="text-xs text-cato-muted mt-0.5">
-            Cierre de gestión con proyectos receptores, Bloque 4 libre y generador de plantillas descargables de certificación.
+          <p className="text-sm text-cato-muted mt-0.5">
+            Genera e imprime los diplomas oficiales universitarios en PDF, fiscaliza los certificados emitidos por fundaciones y supervisa las evaluaciones de los proyectos.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          {activeTab === 'feedback' ? (
-            <button
-              onClick={handleGuardarFeedback}
-              className="btn-cta text-xs flex items-center gap-1.5 shadow-sm"
-              type="button"
-            >
-              <Send className="w-4 h-4" />
-              Enviar Informe a Pastoral UCB
-            </button>
-          ) : (
-            <button
-              onClick={handleCopiarCertificado}
-              className="btn-cta text-xs flex items-center gap-1.5 shadow-sm"
-              type="button"
-            >
-              <Copy className="w-4 h-4" />
-              {copiado ? '¡Copiado al Portapapeles!' : 'Copiar Datos de Certificado'}
-            </button>
-          )}
+        <button
+          onClick={() => void cargarDatosIniciales()}
+          className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-cato-navy bg-white border border-cato-border rounded-xl shadow-xs hover:bg-slate-50 transition-colors"
+        >
+          <RefreshCw className="w-3.5 h-3.5 text-cato-gold" />
+          <span>Sincronizar Datos</span>
+        </button>
+      </div>
+
+      {/* 2. Barra de Filtros y Selección Rápida */}
+      <div className="bg-white rounded-2xl border border-cato-border p-4 shadow-card grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Selector de Gestión */}
+        <div>
+          <label className="block text-[11px] font-bold uppercase text-cato-muted mb-1">
+            Gestión / Semestre
+          </label>
+          <select
+            value={semestre}
+            onChange={(e) => setSemestre(e.target.value)}
+            className="w-full text-xs font-semibold border border-cato-border rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cato-navy/20"
+          >
+            <option value="2/2026">Gestión 2/2026</option>
+            <option value="1/2026">Gestión 1/2026</option>
+            <option value="2/2025">Gestión 2/2025</option>
+          </select>
+        </div>
+
+        {/* Selector de Proyecto */}
+        <div>
+          <label className="block text-[11px] font-bold uppercase text-cato-muted mb-1">
+            Proyecto Receptor
+          </label>
+          <select
+            value={proyectoFiltro}
+            onChange={(e) => setProyectoFiltro(e.target.value)}
+            className="w-full text-xs font-semibold border border-cato-border rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cato-navy/20"
+          >
+            <option value="TODOS">Todos los Proyectos Receptores</option>
+            {proyectos.map((p) => (
+              <option key={p.id} value={String(p.id)}>
+                {p.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Buscador de Voluntario */}
+        <div>
+          <label className="block text-[11px] font-bold uppercase text-cato-muted mb-1">
+            Buscar Catovoluntario
+          </label>
+          <div className="relative">
+            <Search className="w-4 h-4 text-cato-muted absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={busquedaVoluntario}
+              onChange={(e) => setBusquedaVoluntario(e.target.value)}
+              placeholder="Nombre, CI o carrera..."
+              className="w-full text-xs pl-9 pr-3 py-2 border border-cato-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cato-navy/20"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Alerta toast */}
+      {/* 3. Navegación por Pestañas */}
+      <div className="flex border-b border-cato-border gap-2">
+        <button
+          onClick={() => setActiveTab('oficial')}
+          className={`pb-3 px-4 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
+            activeTab === 'oficial'
+              ? 'border-cato-gold text-cato-navy'
+              : 'border-transparent text-cato-muted hover:text-cato-navy'
+          }`}
+        >
+          <FileBadge className="w-4 h-4 text-cato-gold" />
+          <span>Certificado Oficial UCB (PDF)</span>
+          <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-extrabold">
+            {voluntariosFiltrados.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('fundacion')}
+          className={`pb-3 px-4 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
+            activeTab === 'fundacion'
+              ? 'border-cato-gold text-cato-navy'
+              : 'border-transparent text-cato-muted hover:text-cato-navy'
+          }`}
+        >
+          <Building2 className="w-4 h-4 text-purple-600" />
+          <span>Certificados de Fundaciones</span>
+          <span className="text-[10px] bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full font-extrabold">
+            {certsFundacion.length} subidos
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('feedback')}
+          className={`pb-3 px-4 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
+            activeTab === 'feedback'
+              ? 'border-cato-gold text-cato-navy'
+              : 'border-transparent text-cato-muted hover:text-cato-navy'
+          }`}
+        >
+          <FileText className="w-4 h-4 text-emerald-600" />
+          <span>Feedback y Cierre Institucional</span>
+        </button>
+      </div>
+
       {notificacion && (
         <div
-          className={`p-3.5 rounded-xl border text-xs flex items-center gap-2 shadow-sm animate-fadeIn ${
+          className={`px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-semibold shadow-sm ${
             notificacion.tipo === 'success'
-              ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
-              : 'bg-amber-50 border-amber-300 text-amber-800'
+              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+              : notificacion.tipo === 'warning'
+              ? 'bg-amber-50 border border-amber-200 text-amber-800'
+              : 'bg-rose-50 border border-rose-200 text-rose-800'
           }`}
         >
           {notificacion.tipo === 'success' ? (
@@ -216,476 +376,503 @@ export const P21FeedbackCertificados: React.FC = () => {
           ) : (
             <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
           )}
-          <span className="font-semibold">{notificacion.mensaje}</span>
+          <span>{notificacion.mensaje}</span>
         </div>
       )}
 
-      {/* 2. Pestañas de Navegación */}
-      <div className="border-b border-cato-border flex items-center gap-3">
-        <button
-          onClick={() => setActiveTab('feedback')}
-          className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
-            activeTab === 'feedback'
-              ? 'border-cato-navy text-cato-navy'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-          type="button"
-        >
-          <Building2 className="w-4 h-4" />
-          Feedback e Informe del Proyecto Receptor (RF-23)
-          <span className="bg-purple-100 text-purple-800 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">
-            Bloque 4 Libre
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('certificados')}
-          className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
-            activeTab === 'certificados'
-              ? 'border-cato-navy text-cato-navy'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-          type="button"
-        >
-          <FileText className="w-4 h-4 text-cato-navy" />
-          Plantilla y Emisión de Certificados de Conclusión
-          <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">
-            1-Clic Copy
-          </span>
-        </button>
-      </div>
-
       {/* ==================================================================== */}
-      {/* SECCIÓN 1: INFORME Y FEEDBACK SEMESTRAL DEL PROYECTO RECEPTOR */}
+      {/* PESTAÑA 1: CERTIFICADO OFICIAL PASTORAL UCB */}
       {/* ==================================================================== */}
-      {activeTab === 'feedback' && (
-        <div className="space-y-6">
-          {/* Bloque 1: Identificación y Métricas Globales */}
-          <div className="cato-card p-5 space-y-4 shadow-sm">
-            <div className="border-b border-cato-border pb-3 flex items-center justify-between">
-              <h2 className="text-sm font-extrabold text-cato-navy flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-cato-steel" />
-                1. Datos del Centro y Métricas Globales del Periodo
-              </h2>
-              <span className="text-xs text-cato-muted font-mono">Semestre 2/2026</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
-              <div>
-                <label className="block font-bold text-cato-navy mb-1">Proyecto Receptor</label>
-                <input
-                  type="text"
-                  readOnly
-                  value={feedback.nombreProyecto}
-                  className="w-full font-semibold bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-700"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-cato-navy mb-1">Supervisor en Sitio</label>
-                <input
-                  type="text"
-                  readOnly
-                  value={feedback.nombreResponsableLlenado}
-                  className="w-full font-semibold bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-700"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-cato-navy mb-1">Cargo Institucional</label>
-                <input
-                  type="text"
-                  readOnly
-                  value={feedback.cargoResponsable}
-                  className="w-full font-semibold bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-700"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-cato-navy mb-1">Catolíder Asignado</label>
-                <input
-                  type="text"
-                  readOnly
-                  value="Mateo Alarcón (Catolíder Titular)"
-                  className="w-full font-semibold bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-700"
-                />
-              </div>
-            </div>
-
-            {/* Métricas del centro */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div className="bg-blue-50/70 p-3.5 rounded-xl border border-blue-200 flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold text-blue-800 uppercase">
-                    Voluntarios Recibidos
-                  </span>
-                  <div className="text-2xl font-black text-cato-navy mt-0.5">
-                    {feedback.voluntariosRecibidos} Voluntarios
-                  </div>
-                </div>
-                <Users className="w-8 h-8 text-blue-400" />
-              </div>
-
-              <div className="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200 flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold text-emerald-800 uppercase">
-                    Culminaron Satisfactoriamente
-                  </span>
-                  <div className="text-2xl font-black text-emerald-700 mt-0.5">
-                    {feedback.voluntariosCulminados} Voluntarios
-                  </div>
-                </div>
-                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-              </div>
-
-              <div className="bg-red-50/70 p-3.5 rounded-xl border border-red-200 flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold text-red-800 uppercase">
-                    Bajas / Abandonos
-                  </span>
-                  <div className="text-2xl font-black text-red-700 mt-0.5">
-                    {feedback.bajasAbandonos} Voluntario
-                  </div>
-                </div>
-                <AlertCircle className="w-8 h-8 text-red-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Bloque 2: Evaluación Individual por Voluntario */}
-          <div className="cato-card p-0 overflow-hidden shadow-card">
-            <div className="px-5 py-3.5 bg-slate-50 border-b border-cato-border flex items-center justify-between">
-              <h2 className="text-sm font-extrabold text-cato-navy flex items-center gap-2">
-                <Users className="w-4 h-4 text-cato-steel" />
-                2. Evaluación Individual por Voluntario (Aporte y Desempeño en Campo)
-              </h2>
-              <span className="text-xs text-cato-muted font-semibold">
-                Escala: 1 (Deficiente) a 5 (Excelente)
+      {activeTab === 'oficial' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Panel Izquierdo: Lista de Voluntarios Elegibles (Col 4) */}
+          <div className="lg:col-span-4 bg-white rounded-2xl border border-cato-border shadow-card p-4 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-cato-border">
+              <h3 className="font-extrabold text-sm text-cato-navy flex items-center gap-1.5">
+                <Medal className="w-4 h-4 text-cato-gold" />
+                Catovoluntarios Acreditados
+              </h3>
+              <span className="text-[11px] font-semibold text-cato-muted">
+                {voluntariosFiltrados.length} elegibles
               </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-[#F8FAFC] border-b border-slate-200 text-cato-navy font-bold">
-                    <th className="py-2.5 px-4 min-w-[180px]">Voluntario</th>
-                    <th className="py-2.5 px-3 min-w-[200px]">Tareas Realizadas en el Centro</th>
-                    <th className="py-2.5 px-3 text-center w-36">Calificación</th>
-                    <th className="py-2.5 px-4 min-w-[240px]">
-                      Contribución y Mejoras Observadas
-                    </th>
-                    <th className="py-2.5 px-3 text-center w-32">Beneficiarios</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {evaluacionesVoluntarios.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-xs text-cato-muted">
-                        No hay evaluaciones individuales registradas en este período.
-                      </td>
-                    </tr>
-                  ) : (
-                    evaluacionesVoluntarios.map((item) => (
-                    <tr
-                      key={item.id}
-                      className={`hover:bg-slate-50 ${
-                        item.calificacion === 1 ? 'bg-red-50/20' : ''
+            <div className="max-h-[560px] overflow-y-auto space-y-2 pr-1">
+              {voluntariosFiltrados.length === 0 ? (
+                <div className="py-8 text-center text-xs text-cato-muted">
+                  No se encontraron voluntarios con los filtros aplicados.
+                </div>
+              ) : (
+                voluntariosFiltrados.map((v) => {
+                  const isSelected = voluntarioSeleccionadoId === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setVoluntarioSeleccionadoId(v.id)}
+                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-start justify-between gap-2 ${
+                        isSelected
+                          ? 'bg-amber-50/80 border-cato-gold shadow-xs'
+                          : 'bg-slate-50/60 border-cato-border hover:bg-slate-100/70'
                       }`}
                     >
+                      <div className="space-y-0.5">
+                        <p className="font-extrabold text-xs text-cato-navy leading-snug">
+                          {v.nombreCompleto}
+                        </p>
+                        <p className="text-[11px] text-cato-muted">
+                          CI: <strong>{v.ci}</strong> · {v.carrera}
+                        </p>
+                        <p className="text-[10px] text-cato-slate truncate max-w-[200px]">
+                          {v.proyectoReciente}
+                        </p>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="text-[11px] font-black text-cato-navy bg-white border border-cato-border px-2 py-0.5 rounded-md inline-block">
+                          {v.horasTotalesHistoricas} hrs
+                        </span>
+                        {v.nivelCalculado === 'SUPER_PRO' && (
+                          <span className="block text-[9px] font-extrabold text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded mt-1">
+                            SUPER PRO
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Panel Derecho: Vista Previa Realista del Diploma UCB (Col 8) */}
+          <div className="lg:col-span-8 space-y-4">
+            {/* Barra de Acciones del Certificado */}
+            <div className="bg-white rounded-2xl border border-cato-border p-3.5 shadow-card flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <FileBadge className="w-5 h-5 text-cato-gold" />
+                <span className="text-xs font-bold text-cato-navy">
+                  Vista Previa del Diploma Oficial UCB
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopiarPlantilla}
+                  leftIcon={<Copy className="w-4 h-4" />}
+                >
+                  {copiado ? '¡Copiado!' : 'Copiar Texto'}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDescargarTxt}
+                  leftIcon={<Download className="w-4 h-4" />}
+                >
+                  Descargar TXT
+                </Button>
+
+                <Button
+                  variant="cta"
+                  size="sm"
+                  onClick={handleImprimirPDF}
+                  leftIcon={<Printer className="w-4 h-4" />}
+                >
+                  Imprimir / Guardar en PDF
+                </Button>
+              </div>
+            </div>
+
+            {/* Hoja de Certificado imprimible con diseño de gala */}
+            {cargandoCertificado ? (
+              <div className="bg-white rounded-2xl border border-cato-border p-16 text-center shadow-card">
+                <Loader2 className="w-8 h-8 text-cato-gold animate-spin mx-auto mb-3" />
+                <p className="text-sm font-semibold text-cato-navy">
+                  Generando vista previa del certificado oficial...
+                </p>
+              </div>
+            ) : !certificadoOficial ? (
+              <div className="bg-white rounded-2xl border border-cato-border p-16 text-center shadow-card text-cato-muted">
+                Selecciona un voluntario de la lista para visualizar su certificado oficial.
+              </div>
+            ) : (
+              <div
+                id="area-imprimible-certificado"
+                className="bg-white rounded-2xl border-4 border-double border-amber-300 p-8 sm:p-12 shadow-xl relative overflow-hidden text-center space-y-6"
+                style={{
+                  backgroundImage:
+                    'radial-gradient(circle at center, rgba(254, 249, 195, 0.25) 0%, rgba(255, 255, 255, 1) 75%)',
+                }}
+              >
+                {/* Ribete de esquina decorativo */}
+                <div className="absolute top-2 left-2 text-cato-gold/40 text-xs font-serif select-none">
+                  ✠
+                </div>
+                <div className="absolute top-2 right-2 text-cato-gold/40 text-xs font-serif select-none">
+                  ✠
+                </div>
+                <div className="absolute bottom-2 left-2 text-cato-gold/40 text-xs font-serif select-none">
+                  ✠
+                </div>
+                <div className="absolute bottom-2 right-2 text-cato-gold/40 text-xs font-serif select-none">
+                  ✠
+                </div>
+
+                {/* Encabezado Institucional */}
+                <div className="space-y-1">
+                  <p className="text-[11px] font-extrabold uppercase tracking-widest text-cato-navy/70">
+                    UNIVERSIDAD CATÓLICA BOLIVIANA "SAN PABLO"
+                  </p>
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">
+                    DEPARTAMENTO REGIONAL DE PASTORAL UNIVERSITARIA · LA PAZ
+                  </p>
+                  <div className="w-20 h-0.5 bg-cato-gold mx-auto my-2" />
+                  <h2 className="text-xl sm:text-2xl font-serif font-black text-cato-navy tracking-tight pt-1">
+                    CERTIFICADO DE CULMINACIÓN DE VOLUNTARIADO SOCIAL
+                  </h2>
+                </div>
+
+                {/* Cuerpo del Diploma */}
+                <div className="space-y-3 max-w-xl mx-auto text-sm text-slate-800 leading-relaxed">
+                  <p className="text-xs text-cato-muted font-medium">Se confiere el presente testimonio a:</p>
+                  <h3 className="text-2xl sm:text-3xl font-black text-cato-navy font-serif uppercase tracking-wide border-b-2 border-amber-200 pb-2 inline-block px-4">
+                    {certificadoOficial.nombreCompleto}
+                  </h3>
+                  <p className="text-xs text-slate-600 font-semibold">
+                    C.I. {certificadoOficial.ci} · Estudiante de la Carrera de{' '}
+                    <strong className="text-cato-navy">{certificadoOficial.carrera}</strong>
+                  </p>
+
+                  <p className="pt-2 text-xs text-slate-700 leading-normal text-justify sm:text-center">
+                    Por haber culminado con madurez humana, compromiso ético y vocación solidaria el
+                    programa de voluntariado universitario <strong className="text-cato-navy">"Catovoluntarios"</strong>{' '}
+                    durante el Semestre <strong className="text-cato-navy">{semestre}</strong>, prestando sus servicios
+                    en el Proyecto Receptor:
+                  </p>
+
+                  <div className="bg-amber-50/80 border border-amber-200 rounded-xl py-2 px-4 inline-block font-extrabold text-sm text-cato-navy">
+                    "{certificadoOficial.proyectoReceptor}"
+                  </div>
+
+                  <p className="text-xs text-slate-700">
+                    Acreditando un total de{' '}
+                    <span className="font-black text-base text-cato-navy underline decoration-cato-gold decoration-2">
+                      {certificadoOficial.horasCumplidas} HORAS CRONOLÓGICAS
+                    </span>{' '}
+                    de servicio efectivo en campo a favor de la comunidad.
+                  </p>
+
+                  {/* Mención Honorífica si aplica */}
+                  {certificadoOficial.distincionPremio && (
+                    <div className="pt-2 flex items-center justify-center gap-1.5 text-xs font-black text-amber-800 bg-amber-100/80 border border-amber-300 py-1.5 px-4 rounded-full max-w-md mx-auto">
+                      <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>Distinción Especial: {certificadoOficial.distincionPremio}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Firmas de Autoridades de Pastoral */}
+                <div className="pt-8 grid grid-cols-2 gap-8 max-w-lg mx-auto text-center border-t border-slate-200">
+                  <div className="space-y-1">
+                    <div className="w-36 h-0.5 bg-slate-400 mx-auto" />
+                    <p className="text-[11px] font-black text-cato-navy">Pbro. Lic. Coordinador</p>
+                    <p className="text-[10px] text-cato-muted">Director de Pastoral Universitaria</p>
+                    <p className="text-[9px] text-slate-400">U.C.B. Regional La Paz</p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="w-36 h-0.5 bg-slate-400 mx-auto" />
+                    <p className="text-[11px] font-black text-cato-navy">Coordinación General</p>
+                    <p className="text-[10px] text-cato-muted">Programa Catovoluntarios</p>
+                    <p className="text-[9px] text-slate-400">Regional La Paz, {certificadoOficial.fechaEmision}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* PESTAÑA 2: CERTIFICADOS DE FUNDACIONES (Subidos por Centros) */}
+      {/* ==================================================================== */}
+      {activeTab === 'fundacion' && (
+        <div className="bg-white rounded-2xl border border-cato-border shadow-card overflow-hidden">
+          <div className="p-4 border-b border-cato-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+            <div>
+              <h3 className="font-extrabold text-sm text-cato-navy flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-purple-700" />
+                Certificados Emitidos por Instituciones Aliadas
+              </h3>
+              <p className="text-xs text-cato-muted mt-0.5">
+                Archivos PDF o diplomas propios que cada centro receptor subió desde su portal como respaldo institucional del voluntario.
+              </p>
+            </div>
+
+            <div className="text-right">
+              <span className="text-xs font-bold text-purple-800 bg-purple-100 border border-purple-200 px-3 py-1 rounded-full">
+                {certsFundacion.length} certificados registrados en BD
+              </span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-cato-canvas border-b border-cato-border text-[11px] uppercase text-cato-muted font-bold">
+                  <th className="py-3 px-4">Voluntario</th>
+                  <th className="py-3 px-4">CI / Carrera</th>
+                  <th className="py-3 px-4">Proyecto Receptor</th>
+                  <th className="py-3 px-4">Archivo PDF Subido</th>
+                  <th className="py-3 px-4">Fecha de Carga</th>
+                  <th className="py-3 px-4 text-right">Acción</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-cato-border">
+                {certsFundacion.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-cato-muted">
+                      Aún no hay certificados subidos por las fundaciones para la gestión {semestre}.
+                    </td>
+                  </tr>
+                ) : (
+                  certsFundacion.map((cf) => (
+                    <tr key={cf.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3 px-4 font-bold text-cato-navy">
+                        {cf.usuario
+                          ? `${cf.usuario.nombres} ${cf.usuario.primerApellido}`
+                          : `Voluntario #${cf.idUsuario}`}
+                      </td>
+                      <td className="py-3 px-4 text-cato-muted">
+                        {cf.usuario?.ci || 'N/D'} · {cf.usuario?.carrera || 'Carrera UCB'}
+                      </td>
+                      <td className="py-3 px-4 text-cato-slate font-semibold">
+                        {cf.proyecto?.nombreProyecto || `Proyecto #${cf.idProyecto}`}
+                      </td>
                       <td className="py-3 px-4">
-                        <div className="font-extrabold text-slate-900">{item.nombre}</div>
-                        <div className="text-[11px] text-slate-500">{item.carrera}</div>
-                      </td>
-
-                      <td className="py-3 px-3 text-slate-700 leading-relaxed">
-                        {item.tareas}
-                      </td>
-
-                      <td className="py-3 px-3 text-center">
-                        <div className="flex items-center justify-center gap-0.5 text-amber-500 font-bold text-sm">
-                          {Array.from({ length: item.calificacion }).map((_, i) => (
-                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                          ))}
-                        </div>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">
-                          ({item.calificacion}/5)
+                        <span className="inline-flex items-center gap-1.5 text-purple-900 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-lg font-mono">
+                          <FileText className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                          <span className="truncate max-w-[180px]">{cf.nombreArchivo}</span>
                         </span>
                       </td>
-
-                      <td className="py-3 px-4 text-slate-600 italic">
-                        "{item.contribucion}"
+                      <td className="py-3 px-4 text-cato-muted">
+                        {new Date(cf.createdAt).toLocaleDateString()}
                       </td>
-
-                      <td className="py-3 px-3 text-center font-mono font-bold text-cato-navy">
-                        {item.beneficiarios}
+                      <td className="py-3 px-4 text-right">
+                        <a
+                          href={cf.urlPdf}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-cato-navy text-white text-xs font-bold rounded-lg hover:bg-cato-navy-dark transition-colors"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Ver / Descargar PDF</span>
+                        </a>
                       </td>
                     </tr>
                   ))
                 )}
               </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Bloque 3: Solicitud de Cupos y Renovación de Convenio */}
-          <div className="cato-card p-5 space-y-4 shadow-sm">
-            <div className="border-b border-cato-border pb-3 flex items-center justify-between">
-              <h2 className="text-sm font-extrabold text-cato-navy flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-cato-steel" />
-                3. Solicitud de Cupos y Renovación de Convenio (Semestre 1/2027)
-              </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-700">¿Desean renovar convenio?</span>
-                <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs border border-emerald-300">
-                  Sí, con agrado ✓
-                </span>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border border-slate-200 rounded-lg">
-                <thead>
-                  <tr className="bg-slate-50 text-cato-navy border-b border-slate-200 font-bold">
-                    <th className="py-2.5 px-3">Área de Servicio Solicitada</th>
-                    <th className="py-2.5 px-3">Perfil Recomendado</th>
-                    <th className="py-2.5 px-3 text-center">Mañana</th>
-                    <th className="py-2.5 px-3 text-center">Tarde</th>
-                    <th className="py-2.5 px-3 text-center">Sábados</th>
-                    <th className="py-2.5 px-3 text-center font-extrabold">Cupos Requeridos</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  <tr>
-                    <td className="py-2 px-3 font-semibold text-slate-800">
-                      Estimulación Cognitiva y Memoria
-                    </td>
-                    <td className="py-2 px-3 text-slate-500">Psicología / Fisioterapia / Biomédica</td>
-                    <td className="py-2 px-3 text-center font-bold">2</td>
-                    <td className="py-2 px-3 text-center font-bold">2</td>
-                    <td className="py-2 px-3 text-center font-bold">2</td>
-                    <td className="py-2 px-3 text-center font-black text-cato-navy">6 Cupos</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 px-3 font-semibold text-slate-800">
-                      Enfermería y Acompañamiento
-                    </td>
-                    <td className="py-2 px-3 text-slate-500">Medicina / Enfermería</td>
-                    <td className="py-2 px-3 text-center font-bold">2</td>
-                    <td className="py-2 px-3 text-center font-bold">2</td>
-                    <td className="py-2 px-3 text-center font-bold">0</td>
-                    <td className="py-2 px-3 text-center font-black text-cato-navy">4 Cupos</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 px-3 font-semibold text-slate-800">
-                      Cocina y Comedor Comunitario
-                    </td>
-                    <td className="py-2 px-3 text-slate-500">Cualquier carrera UCB</td>
-                    <td className="py-2 px-3 text-center font-bold">3</td>
-                    <td className="py-2 px-3 text-center font-bold">1</td>
-                    <td className="py-2 px-3 text-center font-bold">0</td>
-                    <td className="py-2 px-3 text-center font-black text-cato-navy">4 Cupos</td>
-                  </tr>
-                </tbody>
-                <tfoot>
-                  <tr className="bg-blue-50/60 font-black border-t border-slate-200 text-cato-navy">
-                    <td colSpan={5} className="py-2.5 px-3 text-right">
-                      TOTAL VACANTES SOLICITADAS PARA EL PRÓXIMO SEMESTRE:
-                    </td>
-                    <td className="py-2.5 px-3 text-center text-sm font-black text-cato-navy">
-                      14 Vacantes
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-
-          {/* Bloque 4 (NUEVO REQUERIMIENTO PASTORAL): Observaciones y Sugerencias Libres */}
-          <div className="bg-gradient-to-r from-purple-50/70 to-blue-50/50 rounded-2xl border-2 border-purple-300 p-6 shadow-md space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">📝</span>
-                <div>
-                  <h3 className="text-sm font-black text-purple-950 uppercase tracking-tight">
-                    Bloque 4: Observaciones, Sugerencias y Testimonio Libre del Proyecto Receptor
-                  </h3>
-                  <p className="text-xs text-purple-800">
-                    Requerimiento específico de Pastoral UCB para evitar informes físicos largos y agilizar la retroalimentación.
-                  </p>
-                </div>
-              </div>
-              <span className="px-2.5 py-1 rounded bg-purple-200 text-purple-900 font-extrabold text-[11px]">
-                Obligatorio
-              </span>
-            </div>
-
-            <textarea
-              rows={4}
-              value={feedback.bloque4ObservacionesSugerenciasLibres}
-              onChange={(e) =>
-                setFeedback((f) => ({
-                  ...f,
-                  bloque4ObservacionesSugerenciasLibres: e.target.value,
-                }))
-              }
-              placeholder="Escriba aquí los comentarios institucionales, anécdotas, sugerencias de mejora o testimonios del centro respecto al desempeño de los voluntarios y su Catolíder..."
-              className="w-full text-xs p-3.5 rounded-xl border border-purple-300 bg-white focus:border-purple-600 focus:ring-1 focus:ring-purple-600 shadow-xs leading-relaxed"
-            />
-
-            <div className="flex items-center justify-between text-xs pt-1">
-              <span className="text-slate-500 italic">
-                Firma institucional registrada para: <strong>{feedback.nombreResponsableLlenado}</strong> ({feedback.cargoResponsable}).
-              </span>
-              <button
-                type="button"
-                onClick={handleGuardarFeedback}
-                className="btn-cta text-xs flex items-center gap-1.5 shadow-sm"
-              >
-                <Send className="w-4 h-4" />
-                Confirmar y Transmitir Informe
-              </button>
-            </div>
+            </table>
           </div>
         </div>
       )}
 
       {/* ==================================================================== */}
-      {/* SECCIÓN 2: GENERADOR DE PLANTILLAS Y EMISIÓN DE CERTIFICADOS */}
+      {/* PESTAÑA 3: FEEDBACK Y CIERRE INSTITUCIONAL (Bloques 1 al 4) */}
       {/* ==================================================================== */}
-      {activeTab === 'certificados' && certificado && (
-        <div className="space-y-6">
-          {/* Banner Explicativo Pastoral */}
-          <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4 flex items-center justify-between gap-4 shadow-sm">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">🎓</span>
-              <div>
-                <h3 className="text-xs font-black text-emerald-950 uppercase tracking-wider">
-                  Generador Oficial de Datos de Certificados de Conclusión
-                </h3>
-                <p className="text-xs text-emerald-900 mt-0.5 leading-relaxed">
-                  Genera la plantilla y resumen descargable con los datos exactos del estudiante y actividades del centro, para copiar y pegar en un solo clic en Word o plantilla oficial sin redactar nada desde cero.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleDescargarPlantilla}
-                className="btn-secondary text-xs flex items-center gap-1.5"
-              >
-                <Download className="w-4 h-4" />
-                Descargar Texto (.txt)
-              </button>
-              <button
-                type="button"
-                onClick={handleCopiarCertificado}
-                className="btn-cta text-xs flex items-center gap-1.5 shadow-sm"
-              >
-                <Copy className="w-4 h-4" />
-                {copiado ? '¡Copiado!' : 'Copiar Datos'}
-              </button>
-            </div>
-          </div>
-
-          {/* Selector de Voluntario */}
-          <div className="cato-card p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <label className="text-xs font-bold text-cato-navy shrink-0">
-                Seleccionar Estudiante Voluntario:
-              </label>
-              <select
-                value={usuarioCertificadoId}
-                onChange={(e) => setUsuarioCertificadoId(Number(e.target.value))}
-                className="text-xs border border-cato-border rounded-lg p-2 bg-white font-semibold text-slate-800 w-full sm:w-80"
-              >
-                {voluntariosCertificado.length === 0 ? (
-                  <option value={1}>Sin voluntarios registrados</option>
-                ) : (
-                  voluntariosCertificado.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.nombre} ({v.ci}) — {v.horas} hrs
-                    </option>
-                  ))
-                )}
-              </select>
-            </div>
-
-            <div className="text-xs text-cato-muted font-medium">
-              Horas Auditadas: <strong className="text-cato-navy">{certificado.horasCumplidas} hrs cumplidas</strong>
-            </div>
-          </div>
-
-          {/* Vista Previa de la Plantilla de Certificado */}
-          <div className="bg-white rounded-2xl border-2 border-slate-300 p-8 shadow-xl space-y-6 max-w-4xl mx-auto relative overflow-hidden">
-            {/* Membrete institucional Pastoral */}
-            <div className="text-center space-y-2 border-b-2 border-cato-gold pb-6">
-              <div className="w-12 h-12 rounded-2xl bg-cato-navy text-cato-gold font-black text-2xl flex items-center justify-center mx-auto shadow-md">
-                C
-              </div>
-              <h2 className="text-lg font-black text-cato-navy tracking-tight uppercase">
-                Universidad Católica Boliviana "San Pablo" — Regional La Paz
-              </h2>
-              <p className="text-xs font-bold text-cato-subtitle uppercase tracking-widest">
-                Dirección de Pastoral Universitaria · Programa Catovoluntarios
-              </p>
-            </div>
-
-            {/* Título Certificado */}
-            <div className="text-center space-y-1">
-              <span className="text-xs text-slate-400 font-mono uppercase tracking-wider block">
-                Plantilla Oficial de Certificación Social
-              </span>
-              <h3 className="text-2xl font-black text-slate-900 tracking-tight">
-                CERTIFICADO DE CULMINACIÓN DE VOLUNTARIADO
+      {activeTab === 'feedback' && (
+        <div className="bg-white rounded-2xl border border-cato-border shadow-card p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-cato-border pb-4">
+            <div>
+              <h3 className="font-extrabold text-base text-cato-navy flex items-center gap-2">
+                <FileText className="w-5 h-5 text-emerald-600" />
+                Evaluación y Feedback Semestral de Proyectos Receptores
               </h3>
-            </div>
-
-            {/* Cuerpo del Certificado */}
-            <div className="text-sm text-slate-700 leading-relaxed text-center max-w-2xl mx-auto space-y-4">
-              <p>La Dirección de Pastoral Universitaria certifica que el/la estudiante universitario/a:</p>
-              
-              <div className="py-2 border-y border-dashed border-slate-300">
-                <div className="text-xl font-extrabold text-cato-navy tracking-tight">
-                  {certificado.nombreCompleto}
-                </div>
-                <div className="text-xs font-bold text-slate-600 mt-0.5">
-                  Carnet de Identidad: <span className="font-mono text-slate-900">{certificado.ci}</span> · Carrera: {certificado.carrera}
-                </div>
-              </div>
-
-              <p className="text-xs leading-relaxed text-justify">
-                Ha culminado satisfactoriamente su participación activa en el Programa de Solidaridad y Servicio Social Universitario "Catovoluntarios" durante el periodo <strong>{certificado.semestre}</strong>, habiendo realizado sus jornadas de voluntariado en el Proyecto Receptor:
-              </p>
-
-              <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200 font-extrabold text-cato-navy text-sm">
-                "{certificado.proyectoReceptor}"
-              </div>
-
-              <p className="text-xs leading-relaxed text-justify">
-                Cumpliendo un total de <strong className="text-cato-navy">{certificado.horasCumplidas} HORAS CRONOLÓGICAS DE VOLUNTARIADO SOCIAL</strong> en campo, habiendo desempeñado actividades de {certificado.actividadesRealizadas.toLowerCase()} con alto sentido de madurez humana, ética y carisma pastoral.
+              <p className="text-xs text-cato-muted mt-0.5">
+                Cuestionario institucional estructurado por bloques para medir el impacto y la continuidad del convenio pastoral.
               </p>
             </div>
 
-            {/* Firmas de Certificación */}
-            <div className="grid grid-cols-2 gap-8 pt-8 border-t border-slate-200 text-center text-xs">
-              <div className="space-y-1">
-                <div className="w-40 border-b border-slate-400 mx-auto pb-6"></div>
-                <div className="font-extrabold text-slate-800">Coordinación Pastoral</div>
-                <div className="text-[11px] text-slate-500">Pastoral Universitaria UCB</div>
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>Bloque 4 Libre Obligatorio</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Bloque Cuantitativo */}
+            <div className="space-y-4 bg-slate-50/70 border border-cato-border rounded-xl p-4">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-cato-navy">
+                Métricas Cuantitativas del Centro
+              </h4>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-cato-muted mb-1">
+                    Voluntarios Recibidos
+                  </label>
+                  <input
+                    type="number"
+                    value={feedback.voluntariosRecibidos}
+                    onChange={(e) =>
+                      setFeedback({ ...feedback, voluntariosRecibidos: Number(e.target.value) })
+                    }
+                    className="w-full text-xs font-bold border border-cato-border rounded-lg px-3 py-1.5 bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-cato-muted mb-1">
+                    Voluntarios Culminados
+                  </label>
+                  <input
+                    type="number"
+                    value={feedback.voluntariosCulminados}
+                    onChange={(e) =>
+                      setFeedback({ ...feedback, voluntariosCulminados: Number(e.target.value) })
+                    }
+                    className="w-full text-xs font-bold border border-cato-border rounded-lg px-3 py-1.5 bg-white"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-1">
-                <div className="w-40 border-b border-slate-400 mx-auto pb-6"></div>
-                <div className="font-extrabold text-slate-800">Supervisión Institucional</div>
-                <div className="text-[11px] text-slate-500">Proyecto Receptor Aliado</div>
+              <div>
+                <label className="block text-[11px] font-bold text-cato-muted mb-1">
+                  Calificación al Desempeño del Grupo (1 a 5)
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((estrella) => (
+                    <button
+                      key={estrella}
+                      type="button"
+                      onClick={() => setFeedback({ ...feedback, calificacionGrupo: estrella })}
+                      className={`p-2 rounded-lg border flex items-center justify-center transition-all ${
+                        feedback.calificacionGrupo >= estrella
+                          ? 'bg-amber-100 border-amber-300 text-amber-600'
+                          : 'bg-white border-slate-200 text-slate-300'
+                      }`}
+                    >
+                      <Star className="w-5 h-5 fill-current" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-cato-muted mb-1">
+                  Calificación al Acompañamiento del Catolíder (1 a 5)
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((estrella) => (
+                    <button
+                      key={estrella}
+                      type="button"
+                      onClick={() => setFeedback({ ...feedback, calificacionCatolider: estrella })}
+                      className={`p-2 rounded-lg border flex items-center justify-center transition-all ${
+                        feedback.calificacionCatolider >= estrella
+                          ? 'bg-amber-100 border-amber-300 text-amber-600'
+                          : 'bg-white border-slate-200 text-slate-300'
+                      }`}
+                    >
+                      <Star className="w-5 h-5 fill-current" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <input
+                  type="checkbox"
+                  id="continuidad"
+                  checked={feedback.solicitaContinuidadConvenio}
+                  onChange={(e) =>
+                    setFeedback({ ...feedback, solicitaContinuidadConvenio: e.target.checked })
+                  }
+                  className="rounded text-cato-navy focus:ring-cato-navy"
+                />
+                <label htmlFor="continuidad" className="text-xs font-bold text-cato-navy cursor-pointer">
+                  La institución solicita renovar el convenio para el próximo semestre
+                </label>
               </div>
             </div>
 
-            {/* Footer de la plantilla */}
-            <div className="text-center text-[10px] text-slate-400 font-mono pt-4 border-t border-slate-100 flex items-center justify-between">
-              <span>La Paz, {certificado.fechaEmision}</span>
-              <span>Código Validación Pastoral: CERT-2026-LP-{certificado.usuarioId}04</span>
+            {/* Bloque 4 Libre Obligatorio */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-extrabold text-cato-navy mb-1 flex items-center gap-1.5">
+                  <Star className="w-3.5 h-3.5 text-cato-gold fill-cato-gold" />
+                  Bloque 4: Observaciones, Sugerencias e Impacto Social (Obligatorio)
+                </label>
+                <p className="text-[11px] text-cato-muted mb-2">
+                  Este espacio de redacción libre sustituye formalmente los informes físicos extensos exigidos anteriormente.
+                </p>
+                <textarea
+                  rows={6}
+                  value={feedback.bloque4ObservacionesSugerenciasLibres}
+                  onChange={(e) =>
+                    setFeedback({
+                      ...feedback,
+                      bloque4ObservacionesSugerenciasLibres: e.target.value,
+                    })
+                  }
+                  placeholder="Describe la vivencia con los voluntarios, anécdotas, sugerencias para la Pastoral y necesidades identificadas en la población beneficiaria..."
+                  className="w-full text-xs p-3 border border-cato-border rounded-xl focus:outline-none focus:ring-2 focus:ring-cato-navy/20 bg-slate-50"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-cato-muted mb-1">
+                    Responsable de la Institución
+                  </label>
+                  <input
+                    type="text"
+                    value={feedback.nombreResponsableLlenado}
+                    onChange={(e) =>
+                      setFeedback({ ...feedback, nombreResponsableLlenado: e.target.value })
+                    }
+                    placeholder="Nombre completo"
+                    className="w-full text-xs border border-cato-border rounded-lg px-3 py-1.5"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-cato-muted mb-1">
+                    Cargo
+                  </label>
+                  <input
+                    type="text"
+                    value={feedback.cargoResponsable || ''}
+                    onChange={(e) =>
+                      setFeedback({ ...feedback, cargoResponsable: e.target.value })
+                    }
+                    placeholder="Ej: Directora General"
+                    className="w-full text-xs border border-cato-border rounded-lg px-3 py-1.5"
+                  />
+                </div>
+              </div>
+
+              <div className="text-right pt-2">
+                <Button
+                  variant="cta"
+                  onClick={handleGuardarFeedback}
+                  disabled={guardandoFeedback}
+                  leftIcon={
+                    guardandoFeedback ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )
+                  }
+                >
+                  {guardandoFeedback ? 'Guardando en BD...' : 'Guardar Feedback del Proyecto'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

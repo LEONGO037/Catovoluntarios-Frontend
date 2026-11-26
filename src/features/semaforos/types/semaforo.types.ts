@@ -133,6 +133,40 @@ export interface PlantillaCertificado {
   semestre: string;
   horasCumplidas: number;
   fechaEmision: string;
+  distincionPremio?: string;
+  premios?: PremioHistorico[];
+  certificadosFundacion?: {
+    id: number;
+    nombreArchivo: string;
+    urlPdf: string;
+    fechaSubida?: string;
+    observaciones?: string;
+  }[];
   actividadesRealizadas: string;
   textoPreformateadoCopiar: string;
+}
+
+export interface CertificadoFundacionItem {
+  id: number;
+  idProyecto: number;
+  idUsuario: number;
+  semestre: string;
+  urlPdf: string;
+  nombreArchivo: string;
+  subidoPor?: number;
+  observaciones?: string;
+  createdAt: string;
+  updatedAt: string;
+  usuario?: {
+    id: number;
+    nombres: string;
+    primerApellido: string;
+    segundoApellido?: string;
+    ci: string;
+    carrera?: string;
+  };
+  proyecto?: {
+    id: number;
+    nombreProyecto: string;
+  };
 }
