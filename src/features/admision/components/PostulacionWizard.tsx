@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePostulacionForm } from '../hooks/usePostulacionForm';
 import { WizardStepper } from './WizardStepper';
 import { Step1Identificacion } from './Step1Identificacion';
@@ -8,6 +9,7 @@ import { Step4Consentimiento } from './Step4Consentimiento';
 import { ModalExitoPostulacion } from './ModalExitoPostulacion';
 import { NotificationModal } from '../../../components/feedback/NotificationModal';
 import { postulacionesApi } from '../../../services/postulaciones.service';
+import { useActiveSemester } from '../../../components/layout/active-semester';
 import { ArrowLeft, ArrowRight, Send } from 'lucide-react';
 
 interface PostulacionWizardProps {
@@ -17,6 +19,8 @@ interface PostulacionWizardProps {
 export const PostulacionWizard: React.FC<PostulacionWizardProps> = ({
   onFinalizar,
 }) => {
+  const navigate = useNavigate();
+  const activeSemester = useActiveSemester();
   const {
     pasoActual,
     formData,
@@ -37,10 +41,8 @@ export const PostulacionWizard: React.FC<PostulacionWizardProps> = ({
   const [enviando, setEnviando] = useState(false);
   const [codigoGenerado, setCodigoGenerado] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pasoActual < 4) {
-      avanzarPaso();
+  const handleEnviarPostulacion = async () => {
+    if (pasoActual !== 4 || enviando || codigoGenerado) {
       return;
     }
 
@@ -56,7 +58,10 @@ export const PostulacionWizard: React.FC<PostulacionWizardProps> = ({
 
     setEnviando(true);
     try {
-      const res = await postulacionesApi.enviarPostulacion(formData);
+      const res = await postulacionesApi.enviarPostulacion({
+        ...formData,
+        semestre: activeSemester,
+      });
       setCodigoGenerado(res.codigoPostulacion);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al enviar la postulación';
@@ -90,7 +95,7 @@ export const PostulacionWizard: React.FC<PostulacionWizardProps> = ({
 
       {/* Tarjeta Contenedora del Formulario */}
       <div className="cato-card border border-cato-border shadow-lg">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
           {pasoActual === 1 && (
             <Step1Identificacion
               formData={formData}
@@ -139,6 +144,7 @@ export const PostulacionWizard: React.FC<PostulacionWizardProps> = ({
 
             {pasoActual < 4 ? (
               <button
+                key="btn-avanzar-paso"
                 type="button"
                 onClick={avanzarPaso}
                 disabled={pasoActual === 2 && tieneSobrecarga}
@@ -152,8 +158,14 @@ export const PostulacionWizard: React.FC<PostulacionWizardProps> = ({
               </button>
             ) : (
               <button
-                type="submit"
-                disabled={enviando || (esMenorDeEdad && !formData.autorizacionPadresConfirmada)}
+                key="btn-enviar-postulacion"
+                type="button"
+                onClick={handleEnviarPostulacion}
+                disabled={
+                  enviando ||
+                  Boolean(codigoGenerado) ||
+                  (esMenorDeEdad && !formData.autorizacionPadresConfirmada)
+                }
                 className="btn-cta text-xs px-8 py-2.5 font-bold shadow-md disabled:opacity-50 inline-flex items-center gap-2"
               >
                 {enviando ? (
@@ -177,7 +189,11 @@ export const PostulacionWizard: React.FC<PostulacionWizardProps> = ({
           celular={formData.celular}
           onCerrar={() => {
             setCodigoGenerado(null);
-            if (onFinalizar) onFinalizar();
+            if (onFinalizar) {
+              onFinalizar();
+            } else {
+              navigate('/');
+            }
           }}
         />
       )}

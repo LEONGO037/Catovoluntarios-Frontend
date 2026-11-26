@@ -30,8 +30,12 @@ export const postulacionesApi = {
   /**
    * Obtiene las métricas KPI de postulantes
    */
-  async obtenerKpis(userRol: string = 'ADMIN_PASTORAL'): Promise<PostulacionKpis> {
-    return apiClient<PostulacionKpis>('/postulaciones/kpis', {
+  async obtenerKpis(
+    userRol: string = 'ADMIN_PASTORAL',
+    semestre?: string,
+  ): Promise<PostulacionKpis> {
+    const qs = semestre ? `?semestre=${encodeURIComponent(semestre)}` : '';
+    return apiClient<PostulacionKpis>(`/postulaciones/kpis${qs}`, {
       headers: {
         'x-user-rol': userRol,
       },
@@ -50,6 +54,7 @@ export const postulacionesApi = {
     if (params.carrera) query.append('carrera', params.carrera);
     if (params.zonaResidencia) query.append('zonaResidencia', params.zonaResidencia);
     if (params.estado) query.append('estado', params.estado);
+    if (params.semestre) query.append('semestre', params.semestre);
     if (params.page) query.append('page', String(params.page));
     if (params.limit) query.append('limit', String(params.limit));
 
@@ -141,8 +146,12 @@ export const postulacionesApi = {
   /**
    * Consulta de Catolíderes vigentes
    */
-  async obtenerCatolideresVigentes(userRol: string = 'ADMIN_PASTORAL'): Promise<any[]> {
-    return apiClient<any[]>('/users/catolideres-vigentes', {
+  async obtenerCatolideresVigentes(
+    userRol: string = 'ADMIN_PASTORAL',
+    semestre?: string,
+  ): Promise<any[]> {
+    const qs = semestre ? `?semestre=${encodeURIComponent(semestre)}` : '';
+    return apiClient<any[]>(`/users/catolideres-vigentes${qs}`, {
       headers: {
         'x-user-rol': userRol,
       },
@@ -158,5 +167,23 @@ export const postulacionesApi = {
         'x-user-rol': userRol,
       },
     });
+  },
+
+  /**
+   * Revocación individual del rol de Catolíder
+   */
+  async revocarCatolider(
+    id: number,
+    userRol: string = 'ADMIN_PASTORAL',
+  ): Promise<{ message: string; user: any }> {
+    return apiClient<{ message: string; user: any }>(
+      `/users/${id}/unassign-catolider`,
+      {
+        method: 'PATCH',
+        headers: {
+          'x-user-rol': userRol,
+        },
+      },
+    );
   },
 };

@@ -10,10 +10,15 @@ import { KpiBandejaCards } from './KpiBandejaCards';
 import { FiltrosPostulantes } from './FiltrosPostulantes';
 import { TablaPostulantes } from './TablaPostulantes';
 import { ExpedientePostulanteDrawer } from './ExpedientePostulanteDrawer';
+import { useActiveSemester } from '../../../components/layout/active-semester';
+import { useAuth } from '../../auth/hooks/useAuth';
+import { ShieldCheck, Eye } from 'lucide-react';
 
 export const BandejaPostulantes: React.FC = () => {
-  // Simulación de rol activo para verificar RBAC (Pastoral vs Catolíder)
-  const [userRol, setUserRol] = useState<'ADMIN_PASTORAL' | 'CATOLIDER'>('ADMIN_PASTORAL');
+  const activeSemester = useActiveSemester();
+  const { user } = useAuth();
+  const userRol: 'ADMIN_PASTORAL' | 'CATOLIDER' =
+    user?.rol === 'CATOLIDER' ? 'CATOLIDER' : 'ADMIN_PASTORAL';
 
   const [kpis, setKpis] = useState<PostulacionKpis>({
     total: 0,
@@ -39,8 +44,11 @@ export const BandejaPostulantes: React.FC = () => {
     setCargando(true);
     try {
       const [kpiRes, listRes] = await Promise.all([
-        postulacionesApi.obtenerKpis(userRol),
-        postulacionesApi.obtenerPostulaciones(filtros, userRol),
+        postulacionesApi.obtenerKpis(userRol, activeSemester),
+        postulacionesApi.obtenerPostulaciones(
+          { ...filtros, semestre: activeSemester },
+          userRol,
+        ),
       ]);
       setKpis(kpiRes);
       setPostulaciones(listRes.items);
@@ -60,7 +68,7 @@ export const BandejaPostulantes: React.FC = () => {
     } finally {
       setCargando(false);
     }
-  }, [filtros, userRol]);
+  }, [filtros, userRol, activeSemester]);
 
   useEffect(() => {
     cargarDatos();
@@ -85,7 +93,7 @@ export const BandejaPostulantes: React.FC = () => {
               Gestión de Admisión
             </span>
             <span className="text-xs font-semibold text-slate-400">
-              Gestión Semestre 2/2026
+              Gestión Semestre {activeSemester}
             </span>
           </div>
           <h1 className="text-2xl font-black text-cato-navy mt-1">
@@ -96,33 +104,19 @@ export const BandejaPostulantes: React.FC = () => {
           </p>
         </div>
 
-        {/* Switch de Rol para Probar RBAC */}
-        <div className="flex items-center gap-2 bg-white p-2 rounded-xl border border-cato-border shadow-sm">
-          <span className="text-[11px] font-bold text-slate-500 uppercase">
-            Rol Activo:
-          </span>
-          <button
-            type="button"
-            onClick={() => setUserRol('ADMIN_PASTORAL')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              userRol === 'ADMIN_PASTORAL'
-                ? 'badge-role-admin shadow-sm'
-                : 'text-slate-500 hover:bg-slate-100'
-            }`}
-          >
-            Admin Pastoral (Control Total)
-          </button>
-          <button
-            type="button"
-            onClick={() => setUserRol('CATOLIDER')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              userRol === 'CATOLIDER'
-                ? 'badge-role-catolider shadow-sm'
-                : 'text-slate-500 hover:bg-slate-100'
-            }`}
-          >
-            Catolíder (Solo Lectura)
-          </button>
+        {/* Indicador de Permisos RBAC del Usuario Autenticado */}
+        <div className="flex items-center gap-2">
+          {userRol === 'CATOLIDER' ? (
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold shadow-2xs">
+              <Eye className="w-3.5 h-3.5 text-amber-600" />
+              Modo Consulta (Catolíder)
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-bold shadow-2xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              Administración Pastoral
+            </span>
+          )}
         </div>
       </div>
 
