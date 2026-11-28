@@ -132,14 +132,18 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               Catolíder Titular:
             </span>
             <span className="font-bold text-cato-navy truncate max-w-[140px]">
-              {project.catolider_titular_nombre || 'Sin asignar'}
+              {project.catolider_titular_nombre ||
+                (project.catolider_titular_id
+                  ? `Catolíder #${project.catolider_titular_id}`
+                  : 'Sin asignar')}
             </span>
           </div>
-          {project.catolider_aprendiz_nombre && (
+          {(project.catolider_aprendiz_nombre || project.catolider_aprendiz_id) && (
             <div className="flex items-center justify-between text-[11px] pt-1 border-t border-cato-border/50">
               <span className="text-cato-muted">Catolíder Aprendiz:</span>
               <span className="font-medium text-cato-text truncate max-w-[140px]">
-                {project.catolider_aprendiz_nombre}
+                {project.catolider_aprendiz_nombre ||
+                  `Catolíder #${project.catolider_aprendiz_id}`}
               </span>
             </div>
           )}

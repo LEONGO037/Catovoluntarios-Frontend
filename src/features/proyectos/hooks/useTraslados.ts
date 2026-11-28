@@ -79,11 +79,18 @@ export function useTraslados(semestre: string, proyectos: ProyectoReceptor[]) {
       const nuevo = await proyectosService.ejecutarTraslado({
         ...params,
         semestre,
+        trasladoExcepcional: Boolean(autorizacionExcepcional),
       });
       refreshData();
       return nuevo;
     },
-    [periodoHabilitado, periodoEstado.maxSemanasOrdinarias, semestre, refreshData]
+    [
+      periodoHabilitado,
+      periodoEstado.maxSemanasOrdinarias,
+      semestre,
+      autorizacionExcepcional,
+      refreshData,
+    ]
   );
 
   const marcarNotificacionLeida = useCallback(

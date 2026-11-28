@@ -32,6 +32,74 @@ interface ProjectFormContentProps {
   semestre: string;
 }
 
+const POBLACION_KEYWORDS: Record<string, string[]> = {
+  'Adultos mayores': ['adulto mayor', 'adultos mayores', 'anciano', 'tercera edad', 'geriatric'],
+  'Niños y niñas en situación de vulnerabilidad': ['nino', 'ninos', 'nina', 'ninas', 'infantil', 'vulnerab', 'aldea'],
+  'Personas con discapacidad mental o psiquiátrico': ['psiquiatr', 'salud mental', 'discapacidad mental', 'mental'],
+  'Comedores populares y personas en situación de calle': ['comedor', 'situacion de calle', 'calle', 'alimenta'],
+  'Apoyo escolar y primera infancia': ['apoyo escolar', 'primera infancia', 'refuerzo escolar', 'guarderia'],
+  'Adolescentes en centros de acogida': ['adolescent', 'acogida', 'joven'],
+};
+
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function mapPoblacionesIniciales(rawList?: string[]): {
+  matched: string[];
+  unmatched: string[];
+} {
+  if (!rawList || rawList.length === 0) {
+    return { matched: [POBLACIONES_OBJETIVO[0]], unmatched: [] };
+  }
+
+  const matchedSet = new Set<string>();
+  const unmatched: string[] = [];
+
+  for (const rawItem of rawList) {
+    const norm = normalizeText(rawItem);
+    if (!norm) continue;
+
+    let foundMatch = false;
+    for (const opt of POBLACIONES_OBJETIVO) {
+      const normOpt = normalizeText(opt);
+      const keywords = POBLACION_KEYWORDS[opt] ?? [];
+      const matchesOpt =
+        norm === normOpt ||
+        norm.includes(normOpt) ||
+        normOpt.includes(norm) ||
+        keywords.some((kw) => norm.includes(kw));
+
+      if (matchesOpt) {
+        matchedSet.add(opt);
+        foundMatch = true;
+      }
+    }
+
+    if (!foundMatch) {
+      unmatched.push(rawItem.trim());
+    }
+  }
+
+  return {
+    matched: Array.from(matchedSet),
+    unmatched,
+  };
+}
+
+function resolveInitialZona(rawZona?: string): string {
+  if (!rawZona?.trim()) return ZONAS_LA_PAZ[0];
+  const trimmed = rawZona.trim();
+  const exactMatch = ZONAS_LA_PAZ.find(
+    (z) => normalizeText(z) === normalizeText(trimmed)
+  );
+  return exactMatch ?? trimmed;
+}
+
 const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
   onClose,
   onSubmit,
@@ -64,7 +132,7 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
     projectToEdit?.direccion_exacta || selectedInstObj?.direccion_exacta || ''
   );
   const [macrodistrito, setMacrodistrito] = useState(
-    projectToEdit?.macrodistrito_zona || selectedInstObj?.macrodistrito_zona || ZONAS_LA_PAZ[0]
+    resolveInitialZona(projectToEdit?.macrodistrito_zona || selectedInstObj?.macrodistrito_zona)
   );
   const [supervisor, setSupervisor] = useState(
     projectToEdit?.nombre_supervisor_centro || selectedInstObj?.nombre_supervisor_centro || ''
@@ -84,9 +152,16 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
     projectToEdit?.fecha_fin_convenio || selectedInstObj?.fecha_fin_convenio || '2026-12-15'
   );
 
-  const [poblaciones, setPoblaciones] = useState<string[]>(
-    projectToEdit?.poblacion_objetivo || [POBLACIONES_OBJETIVO[0]]
-  );
+  const initialPoblaciones = isEditing
+    ? mapPoblacionesIniciales(projectToEdit?.poblacion_objetivo)
+    : { matched: [POBLACIONES_OBJETIVO[0]], unmatched: [] };
+
+  const [poblaciones, setPoblaciones] = useState<string[]>([
+    ...initialPoblaciones.matched,
+    ...initialPoblaciones.unmatched,
+  ]);
+  const [poblacionesModificadas, setPoblacionesModificadas] = useState(false);
+
   const [actividades, setActividades] = useState(
     projectToEdit?.actividades_semestre_actual || ''
   );
@@ -97,7 +172,7 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
     projectToEdit?.cupo_maximo_voluntarios || 10
   );
   const [titularId, setTitularId] = useState(
-    projectToEdit?.catolider_titular_id || catolideres[0]?.id || ''
+    isEditing ? (projectToEdit?.catolider_titular_id || '') : (catolideres[0]?.id || '')
   );
   const [aprendizId, setAprendizId] = useState(
     projectToEdit?.catolider_aprendiz_id || ''
@@ -105,6 +180,18 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const zonaOptions = [
+    ...(macrodistrito && !ZONAS_LA_PAZ.includes(macrodistrito)
+      ? [{ value: macrodistrito, label: `${macrodistrito} (Registrada)` }]
+      : []),
+    ...ZONAS_LA_PAZ.map((z) => ({ value: z, label: z })),
+  ];
+
+  const poblacionOptions = [
+    ...POBLACIONES_OBJETIVO,
+    ...initialPoblaciones.unmatched.filter((u) => !POBLACIONES_OBJETIVO.includes(u)),
+  ];
 
   const handleSelectExistingInstitution = (instId: string) => {
     setSelectedInstitucionId(instId);
@@ -115,7 +202,7 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
         setNombreProyecto(found.nombre_institucion);
       }
       setDireccion(found.direccion_exacta);
-      setMacrodistrito(found.macrodistrito_zona || ZONAS_LA_PAZ[0]);
+      setMacrodistrito(resolveInitialZona(found.macrodistrito_zona));
       setSupervisor(found.nombre_supervisor_centro);
       setTelefono(found.telefono_contacto);
       setCorreo(found.correo);
@@ -144,6 +231,7 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
   };
 
   const handleTogglePoblacion = (pob: string) => {
+    setPoblacionesModificadas(true);
     setPoblaciones((prev) =>
       prev.includes(pob) ? prev.filter((p) => p !== pob) : [...prev, pob]
     );
@@ -200,6 +288,14 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
       fecha_fin_convenio: fechaFin,
     };
 
+    const poblacionesFinales =
+      isEditing &&
+      !poblacionesModificadas &&
+      projectToEdit?.poblacion_objetivo &&
+      projectToEdit.poblacion_objetivo.length > 0
+        ? projectToEdit.poblacion_objetivo
+        : poblaciones;
+
     const payload: CrearProyectoReceptorDto = {
       institucion_id:
         isEditing || modoInstitucion === 'existente' ? selectedInstitucionId || undefined : undefined,
@@ -213,12 +309,12 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
       correo: correo.trim(),
       fecha_inicio_convenio: fechaInicio,
       fecha_fin_convenio: fechaFin,
-      poblacion_objetivo: poblaciones,
+      poblacion_objetivo: poblacionesFinales,
       actividades_semestre_actual: actividades.trim(),
       monto_pasaje_fijo: Number(pasajeFijo),
       cupo_maximo_voluntarios: Number(cupoMaximo),
       catolider_titular_id: titularId,
-      catolider_aprendiz_id: aprendizId || undefined,
+      catolider_aprendiz_id: aprendizId || null,
     };
 
     setIsSaving(true);
@@ -311,7 +407,7 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
             required
             value={macrodistrito}
             onChange={(e) => setMacrodistrito(e.target.value)}
-            options={ZONAS_LA_PAZ.map((z) => ({ value: z, label: z }))}
+            options={zonaOptions}
           />
         </div>
 
@@ -421,6 +517,17 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
             onChange={(e) => setTitularId(e.target.value)}
             options={[
               { value: '', label: '-- Seleccionar Catolíder Titular --' },
+              ...(projectToEdit?.catolider_titular_id &&
+              !catolideres.some((c) => c.id === projectToEdit.catolider_titular_id)
+                ? [
+                    {
+                      value: projectToEdit.catolider_titular_id,
+                      label:
+                        projectToEdit.catolider_titular_nombre ||
+                        `Catolíder #${projectToEdit.catolider_titular_id}`,
+                    },
+                  ]
+                : []),
               ...catolideres.map((c) => ({
                 value: c.id,
                 label: `${c.nombre} (${c.carrera} - ${c.nivel})`,
@@ -434,6 +541,18 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
             onChange={(e) => setAprendizId(e.target.value)}
             options={[
               { value: '', label: '-- Sin Catolíder Aprendiz --' },
+              ...(projectToEdit?.catolider_aprendiz_id &&
+              projectToEdit.catolider_aprendiz_id !== titularId &&
+              !catolideres.some((c) => c.id === projectToEdit.catolider_aprendiz_id)
+                ? [
+                    {
+                      value: projectToEdit.catolider_aprendiz_id,
+                      label:
+                        projectToEdit.catolider_aprendiz_nombre ||
+                        `Catolíder #${projectToEdit.catolider_aprendiz_id}`,
+                    },
+                  ]
+                : []),
               ...catolideres
                 .filter((c) => c.id !== titularId)
                 .map((c) => ({
@@ -449,7 +568,7 @@ const ProjectFormContent: React.FC<ProjectFormContentProps> = ({
             Poblaciones Objetivo Atendidas <span className="text-red-500">*</span>
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-cato-canvas p-3 rounded-lg border border-cato-border">
-            {POBLACIONES_OBJETIVO.map((pob) => {
+            {poblacionOptions.map((pob) => {
               const isChecked = poblaciones.includes(pob);
               return (
                 <label

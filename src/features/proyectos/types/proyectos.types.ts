@@ -75,7 +75,7 @@ export interface CrearProyectoReceptorDto {
   monto_pasaje_fijo: number;
   cupo_maximo_voluntarios: number;
   catolider_titular_id: string;
-  catolider_aprendiz_id?: string;
+  catolider_aprendiz_id?: string | null;
 }
 
 export type ActualizarProyectoReceptorDto = Partial<CrearProyectoReceptorDto> & {
@@ -125,6 +125,7 @@ export interface ReasignarUbicacionDto {
   motivo_otro_detalle?: string;
   fecha_efectiva: string;
   semestre: string;
+  traslado_excepcional?: boolean;
   observaciones?: string;
 }
 

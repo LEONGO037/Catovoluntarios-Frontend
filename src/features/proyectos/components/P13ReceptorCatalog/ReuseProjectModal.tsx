@@ -63,7 +63,9 @@ const ReuseProjectContent: React.FC<ReuseContentProps> = ({
     selectedSource?.catolider_aprendiz_id || ''
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reactivatingId, setReactivatingId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleSelectSource = (id: string) => {
     setSelectedSourceId(id);
@@ -84,6 +86,7 @@ const ReuseProjectContent: React.FC<ReuseContentProps> = ({
       return;
     }
     setErrorMsg('');
+    setSuccessMsg('');
     setIsSubmitting(true);
     try {
       await onReuse({
@@ -105,20 +108,28 @@ const ReuseProjectContent: React.FC<ReuseContentProps> = ({
     }
   };
 
-  const handleReactivateClick = async (projectId: string) => {
+  const handleReactivateClick = async (project: ProyectoReceptor) => {
     setErrorMsg('');
+    setSuccessMsg('');
+    setReactivatingId(project.id);
     setIsSubmitting(true);
     try {
-      await onReactivate(projectId);
-      onClose();
+      await onReactivate(project.id);
+      setSuccessMsg(
+        `El Proyecto Receptor "${project.nombre_proyecto}" fue reactivado en la Gestión ${semestreDestino}.`
+      );
     } catch (err: unknown) {
       setErrorMsg(
         err instanceof Error ? err.message : 'No se pudo reactivar el Proyecto Receptor.'
       );
     } finally {
+      setReactivatingId(null);
       setIsSubmitting(false);
     }
   };
+
+  const nothingAvailable =
+    proyectosInactivosActuales.length === 0 && proyectosHistoricos.length === 0;
 
   return (
     <div className="space-y-6">
@@ -128,151 +139,201 @@ const ReuseProjectContent: React.FC<ReuseContentProps> = ({
         </div>
       )}
 
-      {proyectosInactivosActuales.length > 0 && (
-        <div className="space-y-2.5 p-4 rounded-xl border border-amber-200 bg-amber-50/60">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-            <RotateCcw className="w-4 h-4 text-amber-700" />
-            Proyectos Inactivos en Gestión {semestreDestino}
-          </h4>
-          <div className="space-y-2">
-            {proyectosInactivosActuales.map((proj) => (
-              <div
-                key={proj.id}
-                className="p-3 rounded-lg bg-white border border-amber-200 flex items-center justify-between gap-3 text-xs"
-              >
-                <div>
-                  <div className="font-bold text-cato-navy">{proj.nombre_proyecto}</div>
-                  <div className="text-[11px] text-cato-muted">
-                    {proj.macrodistrito_zona} | Pasaje: {formatCurrency(proj.monto_pasaje_fijo)}
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  disabled={isSubmitting}
-                  onClick={() => void handleReactivateClick(proj.id)}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Reactivar
-                </Button>
-              </div>
-            ))}
-          </div>
+      {successMsg && (
+        <div className="p-3 rounded-lg bg-emerald-50 text-emerald-800 text-xs border border-emerald-200 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{successMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleReuseSubmit} className="space-y-4">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cato-navy">
-          <History className="w-4 h-4 text-cato-steel" />
-          <span>Habilitar Proyecto de Gestión Anterior en {semestreDestino}</span>
-        </div>
-
-        {proyectosHistoricos.length === 0 ? (
-          <div className="p-6 text-center rounded-xl border border-cato-border bg-cato-canvas text-xs text-cato-muted">
+      {nothingAvailable ? (
+        <div className="space-y-4">
+          <div className="p-8 text-center rounded-xl border border-cato-border bg-cato-canvas text-xs text-cato-muted">
             <Building2 className="w-8 h-8 mx-auto text-cato-steel/50 mb-2" />
-            No se encontraron Proyectos Receptores de gestiones anteriores disponibles para clonar.
+            <p className="font-semibold text-cato-slate">
+              Sin Proyectos Receptores disponibles para reactivar o reutilizar
+            </p>
+            <p className="mt-1">
+              No existen proyectos inactivos en la Gestión {semestreDestino} ni proyectos de gestiones anteriores registrados.
+            </p>
           </div>
-        ) : (
-          <>
-            <Select
-              label="Proyecto Receptor de Origen"
-              value={selectedSourceId}
-              onChange={(e) => handleSelectSource(e.target.value)}
-              options={proyectosHistoricos.map((p) => ({
-                value: p.id,
-                label: `${p.nombre_proyecto} (Gestión ${p.semestre} - ${p.macrodistrito_zona})`,
-              }))}
-            />
+          <div className="pt-2 border-t border-cato-border flex justify-end">
+            <Button variant="outline" type="button" onClick={onClose}>
+              Cerrar
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="space-y-3 p-4 rounded-xl border border-amber-200 bg-amber-50/50">
+            <div className="flex items-center justify-between gap-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                <RotateCcw className="w-4 h-4 text-amber-700" />
+                Proyectos Inactivos en la Gestión Activa ({semestreDestino})
+              </h4>
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">
+                {proyectosInactivosActuales.length}
+              </span>
+            </div>
 
-            {selectedSource && (
-              <div className="p-3 rounded-lg bg-cato-canvas border border-cato-border text-xs space-y-1">
-                <div className="font-bold text-cato-navy">
-                  Institución vinculada: {selectedSource.institucion?.nombre_institucion || selectedSource.nombre_proyecto}
-                </div>
-                <div className="text-[11px] text-cato-muted">
-                  Supervisor: {selectedSource.nombre_supervisor_centro} | Dirección:{' '}
-                  {selectedSource.direccion_exacta}
-                </div>
+            {proyectosInactivosActuales.length === 0 ? (
+              <p className="text-xs text-amber-900/80 bg-white/80 p-3 rounded-lg border border-amber-200/80">
+                No hay proyectos inactivos pendientes en la Gestión {semestreDestino}.
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {proyectosInactivosActuales.map((proj) => (
+                  <div
+                    key={proj.id}
+                    className="p-3 rounded-lg bg-white border border-amber-200 flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-bold text-cato-navy truncate">
+                        {proj.nombre_proyecto}
+                      </div>
+                      <div className="text-[11px] text-cato-slate truncate">
+                        Institución:{' '}
+                        {proj.institucion?.nombre_institucion || proj.nombre_proyecto}
+                      </div>
+                      <div className="text-[11px] text-cato-muted">
+                        Zona: {proj.macrodistrito_zona} | Pasaje:{' '}
+                        {formatCurrency(proj.monto_pasaje_fijo)}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      type="button"
+                      isLoading={reactivatingId === proj.id}
+                      disabled={isSubmitting}
+                      onClick={() => void handleReactivateClick(proj)}
+                      className="shrink-0"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Reactivar
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Select
-                label="Tarifa Fija de Pasajes (Bs/día)"
-                value={String(pasaje)}
-                onChange={(e) => setPasaje(Number(e.target.value))}
-                options={[
-                  { value: '10', label: 'Bs. 10 / día' },
-                  { value: '12', label: 'Bs. 12 / día' },
-                  { value: '15', label: 'Bs. 15 / día' },
-                  { value: '20', label: 'Bs. 20 / día' },
-                ]}
-              />
-              <Input
-                label="Cupo Máximo de Voluntarios"
-                type="number"
-                min={1}
-                max={50}
-                value={cupo}
-                onChange={(e) => setCupo(Number(e.target.value))}
-              />
+          <form onSubmit={handleReuseSubmit} className="space-y-4">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cato-navy">
+              <History className="w-4 h-4 text-cato-steel" />
+              <span>Habilitar Proyecto de Gestión Anterior en {semestreDestino}</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Select
-                label="Catolíder Titular"
-                value={titularId}
-                onChange={(e) => setTitularId(e.target.value)}
-                options={[
-                  { value: '', label: '-- Seleccionar Catolíder Titular --' },
-                  ...catolideres.map((c) => ({
-                    value: c.id,
-                    label: `${c.nombre} (${c.carrera})`,
-                  })),
-                ]}
-              />
-              <Select
-                label="Catolíder Aprendiz (Opcional)"
-                value={aprendizId}
-                onChange={(e) => setAprendizId(e.target.value)}
-                options={[
-                  { value: '', label: '-- Sin Catolíder Aprendiz --' },
-                  ...catolideres
-                    .filter((c) => c.id !== titularId)
-                    .map((c) => ({
-                      value: c.id,
-                      label: `${c.nombre} (${c.carrera})`,
-                    })),
-                ]}
-              />
-            </div>
+            {proyectosHistoricos.length === 0 ? (
+              <div className="p-5 text-center rounded-xl border border-cato-border bg-cato-canvas text-xs text-cato-muted">
+                <Building2 className="w-7 h-7 mx-auto text-cato-steel/50 mb-1.5" />
+                No se encontraron Proyectos Receptores de gestiones anteriores disponibles para clonar.
+              </div>
+            ) : (
+              <>
+                <Select
+                  label="Proyecto Receptor de Origen"
+                  value={selectedSourceId}
+                  onChange={(e) => handleSelectSource(e.target.value)}
+                  options={proyectosHistoricos.map((p) => ({
+                    value: p.id,
+                    label: `${p.nombre_proyecto} (Gestión ${p.semestre} - ${p.macrodistrito_zona})`,
+                  }))}
+                />
 
-            <div>
-              <label className="block text-xs font-semibold text-cato-slate mb-1">
-                Actividades Específicas para Gestión {semestreDestino}
-              </label>
-              <textarea
-                rows={3}
-                required
-                value={actividades}
-                onChange={(e) => setActividades(e.target.value)}
-                className="w-full px-3 py-2 border border-cato-input rounded-md text-xs text-cato-text focus:outline-none focus:border-cato-navy"
-              />
-            </div>
-          </>
-        )}
+                {selectedSource && (
+                  <div className="p-3 rounded-lg bg-cato-canvas border border-cato-border text-xs space-y-1">
+                    <div className="font-bold text-cato-navy">
+                      Institución vinculada:{' '}
+                      {selectedSource.institucion?.nombre_institucion ||
+                        selectedSource.nombre_proyecto}
+                    </div>
+                    <div className="text-[11px] text-cato-muted">
+                      Supervisor: {selectedSource.nombre_supervisor_centro} | Dirección:{' '}
+                      {selectedSource.direccion_exacta}
+                    </div>
+                  </div>
+                )}
 
-        <div className="pt-3 border-t border-cato-border flex justify-end gap-2">
-          <Button variant="outline" type="button" onClick={onClose} disabled={isSubmitting}>
-            Cerrar
-          </Button>
-          {proyectosHistoricos.length > 0 && (
-            <Button variant="cta" type="submit" isLoading={isSubmitting}>
-              Habilitar en Gestión {semestreDestino}
-            </Button>
-          )}
-        </div>
-      </form>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Select
+                    label="Tarifa Fija de Pasajes (Bs/día)"
+                    value={String(pasaje)}
+                    onChange={(e) => setPasaje(Number(e.target.value))}
+                    options={[
+                      { value: '10', label: 'Bs. 10 / día' },
+                      { value: '12', label: 'Bs. 12 / día' },
+                      { value: '15', label: 'Bs. 15 / día' },
+                      { value: '20', label: 'Bs. 20 / día' },
+                    ]}
+                  />
+                  <Input
+                    label="Cupo Máximo de Voluntarios"
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={cupo}
+                    onChange={(e) => setCupo(Number(e.target.value))}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Select
+                    label="Catolíder Titular"
+                    value={titularId}
+                    onChange={(e) => setTitularId(e.target.value)}
+                    options={[
+                      { value: '', label: '-- Seleccionar Catolíder Titular --' },
+                      ...catolideres.map((c) => ({
+                        value: c.id,
+                        label: `${c.nombre} (${c.carrera})`,
+                      })),
+                    ]}
+                  />
+                  <Select
+                    label="Catolíder Aprendiz (Opcional)"
+                    value={aprendizId}
+                    onChange={(e) => setAprendizId(e.target.value)}
+                    options={[
+                      { value: '', label: '-- Sin Catolíder Aprendiz --' },
+                      ...catolideres
+                        .filter((c) => c.id !== titularId)
+                        .map((c) => ({
+                          value: c.id,
+                          label: `${c.nombre} (${c.carrera})`,
+                        })),
+                    ]}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-cato-slate mb-1">
+                    Actividades Específicas para Gestión {semestreDestino}
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={actividades}
+                    onChange={(e) => setActividades(e.target.value)}
+                    className="w-full px-3 py-2 border border-cato-input rounded-md text-xs text-cato-text focus:outline-none focus:border-cato-navy"
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="pt-3 border-t border-cato-border flex justify-end gap-2">
+              <Button variant="outline" type="button" onClick={onClose} disabled={isSubmitting}>
+                Cerrar
+              </Button>
+              {proyectosHistoricos.length > 0 && (
+                <Button variant="cta" type="submit" isLoading={isSubmitting && !reactivatingId}>
+                  Habilitar en Gestión {semestreDestino}
+                </Button>
+              )}
+            </div>
+          </form>
+        </>
+      )}
     </div>
   );
 };

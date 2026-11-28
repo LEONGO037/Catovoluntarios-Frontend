@@ -40,6 +40,7 @@ export const P13ReceptorCatalog: React.FC<P13ReceptorCatalogProps> = ({
 
   const {
     proyectos,
+    proyectosInactivos,
     proyectosHistoricos,
     instituciones,
     catolideres,
@@ -68,10 +69,7 @@ export const P13ReceptorCatalog: React.FC<P13ReceptorCatalogProps> = ({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isReuseOpen, setIsReuseOpen] = useState(false);
 
-  const proyectosInactivosActuales = useMemo(
-    () => proyectos.filter((p) => p.estado === 'inactivo'),
-    [proyectos]
-  );
+  const proyectosInactivosActuales = proyectosInactivos;
 
   const stats = useMemo(() => {
     const activos = proyectos.filter((p) => p.estado === 'activo');
@@ -92,7 +90,11 @@ export const P13ReceptorCatalog: React.FC<P13ReceptorCatalogProps> = ({
   }, [proyectos, countsByProject]);
 
   const filteredProyectos = useMemo(() => {
-    return proyectos.filter((p) => {
+    const sourceList = showInactives
+      ? [...proyectos, ...proyectosInactivosActuales]
+      : proyectos;
+
+    return sourceList.filter((p) => {
       if (!showInactives && p.estado === 'inactivo') return false;
       const query = searchTerm.toLowerCase();
       const matchSearch =
@@ -103,7 +105,7 @@ export const P13ReceptorCatalog: React.FC<P13ReceptorCatalogProps> = ({
       const matchZona = selectedZona === 'Todas' || p.macrodistrito_zona === selectedZona;
       return matchSearch && matchZona;
     });
-  }, [proyectos, searchTerm, selectedZona, showInactives]);
+  }, [proyectos, proyectosInactivosActuales, searchTerm, selectedZona, showInactives]);
 
   const handleOpenCreate = () => {
     setActionError('');
