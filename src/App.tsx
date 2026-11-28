@@ -178,11 +178,11 @@ export function App() {
             }
           />
 
-          {/* ADMIN_PASTORAL: Proyectos, Ubicación y Reasignaciones */}
+          {/* ADMIN_PASTORAL y CATOLIDER (consulta): Proyectos; ADMIN_PASTORAL: Ubicación y Reasignaciones */}
           <Route
             path="/proyectos"
             element={
-              <RutaPorRol roles={['ADMIN_PASTORAL']}>
+              <RutaPorRol roles={['ADMIN_PASTORAL', 'CATOLIDER']}>
                 <AppShell>
                   <P13ReceptorCatalog />
                 </AppShell>

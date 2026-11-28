@@ -1,367 +1,1002 @@
 import { apiClient } from '../../../services/api.client';
 import type {
+  Institucion,
   ProyectoReceptor,
   VoluntarioAdmitido,
   TrasladoRegistro,
   NotificacionTraslado,
   MotivoTraslado,
   CatoliderInfo,
+  CrearInstitucionDto,
+  ActualizarInstitucionDto,
+  CrearProyectoReceptorDto,
+  ActualizarProyectoReceptorDto,
+  ReutilizarProyectoDto,
+  ReasignarUbicacionDto,
+  PeriodoTrasladoEstado,
 } from '../types/proyectos.types';
 
-// Repositorio de gestión de proyectos y asignaciones conectado al Backend
+interface RawInstitucion {
+  id_institucion?: number | string;
+  id?: number | string;
+  nombre_institucion?: string;
+  nombreInstitucion?: string;
+  nombre?: string;
+  direccion_exacta?: string;
+  direccionExacta?: string;
+  macrodistrito_zona?: string;
+  macrodistritoZona?: string;
+  nombre_supervisor_centro?: string;
+  supervisor_nombre?: string;
+  supervisorNombre?: string;
+  telefono_contacto?: string;
+  supervisor_telefono?: string;
+  supervisorTelefono?: string;
+  correo?: string;
+  fecha_inicio_convenio?: string;
+  fecha_fin_convenio?: string;
+  activo?: boolean;
+}
+
+interface RawUsuarioResumen {
+  id?: number | string;
+  id_usuario?: number | string;
+  nombres?: string;
+  primerApellido?: string;
+  primer_apellido?: string;
+  segundoApellido?: string;
+  segundo_apellido?: string;
+  nombre_completo?: string;
+  email?: string;
+}
+
+interface RawProyecto {
+  id_proyecto?: number | string;
+  id?: number | string;
+  id_institucion?: number | string;
+  institucion_id?: number | string;
+  institucionId?: number | string;
+  institucion?: RawInstitucion;
+  semestre?: string;
+  gestion?: string;
+  nombre_proyecto?: string;
+  nombreProyecto?: string;
+  direccion_exacta?: string;
+  direccionExacta?: string;
+  macrodistrito_zona?: string;
+  macrodistritoZona?: string;
+  nombre_supervisor_centro?: string;
+  supervisor_nombre?: string;
+  supervisorNombre?: string;
+  telefono_contacto?: string;
+  supervisor_telefono?: string;
+  supervisorTelefono?: string;
+  correo?: string;
+  fecha_inicio_convenio?: string;
+  fecha_fin_convenio?: string;
+  poblacion_objetivo?: string | string[];
+  actividades_semestre_actual?: string;
+  actividadesSemestreActual?: string;
+  monto_pasaje_fijo?: number | string;
+  monto_pasaje_por_dia?: number | string;
+  cupo_maximo_voluntarios?: number | string;
+  cupo_maximo?: number | string;
+  cupoMaximo?: number | string;
+  cupos_ocupados?: number | string;
+  cuposOcupados?: number | string;
+  voluntarios_count?: number | string;
+  voluntariosCount?: number | string;
+  catolider_titular_id?: number | string | null;
+  catoliderTitularId?: number | string | null;
+  id_catolider_titular?: number | string | null;
+  idCatoliderTitular?: number | string | null;
+  catolider_titular_nombre?: string | null;
+  catoliderTitularNombre?: string | null;
+  catolider_titular?: RawUsuarioResumen | null;
+  catoliderTitular?: RawUsuarioResumen | null;
+  catolider_aprendiz_id?: number | string | null;
+  catoliderAprendizId?: number | string | null;
+  id_catolider_aprendiz?: number | string | null;
+  idCatoliderAprendiz?: number | string | null;
+  catolider_aprendiz_nombre?: string | null;
+  catoliderAprendizNombre?: string | null;
+  catolider_aprendiz?: RawUsuarioResumen | null;
+  catoliderAprendiz?: RawUsuarioResumen | null;
+  activo?: boolean;
+  estado?: string;
+}
+
+interface RawProyectosResponse {
+  data?: RawProyecto[];
+  items?: RawProyecto[];
+}
+
+interface RawInstitucionesResponse {
+  data?: RawInstitucion[];
+  items?: RawInstitucion[];
+}
+
+interface RawCatolider {
+  id?: number | string;
+  id_usuario?: number | string;
+  nombres?: string;
+  primerApellido?: string;
+  primer_apellido?: string;
+  nombre_completo?: string;
+  email?: string;
+  correo?: string;
+  telefono?: string;
+  celular?: string;
+  carrera?: string;
+  nivel?: string;
+}
+
+interface RawCatolideresResponse {
+  data?: RawCatolider[];
+  items?: RawCatolider[];
+}
+
+interface RawVoluntarioAdmitido {
+  id_usuario?: number | string;
+  id?: number | string;
+  nombre_completo?: string;
+  nombres?: string;
+  primerApellido?: string;
+  ci?: string;
+  celular?: string;
+  telefono?: string;
+  correo?: string;
+  email?: string;
+  carrera?: string;
+  edad?: number;
+  condicion?: string;
+  horario_comprometido?: string;
+  poblacion_sugerida?: string;
+  puntaje_esre?: number;
+}
+
+interface RawVoluntarioAsignado {
+  id_asignacion?: number;
+  id_usuario: number | string;
+  nombre?: string;
+  nombre_completo?: string;
+  ci?: string;
+  celular?: string;
+  telefono?: string;
+  correo?: string;
+  email?: string;
+  carrera?: string;
+  edad?: number;
+  condicion?: string;
+  horario_comprometido?: string;
+  poliza_validada?: boolean;
+  fecha_asignacion?: string;
+}
+
+interface RawTraslado {
+  id_historial?: number | string;
+  id?: number | string;
+  id_usuario?: number | string;
+  voluntario_nombre?: string;
+  voluntario_carrera?: string;
+  id_proyecto_origen?: number | string;
+  proyecto_origen_nombre?: string;
+  id_proyecto_destino?: number | string;
+  proyecto_destino_nombre?: string;
+  motivo_traslado?: string;
+  motivo_otro_detalle?: string;
+  fecha_efectiva?: string;
+  createdAt?: string;
+  fecha_solicitud?: string;
+  semestre?: string;
+}
+
+interface RawNotificacion {
+  id_notificacion?: number | string;
+  id?: number | string;
+  id_asignacion?: number | string;
+  id_traslado?: number | string;
+  tipo_notificacion?: string;
+  tipo?: string;
+  rol_destinatario?: string;
+  destinatario_rol?: string;
+  id_usuario_destinatario?: number | string;
+  destinatario_nombre?: string;
+  usuario_destinatario_nombre?: string;
+  usuario_destinatario?: {
+    nombres?: string;
+    primerApellido?: string;
+    nombre_completo?: string;
+  };
+  titulo?: string;
+  mensaje?: string;
+  motivo_traslado?: string;
+  motivo?: string;
+  motivo_otro_detalle?: string;
+  proyecto_origen_nombre?: string;
+  proyecto_destino_nombre?: string;
+  fecha_envio?: string;
+  createdAt?: string;
+  leido?: boolean;
+  leida?: boolean;
+}
+
+interface RawPeriodoResponse {
+  semestre?: string;
+  semanaActual?: number;
+  semana_actual?: number;
+  maxSemanasOrdinarias?: number;
+  max_semanas_ordinarias?: number;
+  habilitado?: boolean;
+  periodoOrdinarioHabilitado?: boolean;
+  fechaInicio?: string;
+  fecha_inicio?: string;
+}
+
+function parsePoblacion(value?: string | string[]): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item) => Boolean(item && item.trim()));
+  }
+  if (typeof value === 'string' && value.trim()) {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function parseInstitucion(raw: RawInstitucion): Institucion {
+  return {
+    id: String(raw.id_institucion ?? raw.id ?? ''),
+    nombre_institucion: raw.nombre_institucion ?? raw.nombreInstitucion ?? raw.nombre ?? '',
+    direccion_exacta: raw.direccion_exacta ?? raw.direccionExacta ?? '',
+    macrodistrito_zona: raw.macrodistrito_zona ?? raw.macrodistritoZona ?? 'Centro',
+    nombre_supervisor_centro:
+      raw.nombre_supervisor_centro ?? raw.supervisor_nombre ?? raw.supervisorNombre ?? '',
+    telefono_contacto:
+      raw.telefono_contacto ?? raw.supervisor_telefono ?? raw.supervisorTelefono ?? '',
+    correo: raw.correo ?? '',
+    fecha_inicio_convenio: raw.fecha_inicio_convenio
+      ? String(raw.fecha_inicio_convenio).split('T')[0]
+      : '',
+    fecha_fin_convenio: raw.fecha_fin_convenio
+      ? String(raw.fecha_fin_convenio).split('T')[0]
+      : '',
+    activo: raw.activo !== false,
+  };
+}
+
+function formatNombreUsuario(user?: RawUsuarioResumen | null): string | undefined {
+  if (!user) return undefined;
+  if (user.nombre_completo?.trim()) return user.nombre_completo.trim();
+  const full = `${user.nombres ?? ''} ${user.primerApellido ?? user.primer_apellido ?? ''}`.trim();
+  return full || user.email || undefined;
+}
+
+function toNullableNumber(val?: string | null): number | null {
+  if (!val || !val.trim()) return null;
+  const num = Number(val);
+  return Number.isNaN(num) ? null : num;
+}
+
+function parseProyecto(
+  raw: RawProyecto,
+  fallbackSemestre: string,
+  catolideresList: CatoliderInfo[] = []
+): ProyectoReceptor {
+  const inst = raw.institucion ? parseInstitucion(raw.institucion) : undefined;
+  const instId = String(raw.id_institucion ?? raw.institucion_id ?? raw.institucionId ?? inst?.id ?? '');
+  const id = String(raw.id_proyecto ?? raw.id ?? '');
+  const activo = raw.estado ? raw.estado === 'activo' : raw.activo !== false;
+
+  const cuposRaw = raw.cupos_ocupados ?? raw.cuposOcupados ?? raw.voluntarios_count ?? raw.voluntariosCount;
+
+  const titularObj = raw.catolider_titular ?? raw.catoliderTitular;
+  const titularIdRaw =
+    raw.catolider_titular_id ??
+    raw.catoliderTitularId ??
+    raw.id_catolider_titular ??
+    raw.idCatoliderTitular ??
+    titularObj?.id ??
+    titularObj?.id_usuario;
+  const titularId = titularIdRaw !== undefined && titularIdRaw !== null && titularIdRaw !== ''
+    ? String(titularIdRaw)
+    : '';
+  const titularFromCatalog = titularId
+    ? catolideresList.find((c) => c.id === titularId)?.nombre
+    : undefined;
+  const titularNombre =
+    (raw.catolider_titular_nombre ?? raw.catoliderTitularNombre)?.trim() ||
+    formatNombreUsuario(titularObj) ||
+    titularFromCatalog;
+
+  const aprendizObj = raw.catolider_aprendiz ?? raw.catoliderAprendiz;
+  const aprendizIdRaw =
+    raw.catolider_aprendiz_id ??
+    raw.catoliderAprendizId ??
+    raw.id_catolider_aprendiz ??
+    raw.idCatoliderAprendiz ??
+    aprendizObj?.id ??
+    aprendizObj?.id_usuario;
+  const aprendizId = aprendizIdRaw !== undefined && aprendizIdRaw !== null && aprendizIdRaw !== ''
+    ? String(aprendizIdRaw)
+    : '';
+  const aprendizFromCatalog = aprendizId
+    ? catolideresList.find((c) => c.id === aprendizId)?.nombre
+    : undefined;
+  const aprendizNombre =
+    (raw.catolider_aprendiz_nombre ?? raw.catoliderAprendizNombre)?.trim() ||
+    formatNombreUsuario(aprendizObj) ||
+    aprendizFromCatalog;
+
+  return {
+    id,
+    institucion_id: instId,
+    semestre: raw.semestre ?? raw.gestion ?? fallbackSemestre,
+    nombre_proyecto: raw.nombre_proyecto ?? raw.nombreProyecto ?? inst?.nombre_institucion ?? '',
+    direccion_exacta: raw.direccion_exacta ?? raw.direccionExacta ?? inst?.direccion_exacta ?? '',
+    macrodistrito_zona: raw.macrodistrito_zona ?? raw.macrodistritoZona ?? inst?.macrodistrito_zona ?? 'Centro',
+    nombre_supervisor_centro:
+      raw.nombre_supervisor_centro ??
+      raw.supervisor_nombre ??
+      raw.supervisorNombre ??
+      inst?.nombre_supervisor_centro ??
+      '',
+    telefono_contacto:
+      raw.telefono_contacto ??
+      raw.supervisor_telefono ??
+      raw.supervisorTelefono ??
+      inst?.telefono_contacto ??
+      '',
+    correo: raw.correo ?? inst?.correo ?? '',
+    fecha_inicio_convenio: raw.fecha_inicio_convenio
+      ? String(raw.fecha_inicio_convenio).split('T')[0]
+      : inst?.fecha_inicio_convenio ?? '',
+    fecha_fin_convenio: raw.fecha_fin_convenio
+      ? String(raw.fecha_fin_convenio).split('T')[0]
+      : inst?.fecha_fin_convenio ?? '',
+    poblacion_objetivo: parsePoblacion(raw.poblacion_objetivo),
+    actividades_semestre_actual:
+      raw.actividades_semestre_actual ?? raw.actividadesSemestreActual ?? '',
+    monto_pasaje_fijo: Number(raw.monto_pasaje_fijo ?? raw.monto_pasaje_por_dia ?? 10),
+    cupo_maximo_voluntarios: Number(
+      raw.cupo_maximo_voluntarios ?? raw.cupo_maximo ?? raw.cupoMaximo ?? 10
+    ),
+    cupos_ocupados: cuposRaw !== undefined ? Number(cuposRaw) : undefined,
+    catolider_titular_id: titularId,
+    catolider_titular_nombre: titularNombre,
+    catolider_aprendiz_id: aprendizId,
+    catolider_aprendiz_nombre: aprendizNombre,
+    estado: activo ? 'activo' : 'inactivo',
+    institucion: inst,
+  };
+}
+
+function deriveInstitucionesFromProyectos(proyectos: ProyectoReceptor[]): Institucion[] {
+  const map = new Map<string, Institucion>();
+  for (const p of proyectos) {
+    if (p.institucion) {
+      map.set(p.institucion.id, p.institucion);
+      continue;
+    }
+    const key = p.institucion_id || p.nombre_proyecto.toLowerCase().trim();
+    if (!map.has(key)) {
+      map.set(key, {
+        id: p.institucion_id || p.id,
+        nombre_institucion: p.nombre_proyecto,
+        direccion_exacta: p.direccion_exacta,
+        macrodistrito_zona: p.macrodistrito_zona,
+        nombre_supervisor_centro: p.nombre_supervisor_centro,
+        telefono_contacto: p.telefono_contacto,
+        correo: p.correo,
+        fecha_inicio_convenio: p.fecha_inicio_convenio,
+        fecha_fin_convenio: p.fecha_fin_convenio,
+        activo: p.estado === 'activo',
+      });
+    }
+  }
+  return Array.from(map.values());
+}
+
+export function calcularPeriodoTrasladoLocal(
+  semestre: string,
+  proyectos?: ProyectoReceptor[],
+  fechaReferencia: Date = new Date()
+): PeriodoTrasladoEstado {
+  const maxSemanasOrdinarias = 4;
+  const match = /^([12])\/(\d{4})$/.exec(semestre.trim());
+  let fechaInicio: Date;
+
+  if (match) {
+    const periodo = Number(match[1]);
+    const anio = Number(match[2]);
+    fechaInicio = periodo === 1 ? new Date(anio, 1, 1) : new Date(anio, 7, 1);
+  } else {
+    fechaInicio = new Date(fechaReferencia.getFullYear(), 7, 1);
+  }
+
+  const proyectosDelSemestre = (proyectos ?? []).filter(
+    (p) => p.semestre === semestre && p.fecha_inicio_convenio
+  );
+  if (proyectosDelSemestre.length > 0) {
+    const timestamps = proyectosDelSemestre
+      .map((p) => new Date(p.fecha_inicio_convenio).getTime())
+      .filter((t) => !Number.isNaN(t));
+    if (timestamps.length > 0) {
+      const earliest = new Date(Math.min(...timestamps));
+      if (earliest.getFullYear() === fechaInicio.getFullYear()) {
+        fechaInicio = earliest;
+      }
+    }
+  }
+
+  const diffMs = fechaReferencia.getTime() - fechaInicio.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const semanaActual = diffDays < 0 ? 1 : Math.floor(diffDays / 7) + 1;
+
+  return {
+    semestre,
+    semanaActual,
+    maxSemanasOrdinarias,
+    periodoOrdinarioHabilitado: semanaActual <= maxSemanasOrdinarias,
+    fechaInicioReferencia: fechaInicio.toISOString().split('T')[0],
+    fuente: 'calculado',
+  };
+}
+
 class ProyectosService {
+  private instituciones: Institucion[] = [];
   private proyectos: ProyectoReceptor[] = [];
+  private proyectosInactivos: ProyectoReceptor[] = [];
+  private proyectosHistoricos: ProyectoReceptor[] = [];
   private voluntarios: VoluntarioAdmitido[] = [];
   private traslados: TrasladoRegistro[] = [];
   private notificaciones: NotificacionTraslado[] = [];
   private catolideres: CatoliderInfo[] = [];
 
-  // ==========================================
-  // RF-10: Catálogo de Proyectos Receptores
-  // ==========================================
-
   getProyectosSync(): ProyectoReceptor[] {
     return [...this.proyectos];
   }
 
-  getProyectos(): ProyectoReceptor[] {
-    return [...this.proyectos];
+  getProyectosInactivosSync(): ProyectoReceptor[] {
+    return [...this.proyectosInactivos];
+  }
+
+  getInstitucionesSync(): Institucion[] {
+    return [...this.instituciones];
   }
 
   getProyectoById(id: string): ProyectoReceptor | undefined {
-    return this.proyectos.find((p) => p.id === id);
+    return (
+      this.proyectos.find((p) => p.id === id) ||
+      this.proyectosHistoricos.find((p) => p.id === id)
+    );
   }
 
-  async fetchProyectos(): Promise<ProyectoReceptor[]> {
+  async fetchInstituciones(signal?: AbortSignal): Promise<Institucion[]> {
     try {
-      const res = await apiClient.get<any>('/proyectos?limit=100');
-      const items: any[] = Array.isArray(res) ? res : res?.data || [];
-
-      this.proyectos = items.map((p) => {
-        let pob: string[] = ['General'];
-        if (Array.isArray(p.poblacion_objetivo)) {
-          pob = p.poblacion_objetivo;
-        } else if (typeof p.poblacion_objetivo === 'string' && p.poblacion_objetivo.trim()) {
-          pob = [p.poblacion_objetivo];
-        }
-
-        return {
-          id: String(p.id_proyecto || p.id),
-          nombre_proyecto: p.nombre_proyecto || p.nombreProyecto || '',
-          direccion_exacta: p.direccion_exacta || p.direccionExacta || '',
-          macrodistrito_zona: p.macrodistrito_zona || p.macrodistritoZona || 'Centro',
-          nombre_supervisor_centro:
-            p.nombre_supervisor_centro || p.supervisor_nombre || p.supervisorNombre || '',
-          telefono_contacto:
-            p.telefono_contacto || p.supervisor_telefono || p.supervisorTelefono || '',
-          correo: p.correo || '',
-          fecha_inicio_convenio: p.fecha_inicio_convenio || '',
-          fecha_fin_convenio: p.fecha_fin_convenio || '',
-          poblacion_objetivo: pob,
-          actividades_semestre_actual:
-            p.actividades_semestre_actual || p.actividadesSemestreActual || '',
-          monto_pasaje_fijo: Number(p.monto_pasaje_fijo || p.monto_pasaje_por_dia || 10),
-          cupo_maximo_voluntarios: Number(
-            p.cupo_maximo_voluntarios || p.cupo_maximo || p.cupoMaximo || 15
-          ),
-          catolider_titular_id: p.catolider_titular_id ? String(p.catolider_titular_id) : '',
-          catolider_titular_nombre: p.catolider_titular_nombre,
-          catolider_aprendiz_id: p.catolider_aprendiz_id ? String(p.catolider_aprendiz_id) : '',
-          catolider_aprendiz_nombre: p.catolider_aprendiz_nombre,
-          estado: p.activo !== false ? 'activo' : 'inactivo',
-        };
-      });
-
-      return [...this.proyectos];
-    } catch (err) {
-      console.warn('No se pudieron obtener proyectos del backend, usando estado local:', err);
-      return [...this.proyectos];
-    }
-  }
-
-  async createProyecto(
-    data: Omit<ProyectoReceptor, 'id' | 'estado'>
-  ): Promise<ProyectoReceptor> {
-    try {
-      const payload = {
-        nombre_proyecto: data.nombre_proyecto,
-        direccion_exacta: data.direccion_exacta,
-        macrodistrito_zona: data.macrodistrito_zona,
-        nombre_supervisor_centro: data.nombre_supervisor_centro,
-        telefono_contacto: data.telefono_contacto,
-        correo: data.correo,
-        fecha_inicio_convenio: data.fecha_inicio_convenio,
-        fecha_fin_convenio: data.fecha_fin_convenio,
-        poblacion_objetivo: Array.isArray(data.poblacion_objetivo)
-          ? data.poblacion_objetivo.join(', ')
-          : data.poblacion_objetivo,
-        actividades_semestre_actual: data.actividades_semestre_actual,
-        monto_pasaje_fijo: Number(data.monto_pasaje_fijo),
-        cupo_maximo_voluntarios: Number(data.cupo_maximo_voluntarios),
-        catolider_titular_id: data.catolider_titular_id ? Number(data.catolider_titular_id) : null,
-        catolider_aprendiz_id: data.catolider_aprendiz_id ? Number(data.catolider_aprendiz_id) : null,
-      };
-
-      const res = await apiClient.post<any>('/proyectos', payload);
-      await this.fetchProyectos();
-      return (
-        this.getProyectoById(String(res.id_proyecto || res.id)) || {
-          ...data,
-          id: String(res.id_proyecto || res.id),
-          estado: 'activo',
-        }
+      const res = await apiClient.get<RawInstitucion[] | RawInstitucionesResponse>(
+        '/instituciones?limit=200',
+        { signal }
       );
-    } catch (err) {
-      console.error('Error al crear proyecto en backend:', err);
-      // Fallback local
-      const newProj: ProyectoReceptor = {
-        ...data,
-        id: `proj-${Date.now()}`,
-        estado: 'activo',
-      };
-      this.proyectos = [newProj, ...this.proyectos];
-      return newProj;
+      const items = Array.isArray(res) ? res : res.data || res.items || [];
+      this.instituciones = items.map(parseInstitucion);
+      return [...this.instituciones];
+    } catch {
+      const derived = deriveInstitucionesFromProyectos([
+        ...this.proyectos,
+        ...this.proyectosHistoricos,
+      ]);
+      this.instituciones = derived;
+      return [...this.instituciones];
     }
+  }
+
+  async createInstitucion(data: CrearInstitucionDto): Promise<Institucion> {
+    const res = await apiClient.post<RawInstitucion>('/instituciones', data);
+    const parsed = parseInstitucion(res);
+    this.instituciones = [parsed, ...this.instituciones];
+    return parsed;
+  }
+
+  async updateInstitucion(id: string, data: ActualizarInstitucionDto): Promise<Institucion> {
+    const res = await apiClient.put<RawInstitucion>(`/instituciones/${id}`, data);
+    const parsed = parseInstitucion(res);
+    this.instituciones = this.instituciones.map((inst) => (inst.id === id ? parsed : inst));
+    return parsed;
+  }
+
+  async fetchProyectos(semestre?: string, signal?: AbortSignal): Promise<ProyectoReceptor[]> {
+    const query = new URLSearchParams({ limit: '100' });
+    if (semestre) {
+      query.set('semestre', semestre);
+    }
+    const res = await apiClient.get<RawProyecto[] | RawProyectosResponse>(
+      `/proyectos?${query.toString()}`,
+      { signal }
+    );
+    const items = Array.isArray(res) ? res : res.data || res.items || [];
+    const parsed = items.map((item) =>
+      parseProyecto(item, semestre ?? '2/2026', this.catolideres)
+    );
+
+    this.proyectos = semestre
+      ? parsed.filter(
+          (p) => (p.semestre === semestre || !p.semestre) && p.estado === 'activo'
+        )
+      : parsed.filter((p) => p.estado === 'activo');
+    if (this.instituciones.length === 0) {
+      this.instituciones = deriveInstitucionesFromProyectos(parsed);
+    }
+    return [...this.proyectos];
+  }
+
+  async fetchProyectosInactivos(
+    semestre: string,
+    signal?: AbortSignal
+  ): Promise<ProyectoReceptor[]> {
+    const query = new URLSearchParams({
+      semestre,
+      incluirInactivos: 'true',
+      limit: '200',
+    });
+    const res = await apiClient.get<RawProyecto[] | RawProyectosResponse>(
+      `/proyectos?${query.toString()}`,
+      { signal }
+    );
+    const items = Array.isArray(res) ? res : res.data || res.items || [];
+    const parsed = items.map((item) =>
+      parseProyecto(item, semestre, this.catolideres)
+    );
+
+    let inactivos = parsed.filter(
+      (p) => p.estado === 'inactivo' && (p.semestre === semestre || !p.semestre)
+    );
+
+    if (inactivos.length === 0) {
+      const altQuery = new URLSearchParams({
+        semestre,
+        activo: 'false',
+        limit: '200',
+      });
+      try {
+        const altRes = await apiClient.get<RawProyecto[] | RawProyectosResponse>(
+          `/proyectos?${altQuery.toString()}`,
+          { signal }
+        );
+        const altItems = Array.isArray(altRes)
+          ? altRes
+          : altRes.data || altRes.items || [];
+        const altParsed = altItems.map((item) =>
+          parseProyecto(item, semestre, this.catolideres)
+        );
+        inactivos = altParsed.filter(
+          (p) => p.estado === 'inactivo' && (p.semestre === semestre || !p.semestre)
+        );
+      } catch {
+        // El backend solo usa incluirInactivos=true
+      }
+    }
+
+    this.proyectosInactivos = inactivos;
+    return [...this.proyectosInactivos];
+  }
+
+  async fetchProyectosHistoricos(
+    semestreActual: string,
+    signal?: AbortSignal
+  ): Promise<ProyectoReceptor[]> {
+    const query = new URLSearchParams({ limit: '200', incluirInactivos: 'true' });
+    const res = await apiClient.get<RawProyecto[] | RawProyectosResponse>(
+      `/proyectos?${query.toString()}`,
+      { signal }
+    );
+    const items = Array.isArray(res) ? res : res.data || res.items || [];
+    const allParsed = items.map((item) =>
+      parseProyecto(item, semestreActual, this.catolideres)
+    );
+    this.proyectosHistoricos = allParsed.filter(
+      (p) => Boolean(p.semestre) && p.semestre !== semestreActual
+    );
+    return [...this.proyectosHistoricos];
+  }
+
+  async fetchCuposPorProyecto(
+    proyectosList: ProyectoReceptor[],
+    semestre: string,
+    signal?: AbortSignal
+  ): Promise<Record<string, number>> {
+    const counts: Record<string, number> = {};
+    const missingFromPayload: ProyectoReceptor[] = [];
+
+    for (const p of proyectosList) {
+      if (p.cupos_ocupados !== undefined && !Number.isNaN(p.cupos_ocupados)) {
+        counts[p.id] = p.cupos_ocupados;
+      } else {
+        missingFromPayload.push(p);
+      }
+    }
+
+    if (missingFromPayload.length === 0) {
+      return counts;
+    }
+
+    const results = await Promise.allSettled(
+      missingFromPayload.map(async (proj) => {
+        const qs = new URLSearchParams({ semestre });
+        const list = await apiClient.get<RawVoluntarioAsignado[]>(
+          `/ubicacion/proyectos/${proj.id}/voluntarios?${qs.toString()}`,
+          { signal }
+        );
+        return { id: proj.id, count: Array.isArray(list) ? list.length : 0 };
+      })
+    );
+
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        counts[result.value.id] = result.value.count;
+      }
+    }
+
+    return counts;
+  }
+
+  async createProyecto(data: CrearProyectoReceptorDto): Promise<ProyectoReceptor> {
+    let institucionId = data.institucion_id;
+
+    if (!institucionId && data.institucion) {
+      try {
+        const createdInst = await this.createInstitucion(data.institucion);
+        institucionId = createdInst.id;
+      } catch {
+        // Si /instituciones no existe separado, continuamos con payload integrado en /proyectos
+      }
+    }
+
+    const payload: Record<string, unknown> = {
+      semestre: data.semestre,
+      gestion: data.semestre,
+      nombre_proyecto: data.nombre_proyecto,
+      direccion_exacta: data.direccion_exacta,
+      macrodistrito_zona: data.macrodistrito_zona,
+      nombre_supervisor_centro: data.nombre_supervisor_centro,
+      telefono_contacto: data.telefono_contacto,
+      correo: data.correo,
+      fecha_inicio_convenio: data.fecha_inicio_convenio,
+      fecha_fin_convenio: data.fecha_fin_convenio,
+      poblacion_objetivo: data.poblacion_objetivo.join(', '),
+      actividades_semestre_actual: data.actividades_semestre_actual,
+      monto_pasaje_fijo: Number(data.monto_pasaje_fijo),
+      cupo_maximo_voluntarios: Number(data.cupo_maximo_voluntarios),
+      catolider_titular_id: toNullableNumber(data.catolider_titular_id),
+      catolider_aprendiz_id: toNullableNumber(data.catolider_aprendiz_id),
+    };
+
+    if (institucionId) {
+      payload.id_institucion = Number(institucionId) || institucionId;
+    }
+
+    const res = await apiClient.post<RawProyecto>('/proyectos', payload);
+    const created = parseProyecto(res, data.semestre, this.catolideres);
+    await this.fetchProyectos(data.semestre);
+    return this.getProyectoById(created.id) || created;
   }
 
   async updateProyecto(
     id: string,
-    data: Partial<ProyectoReceptor>
+    data: ActualizarProyectoReceptorDto,
+    semestre: string
   ): Promise<ProyectoReceptor> {
-    try {
-      const payload: Record<string, any> = {};
-      if (data.nombre_proyecto) payload.nombre_proyecto = data.nombre_proyecto;
-      if (data.direccion_exacta) payload.direccion_exacta = data.direccion_exacta;
-      if (data.macrodistrito_zona) payload.macrodistrito_zona = data.macrodistrito_zona;
-      if (data.nombre_supervisor_centro) payload.nombre_supervisor_centro = data.nombre_supervisor_centro;
-      if (data.telefono_contacto) payload.telefono_contacto = data.telefono_contacto;
-      if (data.correo) payload.correo = data.correo;
-      if (data.fecha_inicio_convenio) payload.fecha_inicio_convenio = data.fecha_inicio_convenio;
-      if (data.fecha_fin_convenio) payload.fecha_fin_convenio = data.fecha_fin_convenio;
-      if (data.poblacion_objetivo) {
-        payload.poblacion_objetivo = Array.isArray(data.poblacion_objetivo)
-          ? data.poblacion_objetivo.join(', ')
-          : data.poblacion_objetivo;
+    if (data.institucion_id && data.institucion) {
+      try {
+        await this.updateInstitucion(data.institucion_id, data.institucion);
+      } catch {
+        // Si la edicion maestra esta integrada en /proyectos/:id, se envia tambien en el payload
       }
-      if (data.actividades_semestre_actual) payload.actividades_semestre_actual = data.actividades_semestre_actual;
-      if (data.monto_pasaje_fijo !== undefined) payload.monto_pasaje_fijo = Number(data.monto_pasaje_fijo);
-      if (data.cupo_maximo_voluntarios !== undefined) payload.cupo_maximo_voluntarios = Number(data.cupo_maximo_voluntarios);
-      if (data.catolider_titular_id !== undefined) {
-        payload.catolider_titular_id = data.catolider_titular_id ? Number(data.catolider_titular_id) : null;
-      }
-      if (data.catolider_aprendiz_id !== undefined) {
-        payload.catolider_aprendiz_id = data.catolider_aprendiz_id ? Number(data.catolider_aprendiz_id) : null;
-      }
-
-      await apiClient.put<any>(`/proyectos/${id}`, payload);
-      await this.fetchProyectos();
-      const updated = this.getProyectoById(id);
-      if (updated) return updated;
-    } catch (err) {
-      console.warn('Error al actualizar proyecto en backend, usando fallback local:', err);
     }
 
-    this.proyectos = this.proyectos.map((p) => (p.id === id ? { ...p, ...data } : p));
-    const local = this.getProyectoById(id);
-    if (!local) throw new Error('Proyecto no encontrado');
-    return local;
+    const payload: Record<string, unknown> = {};
+    if (data.institucion_id) {
+      const parsedInstId = Number(data.institucion_id);
+      if (!Number.isNaN(parsedInstId) && parsedInstId > 0) {
+        payload.id_institucion = parsedInstId;
+      }
+    }
+    if (data.semestre !== undefined) payload.semestre = data.semestre;
+    if (data.nombre_proyecto !== undefined) payload.nombre_proyecto = data.nombre_proyecto;
+    if (data.direccion_exacta !== undefined) payload.direccion_exacta = data.direccion_exacta;
+    if (data.macrodistrito_zona !== undefined) payload.macrodistrito_zona = data.macrodistrito_zona;
+    if (data.nombre_supervisor_centro !== undefined) {
+      payload.nombre_supervisor_centro = data.nombre_supervisor_centro;
+    }
+    if (data.telefono_contacto !== undefined) payload.telefono_contacto = data.telefono_contacto;
+    if (data.correo !== undefined) payload.correo = data.correo;
+    if (data.fecha_inicio_convenio !== undefined) {
+      payload.fecha_inicio_convenio = data.fecha_inicio_convenio;
+    }
+    if (data.fecha_fin_convenio !== undefined) payload.fecha_fin_convenio = data.fecha_fin_convenio;
+    if (data.poblacion_objetivo !== undefined) {
+      payload.poblacion_objetivo = data.poblacion_objetivo.join(', ');
+    }
+    if (data.actividades_semestre_actual !== undefined) {
+      payload.actividades_semestre_actual = data.actividades_semestre_actual;
+    }
+    if (data.monto_pasaje_fijo !== undefined) {
+      payload.monto_pasaje_fijo = Number(data.monto_pasaje_fijo);
+    }
+    if (data.cupo_maximo_voluntarios !== undefined) {
+      payload.cupo_maximo_voluntarios = Number(data.cupo_maximo_voluntarios);
+    }
+    if (data.catolider_titular_id !== undefined) {
+      payload.catolider_titular_id = toNullableNumber(data.catolider_titular_id);
+    }
+    if (data.catolider_aprendiz_id !== undefined) {
+      payload.catolider_aprendiz_id = toNullableNumber(data.catolider_aprendiz_id);
+    }
+    if (data.activo !== undefined) {
+      payload.activo = data.activo;
+    }
+
+    let res: RawProyecto;
+    try {
+      res = await apiClient.patch<RawProyecto>(`/proyectos/${id}`, payload);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('404') || msg.includes('Cannot PATCH')) {
+        res = await apiClient.put<RawProyecto>(`/proyectos/${id}`, payload);
+      } else {
+        throw err;
+      }
+    }
+    await this.fetchProyectos(semestre);
+    return this.getProyectoById(id) || parseProyecto(res, semestre, this.catolideres);
   }
 
-  async deleteProyecto(id: string): Promise<void> {
-    try {
-      await apiClient.delete(`/proyectos/${id}`);
-    } catch (err) {
-      console.warn('Error al eliminar proyecto en backend:', err);
+  async reactivarProyecto(id: string, semestre: string = '2/2026'): Promise<ProyectoReceptor> {
+    const res = await apiClient.patch<RawProyecto>(`/proyectos/${id}`, {
+      activo: true,
+    });
+    await Promise.all([
+      this.fetchProyectos(semestre),
+      this.fetchProyectosInactivos(semestre).catch(() => []),
+    ]);
+    return this.getProyectoById(id) || parseProyecto(res, semestre, this.catolideres);
+  }
+
+  async reutilizarProyecto(dto: ReutilizarProyectoDto): Promise<ProyectoReceptor> {
+    const origen = this.getProyectoById(dto.proyectoOrigenId);
+    if (!origen) {
+      throw new Error('No se encontró el Proyecto Receptor de origen para reutilizar.');
     }
-    this.proyectos = this.proyectos.filter((p) => p.id !== id);
-    this.voluntarios = this.voluntarios.map((v) =>
-      v.proyecto_id === id ? { ...v, proyecto_id: undefined, fecha_asignacion: undefined } : v
-    );
+
+    try {
+      const res = await apiClient.post<RawProyecto>(
+        `/proyectos/${dto.proyectoOrigenId}/reutilizar`,
+        {
+          semestre: dto.semestreDestino,
+          actividades_semestre_actual:
+            dto.actividades_semestre_actual ?? origen.actividades_semestre_actual,
+          cupo_maximo_voluntarios:
+            dto.cupo_maximo_voluntarios ?? origen.cupo_maximo_voluntarios,
+          monto_pasaje_fijo: dto.monto_pasaje_fijo ?? origen.monto_pasaje_fijo,
+          catolider_titular_id: dto.catolider_titular_id
+            ? Number(dto.catolider_titular_id)
+            : origen.catolider_titular_id
+            ? Number(origen.catolider_titular_id)
+            : null,
+          catolider_aprendiz_id: dto.catolider_aprendiz_id
+            ? Number(dto.catolider_aprendiz_id)
+            : origen.catolider_aprendiz_id
+            ? Number(origen.catolider_aprendiz_id)
+            : null,
+        }
+      );
+      await this.fetchProyectos(dto.semestreDestino);
+      return parseProyecto(res, dto.semestreDestino);
+    } catch {
+      return await this.createProyecto({
+        institucion_id: origen.institucion_id,
+        semestre: dto.semestreDestino,
+        nombre_proyecto: origen.nombre_proyecto,
+        direccion_exacta: origen.direccion_exacta,
+        macrodistrito_zona: origen.macrodistrito_zona,
+        nombre_supervisor_centro: origen.nombre_supervisor_centro,
+        telefono_contacto: origen.telefono_contacto,
+        correo: origen.correo,
+        fecha_inicio_convenio: origen.fecha_inicio_convenio,
+        fecha_fin_convenio: origen.fecha_fin_convenio,
+        poblacion_objetivo: origen.poblacion_objetivo,
+        actividades_semestre_actual:
+          dto.actividades_semestre_actual ?? origen.actividades_semestre_actual,
+        monto_pasaje_fijo: dto.monto_pasaje_fijo ?? origen.monto_pasaje_fijo,
+        cupo_maximo_voluntarios: dto.cupo_maximo_voluntarios ?? origen.cupo_maximo_voluntarios,
+        catolider_titular_id: dto.catolider_titular_id ?? origen.catolider_titular_id,
+        catolider_aprendiz_id: dto.catolider_aprendiz_id ?? origen.catolider_aprendiz_id,
+      });
+    }
+  }
+
+  async deleteProyecto(id: string, semestre: string): Promise<void> {
+    await apiClient.delete(`/proyectos/${id}`);
+    await this.fetchProyectos(semestre);
   }
 
   getCatolideresSync(): CatoliderInfo[] {
     return [...this.catolideres];
   }
 
-  getCatolideres(): CatoliderInfo[] {
-    return [...this.catolideres];
-  }
-
-  async fetchCatolideres(): Promise<CatoliderInfo[]> {
+  private getCurrentUserRoleHeader(): string {
     try {
-      const res = await apiClient.get<any[]>('/users/catolideres-vigentes');
-      if (Array.isArray(res) && res.length > 0) {
-        this.catolideres = res.map((u) => ({
-          id: String(u.id),
-          nombre: `${u.nombres || ''} ${u.primerApellido || ''}`.trim() || u.email,
-          correo: u.email,
-          telefono: u.telefono || '70000000',
-          carrera: u.carrera || 'Pastoral Universitaria',
-          nivel: (u.nivel === 'Super Pro' ? 'Super Pro' : 'Pro') as 'Pro' | 'Super Pro',
-        }));
+      const saved = localStorage.getItem('catovoluntarios_user');
+      if (saved) {
+        const parsed = JSON.parse(saved) as { rol?: string };
+        if (parsed.rol) return parsed.rol;
       }
-    } catch (err) {
-      console.warn('No se pudieron obtener catolideres vigentes, usando fallback:', err);
+    } catch {
+      // Ignorar JSON inválido en almacenamiento local
     }
-    return [...this.catolideres];
+    return 'ADMIN_PASTORAL';
   }
 
-  // ==========================================
-  // RF-12: Asignación Inteligente y Ubicación
-  // ==========================================
+  async fetchCatolideres(semestre: string, signal?: AbortSignal): Promise<CatoliderInfo[]> {
+    const query = new URLSearchParams({ semestre });
+    const res = await apiClient.get<RawCatolider[] | RawCatolideresResponse>(
+      `/users/catolideres-vigentes?${query.toString()}`,
+      {
+        signal,
+        headers: {
+          'x-user-rol': this.getCurrentUserRoleHeader(),
+        },
+      }
+    );
+    const items = Array.isArray(res) ? res : res.data || res.items || [];
+    this.catolideres = items.map((u) => {
+      const apellido = u.primerApellido ?? u.primer_apellido ?? '';
+      const nombreArmado =
+        u.nombre_completo ?? `${u.nombres ?? ''} ${apellido}`.trim();
+      const email = u.email ?? u.correo ?? '';
+      return {
+        id: String(u.id ?? u.id_usuario ?? ''),
+        nombre: nombreArmado || email || 'Catolíder',
+        correo: email,
+        telefono: u.telefono ?? u.celular ?? '',
+        carrera: u.carrera ?? 'Pastoral Universitaria',
+        nivel: u.nivel === 'Super Pro' ? 'Super Pro' : 'Pro',
+      };
+    });
+    return [...this.catolideres];
+  }
 
   getVoluntariosSync(): VoluntarioAdmitido[] {
     return [...this.voluntarios];
   }
 
-  getVoluntarios(): VoluntarioAdmitido[] {
-    return [...this.voluntarios];
-  }
+  async fetchVoluntarios(
+    proyectosList: ProyectoReceptor[],
+    semestre: string,
+    signal?: AbortSignal
+  ): Promise<VoluntarioAdmitido[]> {
+    const listProyectos = proyectosList.length > 0 ? proyectosList : this.proyectos;
+    const qs = new URLSearchParams({ semestre });
 
-  getVoluntariosSinUbicar(): VoluntarioAdmitido[] {
-    return this.voluntarios.filter((v) => !v.proyecto_id);
-  }
+    const admitidos = await apiClient.get<RawVoluntarioAdmitido[]>(
+      `/ubicacion/postulantes-admitidos?${qs.toString()}`,
+      { signal }
+    );
 
-  getVoluntariosPorProyecto(proyectoId: string): VoluntarioAdmitido[] {
-    return this.voluntarios.filter((v) => v.proyecto_id === proyectoId);
-  }
-
-  async fetchVoluntarios(proyectosList?: ProyectoReceptor[]): Promise<VoluntarioAdmitido[]> {
-    const listProyectos = proyectosList && proyectosList.length > 0 ? proyectosList : this.proyectos;
-
-    try {
-      // 1. Obtener postulantes admitidos sin ubicar
-      const admitidos = await apiClient.get<any[]>('/ubicacion/postulantes-admitidos');
-      const unassigned: VoluntarioAdmitido[] = (Array.isArray(admitidos) ? admitidos : []).map(
-        (e) => ({
-          id: String(e.id_usuario),
-          nombre_completo: e.nombre_completo,
-          ci: e.ci,
-          telefono: e.celular || '70000000',
-          correo: `${e.nombre_completo.toLowerCase().replace(/\s+/g, '.')}@ucb.edu.bo`,
-          carrera: e.carrera,
-          edad: e.edad || 20,
-          condicion:
-            String(e.condicion).toUpperCase() === 'ANTIGUO' ? 'Antiguo' : 'Nuevo',
-          horario_comprometido: 'Tarde (14:00 - 18:00)',
-          poblacion_sugerida: e.poblacion_sugerida || 'General',
+    const unassigned: VoluntarioAdmitido[] = (Array.isArray(admitidos) ? admitidos : []).map(
+      (e) => {
+        const nombre =
+          e.nombre_completo ?? `${e.nombres ?? ''} ${e.primerApellido ?? ''}`.trim();
+        return {
+          id: String(e.id_usuario ?? e.id ?? ''),
+          nombre_completo: nombre,
+          ci: e.ci ?? '',
+          telefono: e.celular ?? e.telefono ?? '',
+          correo: e.correo ?? e.email ?? '',
+          carrera: e.carrera ?? '',
+          edad: Number(e.edad ?? 20),
+          condicion: String(e.condicion).toUpperCase() === 'ANTIGUO' ? 'Antiguo' : 'Nuevo',
+          horario_comprometido: e.horario_comprometido ?? 'Por coordinar',
+          poblacion_sugerida: e.poblacion_sugerida ?? 'General',
+          puntaje_esre: e.puntaje_esre,
           poliza_validada: true,
           proyecto_id: undefined,
           fecha_asignacion: undefined,
-        })
-      );
-
-      // 2. Obtener voluntarios asignados por cada proyecto
-      const assigned: VoluntarioAdmitido[] = [];
-      for (const proj of listProyectos) {
-        try {
-          const proVoluntarios = await apiClient.get<any[]>(
-            `/ubicacion/proyectos/${proj.id}/voluntarios`
-          );
-          if (Array.isArray(proVoluntarios)) {
-            proVoluntarios.forEach((v) => {
-              assigned.push({
-                id: String(v.id_usuario),
-                nombre_completo: v.nombre,
-                ci: `CI-${v.id_usuario}`,
-                telefono: v.celular || '70000000',
-                correo: `${v.nombre.toLowerCase().replace(/\s+/g, '.')}@ucb.edu.bo`,
-                carrera: v.carrera,
-                edad: v.edad || 21,
-                condicion:
-                  String(v.condicion).toUpperCase() === 'ANTIGUO' ? 'Antiguo' : 'Nuevo',
-                horario_comprometido: v.horario_comprometido || 'Tarde (14:00 - 18:00)',
-                poblacion_sugerida: proj.poblacion_objetivo[0] || 'General',
-                poliza_validada: Boolean(v.poliza_validada),
-                proyecto_id: String(proj.id),
-                fecha_asignacion: new Date().toISOString().split('T')[0],
-              });
-            });
-          }
-        } catch {
-          // Ignorar fallo por proyecto individual
-        }
-      }
-
-      this.voluntarios = [...unassigned, ...assigned];
-      return [...this.voluntarios];
-    } catch (err) {
-      console.warn('Error al obtener voluntarios de API, usando estado local:', err);
-      return [...this.voluntarios];
-    }
-  }
-
-  async asignarVoluntario(voluntarioId: string, proyectoId: string): Promise<void> {
-    const voluntario = this.voluntarios.find((v) => v.id === voluntarioId);
-
-    const today = new Date().toISOString().split('T')[0];
-
-    try {
-      await apiClient.post('/ubicacion/asignar', {
-        id_usuario: Number(voluntarioId),
-        id_proyecto: Number(proyectoId),
-        semestre: '2/2026',
-        condicion: voluntario?.condicion === 'Antiguo' ? 'ANTIGUO' : 'NUEVO',
-        horario_comprometido: voluntario?.horario_comprometido || 'Tarde (14:00 - 18:00)',
-        poliza_validada: true,
-        induccion_completada: true,
-      });
-    } catch (err) {
-      console.warn('Fallo en endpoint /ubicacion/asignar, aplicando localmente:', err);
-    }
-
-    this.voluntarios = this.voluntarios.map((v) => {
-      if (v.id === voluntarioId) {
-        return {
-          ...v,
-          proyecto_id: proyectoId,
-          fecha_asignacion: today,
         };
       }
-      return v;
-    });
-  }
+    );
 
-  async desasignarVoluntario(voluntarioId: string): Promise<void> {
-    const vol = this.voluntarios.find((v) => v.id === voluntarioId);
-    if (vol && vol.proyecto_id) {
-      try {
-        // Buscar las asignaciones de ese proyecto para obtener el id de asignacion
-        const asignaciones = await apiClient.get<any[]>(
-          `/ubicacion/proyectos/${vol.proyecto_id}/voluntarios`
+    const assignedResults = await Promise.allSettled(
+      listProyectos.map(async (proj) => {
+        const proVoluntarios = await apiClient.get<RawVoluntarioAsignado[]>(
+          `/ubicacion/proyectos/${proj.id}/voluntarios?${qs.toString()}`,
+          { signal }
         );
-        const match = Array.isArray(asignaciones)
-          ? asignaciones.find((a) => String(a.id_usuario) === String(voluntarioId))
-          : null;
-        if (match && match.id_asignacion) {
-          await apiClient.delete(`/ubicacion/asignaciones/${match.id_asignacion}`);
-        }
-      } catch (err) {
-        console.warn('Error al desasignar en backend:', err);
+        return { proj, proVoluntarios };
+      })
+    );
+
+    const assigned: VoluntarioAdmitido[] = [];
+    for (const result of assignedResults) {
+      if (result.status !== 'fulfilled') continue;
+      const { proj, proVoluntarios } = result.value;
+      if (!Array.isArray(proVoluntarios)) continue;
+
+      for (const v of proVoluntarios) {
+        assigned.push({
+          id: String(v.id_usuario),
+          nombre_completo: v.nombre_completo ?? v.nombre ?? '',
+          ci: v.ci ?? '',
+          telefono: v.celular ?? v.telefono ?? '',
+          correo: v.correo ?? v.email ?? '',
+          carrera: v.carrera ?? '',
+          edad: Number(v.edad ?? 20),
+          condicion: String(v.condicion).toUpperCase() === 'ANTIGUO' ? 'Antiguo' : 'Nuevo',
+          horario_comprometido: v.horario_comprometido ?? 'Por coordinar',
+          poblacion_sugerida: proj.poblacion_objetivo[0] ?? 'General',
+          poliza_validada: Boolean(v.poliza_validada),
+          proyecto_id: String(proj.id),
+          fecha_asignacion: v.fecha_asignacion
+            ? String(v.fecha_asignacion).split('T')[0]
+            : undefined,
+        });
       }
     }
 
-    this.voluntarios = this.voluntarios.map((v) => {
-      if (v.id === voluntarioId) {
-        return {
-          ...v,
-          proyecto_id: undefined,
-          fecha_asignacion: undefined,
-        };
+    this.voluntarios = [...unassigned, ...assigned];
+    return [...this.voluntarios];
+  }
+
+  async asignarVoluntario(
+    voluntarioId: string,
+    proyectoId: string,
+    semestre: string
+  ): Promise<void> {
+    const voluntario = this.voluntarios.find((v) => v.id === voluntarioId);
+    const proyecto = this.getProyectoById(proyectoId);
+
+    if (proyecto) {
+      const currentAssigned = this.voluntarios.filter((v) => v.proyecto_id === proyectoId).length;
+      if (currentAssigned >= proyecto.cupo_maximo_voluntarios) {
+        throw new Error('El Proyecto Receptor seleccionado ha alcanzado su cupo máximo.');
       }
-      return v;
+    }
+
+    await apiClient.post('/ubicacion/asignar', {
+      id_usuario: Number(voluntarioId),
+      id_proyecto: Number(proyectoId),
+      semestre,
+      condicion: voluntario?.condicion === 'Antiguo' ? 'ANTIGUO' : 'NUEVO',
+      horario_comprometido: voluntario?.horario_comprometido || 'Tarde (14:00 - 18:00)',
+      poliza_validada: voluntario?.poliza_validada ?? true,
+      induccion_completada: true,
     });
   }
 
-  // ==========================================
-  // RF-13: Gestión de Reasignaciones y Traslados
-  // ==========================================
+  async desasignarVoluntario(voluntarioId: string, semestre: string): Promise<void> {
+    const vol = this.voluntarios.find((v) => v.id === voluntarioId);
+    if (!vol || !vol.proyecto_id) {
+      throw new Error('El voluntario no tiene una asignación activa.');
+    }
+
+    const qs = new URLSearchParams({ semestre });
+    const asignaciones = await apiClient.get<RawVoluntarioAsignado[]>(
+      `/ubicacion/proyectos/${vol.proyecto_id}/voluntarios?${qs.toString()}`
+    );
+    const match = Array.isArray(asignaciones)
+      ? asignaciones.find((a) => String(a.id_usuario) === String(voluntarioId))
+      : undefined;
+
+    if (!match?.id_asignacion) {
+      throw new Error('No se encontró el identificador de asignación en el servidor.');
+    }
+
+    await apiClient.delete(`/ubicacion/asignaciones/${match.id_asignacion}`);
+  }
 
   getTrasladosSync(): TrasladoRegistro[] {
-    return [...this.traslados];
-  }
-
-  getTraslados(): TrasladoRegistro[] {
     return [...this.traslados];
   }
 
@@ -369,74 +1004,148 @@ class ProyectosService {
     return [...this.notificaciones];
   }
 
-  getNotificaciones(): NotificacionTraslado[] {
-    return [...this.notificaciones];
+  async fetchPeriodoTraslado(
+    semestre: string,
+    proyectosList?: ProyectoReceptor[],
+    signal?: AbortSignal
+  ): Promise<PeriodoTrasladoEstado> {
+    try {
+      const qs = new URLSearchParams({ semestre });
+      const res = await apiClient.get<RawPeriodoResponse>(
+        `/ubicacion/reasignaciones/periodo?${qs.toString()}`,
+        { signal }
+      );
+      const semanaActual = Number(res.semanaActual ?? res.semana_actual);
+      if (!Number.isNaN(semanaActual) && semanaActual > 0) {
+        const maxSemanas = Number(res.maxSemanasOrdinarias ?? res.max_semanas_ordinarias ?? 4);
+        const habilitado =
+          res.periodoOrdinarioHabilitado ?? res.habilitado ?? semanaActual <= maxSemanas;
+        return {
+          semestre: res.semestre ?? semestre,
+          semanaActual,
+          maxSemanasOrdinarias: maxSemanas,
+          periodoOrdinarioHabilitado: Boolean(habilitado),
+          fechaInicioReferencia: res.fechaInicio ?? res.fecha_inicio ?? '',
+          fuente: 'backend',
+        };
+      }
+    } catch {
+      // Si el backend no expone el endpoint de periodo, se calcula con base en la gestion activa
+    }
+
+    return calcularPeriodoTrasladoLocal(semestre, proyectosList ?? this.proyectos);
   }
 
-  async fetchTraslados(): Promise<TrasladoRegistro[]> {
-    try {
-      const res = await apiClient.get<any[]>('/ubicacion/reasignaciones/historial');
-      if (Array.isArray(res)) {
-        this.traslados = res.map((t) => {
-          const vol = this.voluntarios.find((v) => v.id === String(t.id_usuario));
-          const pOrig = this.getProyectoById(String(t.id_proyecto_origen));
-          const pDest = this.getProyectoById(String(t.id_proyecto_destino));
+  async fetchTraslados(semestre: string, signal?: AbortSignal): Promise<TrasladoRegistro[]> {
+    const qs = new URLSearchParams({ semestre });
+    const res = await apiClient.get<RawTraslado[]>(
+      `/ubicacion/reasignaciones/historial?${qs.toString()}`,
+      { signal }
+    );
 
-          return {
-            id: String(t.id_historial || t.id),
-            voluntario_id: String(t.id_usuario),
-            voluntario_nombre: vol ? vol.nombre_completo : `Voluntario #${t.id_usuario}`,
-            voluntario_carrera: vol ? vol.carrera : 'General',
-            proyecto_origen_id: String(t.id_proyecto_origen),
-            proyecto_origen_nombre: pOrig ? pOrig.nombre_proyecto : `Proyecto #${t.id_proyecto_origen}`,
-            proyecto_destino_id: String(t.id_proyecto_destino),
-            proyecto_destino_nombre: pDest ? pDest.nombre_proyecto : `Proyecto #${t.id_proyecto_destino}`,
-            motivo_traslado: t.motivo_traslado as MotivoTraslado,
-            fecha_efectiva: t.fecha_efectiva ? String(t.fecha_efectiva).split('T')[0] : '',
-            fecha_solicitud: t.createdAt ? String(t.createdAt).split('T')[0] : '',
-            estado: 'completado',
-          };
-        });
-      }
-    } catch (err) {
-      console.warn('Error al obtener historial de reasignaciones:', err);
+    if (Array.isArray(res)) {
+      this.traslados = res.map((t) => {
+        const vol = this.voluntarios.find((v) => v.id === String(t.id_usuario));
+        const pOrig = this.getProyectoById(String(t.id_proyecto_origen));
+        const pDest = this.getProyectoById(String(t.id_proyecto_destino));
+
+        return {
+          id: String(t.id_historial ?? t.id ?? ''),
+          voluntario_id: String(t.id_usuario ?? ''),
+          voluntario_nombre:
+            t.voluntario_nombre ?? vol?.nombre_completo ?? 'Voluntario registrado',
+          voluntario_carrera: t.voluntario_carrera ?? vol?.carrera ?? '',
+          proyecto_origen_id: String(t.id_proyecto_origen ?? ''),
+          proyecto_origen_nombre:
+            t.proyecto_origen_nombre ?? pOrig?.nombre_proyecto ?? 'Proyecto origen',
+          proyecto_destino_id: String(t.id_proyecto_destino ?? ''),
+          proyecto_destino_nombre:
+            t.proyecto_destino_nombre ?? pDest?.nombre_proyecto ?? 'Proyecto destino',
+          motivo_traslado: (t.motivo_traslado as MotivoTraslado) || 'Otro',
+          motivo_otro_detalle: t.motivo_otro_detalle,
+          fecha_efectiva: t.fecha_efectiva ? String(t.fecha_efectiva).split('T')[0] : '',
+          fecha_solicitud:
+            t.fecha_solicitud || t.createdAt
+              ? String(t.fecha_solicitud ?? t.createdAt).split('T')[0]
+              : '',
+          semestre: t.semestre ?? semestre,
+          estado: 'completado',
+        };
+      });
     }
+
     return [...this.traslados];
   }
 
-  async fetchNotificaciones(): Promise<NotificacionTraslado[]> {
-    try {
-      const res = await apiClient.get<any[]>('/ubicacion/notificaciones');
-      if (Array.isArray(res)) {
-        this.notificaciones = res.map((n) => ({
-          id: String(n.id_notificacion || n.id),
-          traslado_id: String(n.id_asignacion || '0'),
-          tipo:
-            n.tipo_notificacion === 'ALTA_CATOLIDER'
-              ? 'alta_lider_destino'
-              : n.tipo_notificacion === 'BAJA_CATOLIDER'
-              ? 'baja_lider_origen'
-              : 'actualizacion_voluntario',
-          destinatario_rol: n.rol_destinatario === 'VOLUNTARIO' ? 'voluntario' : 'catolider',
-          destinatario_nombre: `Usuario #${n.id_usuario_destinatario}`,
-          titulo: n.titulo,
-          mensaje: n.mensaje,
-          fecha: n.fecha_envio ? String(n.fecha_envio).replace('T', ' ').substring(0, 16) : '',
-          leido: Boolean(n.leido),
-        }));
-      }
-    } catch (err) {
-      console.warn('Error al obtener notificaciones de backend:', err);
+  private resolveDestinatarioNombre(raw: RawNotificacion): string {
+    if (raw.destinatario_nombre?.trim()) return raw.destinatario_nombre.trim();
+    if (raw.usuario_destinatario_nombre?.trim()) return raw.usuario_destinatario_nombre.trim();
+    if (raw.usuario_destinatario) {
+      const fromObj =
+        raw.usuario_destinatario.nombre_completo ??
+        `${raw.usuario_destinatario.nombres ?? ''} ${raw.usuario_destinatario.primerApellido ?? ''}`.trim();
+      if (fromObj) return fromObj;
     }
+
+    const userId = raw.id_usuario_destinatario ? String(raw.id_usuario_destinatario) : '';
+    if (userId) {
+      const lider = this.catolideres.find((c) => c.id === userId);
+      if (lider) return lider.nombre;
+      const vol = this.voluntarios.find((v) => v.id === userId);
+      if (vol) return vol.nombre_completo;
+    }
+
+    const rol = raw.rol_destinatario ?? raw.destinatario_rol ?? '';
+    return rol === 'VOLUNTARIO' ? 'Catovoluntario trasladado' : 'Catolíder de proyecto';
+  }
+
+  async fetchNotificaciones(
+    semestre: string,
+    signal?: AbortSignal
+  ): Promise<NotificacionTraslado[]> {
+    const qs = new URLSearchParams({ semestre });
+    const res = await apiClient.get<RawNotificacion[]>(
+      `/ubicacion/notificaciones?${qs.toString()}`,
+      { signal }
+    );
+
+    if (Array.isArray(res)) {
+      this.notificaciones = res.map((n) => {
+        const tipoRaw = n.tipo_notificacion ?? n.tipo ?? '';
+        const tipo: NotificacionTraslado['tipo'] =
+          tipoRaw === 'ALTA_CATOLIDER' || tipoRaw === 'alta_lider_destino'
+            ? 'alta_lider_destino'
+            : tipoRaw === 'BAJA_CATOLIDER' || tipoRaw === 'baja_lider_origen'
+            ? 'baja_lider_origen'
+            : 'actualizacion_voluntario';
+
+        const rolRaw = n.rol_destinatario ?? n.destinatario_rol ?? '';
+        const fechaRaw = n.fecha_envio ?? n.createdAt ?? '';
+
+        return {
+          id: String(n.id_notificacion ?? n.id ?? ''),
+          traslado_id: String(n.id_traslado ?? n.id_asignacion ?? '0'),
+          tipo,
+          destinatario_rol:
+            rolRaw.toUpperCase() === 'VOLUNTARIO' ? 'voluntario' : 'catolider',
+          destinatario_nombre: this.resolveDestinatarioNombre(n),
+          titulo: n.titulo ?? 'Notificación de reasignación',
+          mensaje: n.mensaje ?? '',
+          motivo: n.motivo_traslado ?? n.motivo,
+          motivo_otro_detalle: n.motivo_otro_detalle,
+          proyecto_origen_nombre: n.proyecto_origen_nombre,
+          proyecto_destino_nombre: n.proyecto_destino_nombre,
+          fecha: fechaRaw ? String(fechaRaw).replace('T', ' ').substring(0, 16) : '',
+          leido: Boolean(n.leido ?? n.leida),
+        };
+      });
+    }
+
     return [...this.notificaciones];
   }
 
   async marcarNotificacionLeida(id: string): Promise<void> {
-    try {
-      await apiClient.patch(`/ubicacion/notificaciones/${id}/marcar-leida`);
-    } catch (err) {
-      console.warn('Error al marcar notificacion leida en backend:', err);
-    }
+    await apiClient.patch(`/ubicacion/notificaciones/${id}/marcar-leida`);
     this.notificaciones = this.notificaciones.map((n) =>
       n.id === id ? { ...n, leido: true } : n
     );
@@ -446,58 +1155,64 @@ class ProyectosService {
     voluntarioId: string;
     proyectoDestinoId: string;
     motivo: MotivoTraslado;
+    motivoOtroDetalle?: string;
     fechaEfectiva: string;
+    semestre: string;
+    trasladoExcepcional?: boolean;
   }): Promise<TrasladoRegistro> {
-    const { voluntarioId, proyectoDestinoId, motivo, fechaEfectiva } = params;
+    const {
+      voluntarioId,
+      proyectoDestinoId,
+      motivo,
+      motivoOtroDetalle,
+      fechaEfectiva,
+      semestre,
+      trasladoExcepcional,
+    } = params;
+
+    if (motivo === 'Otro' && !motivoOtroDetalle?.trim()) {
+      throw new Error('Debe especificar el detalle del motivo cuando selecciona "Otro".');
+    }
 
     const voluntario = this.voluntarios.find((v) => v.id === voluntarioId);
-    if (!voluntario) throw new Error('Voluntario no encontrado');
-    if (!voluntario.proyecto_id) throw new Error('El voluntario no tiene un proyecto asignado');
+    if (!voluntario) throw new Error('Voluntario no encontrado.');
+    if (!voluntario.proyecto_id) throw new Error('El voluntario no tiene un proyecto asignado.');
 
     const proyectoOrigen = this.getProyectoById(voluntario.proyecto_id);
     const proyectoDestino = this.getProyectoById(proyectoDestinoId);
-    if (!proyectoOrigen) throw new Error('Proyecto de origen no encontrado');
-    if (!proyectoDestino) throw new Error('Proyecto de destino no encontrado');
+    if (!proyectoOrigen) throw new Error('Proyecto Receptor de origen no encontrado.');
+    if (!proyectoDestino) throw new Error('Proyecto Receptor de destino no encontrado.');
 
-    try {
-      // Buscar la asignación activa de origen
-      const asignaciones = await apiClient.get<any[]>(
-        `/ubicacion/proyectos/${proyectoOrigen.id}/voluntarios`
-      );
-      const match = Array.isArray(asignaciones)
-        ? asignaciones.find((a) => String(a.id_usuario) === String(voluntarioId))
-        : null;
+    const qs = new URLSearchParams({ semestre });
+    const asignaciones = await apiClient.get<RawVoluntarioAsignado[]>(
+      `/ubicacion/proyectos/${proyectoOrigen.id}/voluntarios?${qs.toString()}`
+    );
+    const match = Array.isArray(asignaciones)
+      ? asignaciones.find((a) => String(a.id_usuario) === String(voluntarioId))
+      : undefined;
 
-      if (match && match.id_asignacion) {
-        await apiClient.post('/ubicacion/reasignar', {
-          id_asignacion_origen: match.id_asignacion,
-          id_proyecto_destino: Number(proyectoDestinoId),
-          motivo_traslado: motivo,
-          fecha_efectiva: fechaEfectiva,
-          observaciones: 'Traslado solicitado desde plataforma web',
-        });
-        await this.fetchTraslados();
-        await this.fetchNotificaciones();
-      }
-    } catch (err) {
-      console.warn('Error al ejecutar traslado en backend, aplicando localmente:', err);
+    if (!match?.id_asignacion) {
+      throw new Error('No se encontró la asignación activa del voluntario en el servidor.');
     }
 
-    // Actualizar ubicación en memoria
-    this.voluntarios = this.voluntarios.map((v) => {
-      if (v.id === voluntarioId) {
-        return {
-          ...v,
-          proyecto_id: proyectoDestinoId,
-          fecha_asignacion: fechaEfectiva,
-        };
-      }
-      return v;
-    });
+    const detalleLimpio = motivo === 'Otro' ? motivoOtroDetalle?.trim() : undefined;
+    const dto: ReasignarUbicacionDto = {
+      id_asignacion_origen: match.id_asignacion,
+      id_proyecto_destino: Number(proyectoDestinoId),
+      motivo_traslado: motivo,
+      motivo_otro_detalle: detalleLimpio,
+      fecha_efectiva: fechaEfectiva,
+      semestre,
+      traslado_excepcional: Boolean(trasladoExcepcional),
+      observaciones: detalleLimpio
+        ? `Otro: ${detalleLimpio}`
+        : 'Traslado autorizado desde plataforma web',
+    };
 
-    const now = new Date();
-    const nuevoTraslado: TrasladoRegistro = {
-      id: `tras-${Date.now()}`,
+    const res = await apiClient.post<RawTraslado>('/ubicacion/reasignar', dto);
+
+    return {
+      id: String(res.id_historial ?? res.id ?? Date.now()),
       voluntario_id: voluntario.id,
       voluntario_nombre: voluntario.nombre_completo,
       voluntario_carrera: voluntario.carrera,
@@ -506,13 +1221,12 @@ class ProyectosService {
       proyecto_destino_id: proyectoDestino.id,
       proyecto_destino_nombre: proyectoDestino.nombre_proyecto,
       motivo_traslado: motivo,
+      motivo_otro_detalle: detalleLimpio,
       fecha_efectiva: fechaEfectiva,
-      fecha_solicitud: now.toISOString().split('T')[0],
+      fecha_solicitud: new Date().toISOString().split('T')[0],
+      semestre,
       estado: 'completado',
     };
-
-    this.traslados = [nuevoTraslado, ...this.traslados];
-    return nuevoTraslado;
   }
 }
 

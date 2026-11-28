@@ -13,12 +13,14 @@ export interface TransferFormProps {
   voluntariosAsignados: VoluntarioAdmitido[];
   proyectos: ProyectoReceptor[];
   assignedCounts: Record<string, number>;
+  semestre: string;
   onSubmitTransfer: (data: {
     voluntarioId: string;
     proyectoDestinoId: string;
     motivo: MotivoTraslado;
+    motivoOtroDetalle?: string;
     fechaEfectiva: string;
-  }) => void;
+  }) => Promise<unknown>;
   disabled?: boolean;
 }
 
@@ -26,6 +28,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   voluntariosAsignados,
   proyectos,
   assignedCounts,
+  semestre,
   onSubmitTransfer,
   disabled = false,
 }) => {
@@ -34,40 +37,44 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   const [motivo, setMotivo] = useState<MotivoTraslado>(
     'Cruce con materias universitarias'
   );
+  const [motivoOtroDetalle, setMotivoOtroDetalle] = useState('');
   const [fechaEfectiva, setFechaEfectiva] = useState(
     () => new Date().toISOString().split('T')[0]
   );
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
-    null
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
-  // Voluntario seleccionado
   const voluntarioSeleccionado = useMemo(() => {
     return voluntariosAsignados.find((v) => v.id === selectedVoluntarioId);
   }, [voluntariosAsignados, selectedVoluntarioId]);
 
-  // Proyecto de origen (lectura automática)
   const proyectoOrigen = useMemo(() => {
     if (!voluntarioSeleccionado || !voluntarioSeleccionado.proyecto_id) return null;
     return proyectos.find((p) => p.id === voluntarioSeleccionado.proyecto_id) || null;
   }, [voluntarioSeleccionado, proyectos]);
 
-  // Proyectos de destino disponibles (solo proyectos con cupos disponibles y diferente al de origen)
   const proyectosDestinoDisponibles = useMemo(() => {
     if (!proyectoOrigen) return [];
     return proyectos.filter((p) => {
+      if (p.estado === 'inactivo') return false;
       if (p.id === proyectoOrigen.id) return false;
       const cuposOcupados = assignedCounts[p.id] || 0;
       return cuposOcupados < p.cupo_maximo_voluntarios;
     });
   }, [proyectos, proyectoOrigen, assignedCounts]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback(null);
 
     if (!selectedVoluntarioId) {
-      setFeedback({ type: 'error', message: 'Debe seleccionar un voluntario para el traslado.' });
+      setFeedback({
+        type: 'error',
+        message: 'Debe seleccionar un voluntario para el traslado.',
+      });
       return;
     }
     if (!selectedDestinoId) {
@@ -77,30 +84,42 @@ export const TransferForm: React.FC<TransferFormProps> = ({
       });
       return;
     }
+    if (motivo === 'Otro' && !motivoOtroDetalle.trim()) {
+      setFeedback({
+        type: 'error',
+        message: 'Debe especificar el detalle del motivo al seleccionar "Otro".',
+      });
+      return;
+    }
 
+    setIsSubmitting(true);
     try {
-      onSubmitTransfer({
+      await onSubmitTransfer({
         voluntarioId: selectedVoluntarioId,
         proyectoDestinoId: selectedDestinoId,
         motivo,
+        motivoOtroDetalle: motivo === 'Otro' ? motivoOtroDetalle.trim() : undefined,
         fechaEfectiva,
       });
 
       setFeedback({
         type: 'success',
         message:
-          'Traslado procesado exitosamente. Se han generado las 3 notificaciones automáticas correspondientes.',
+          'Traslado procesado exitosamente. Se han emitido las alertas correspondientes para los Catolíderes de origen y destino y para el Catovoluntario.',
       });
 
-      // Reset
       setSelectedVoluntarioId('');
       setSelectedDestinoId('');
+      setMotivo('Cruce con materias universitarias');
+      setMotivoOtroDetalle('');
     } catch (err: unknown) {
-      const error = err as Error;
       setFeedback({
         type: 'error',
-        message: error.message || 'Error al procesar el traslado.',
+        message:
+          err instanceof Error ? err.message : 'Error al procesar el traslado.',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -111,7 +130,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           Formulario Oficial de Reasignación y Traslado (RF-13)
         </h3>
         <p className="text-xs text-cato-muted mt-0.5">
-          Autorización pastoral para cambio de centro operativo dentro de las 4 primeras semanas.
+          Autorización pastoral para cambio de Proyecto Receptor en la Gestión {semestre}.
         </p>
       </div>
 
@@ -133,7 +152,6 @@ export const TransferForm: React.FC<TransferFormProps> = ({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Selección de Voluntario */}
         <div>
           <label className="block text-xs font-semibold text-cato-slate mb-1">
             Voluntario Asignado para Traslado <span className="text-red-500">*</span>
@@ -145,7 +163,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
               setSelectedDestinoId('');
               setFeedback(null);
             }}
-            disabled={disabled}
+            disabled={disabled || isSubmitting}
             className="w-full h-10 px-3 py-2 border border-cato-input rounded-md text-xs text-cato-text bg-white focus:outline-none focus:border-cato-navy disabled:bg-slate-100"
           >
             <option value="">-- Seleccione un Catovoluntario asignado --</option>
@@ -161,9 +179,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           </select>
         </div>
 
-        {/* Origen vs Destino Split */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-cato-canvas rounded-lg border border-cato-border">
-          {/* Origen (Lectura Automática) */}
           <div className="space-y-1.5">
             <span className="text-[11px] uppercase font-bold text-cato-slate">
               Proyecto Receptor de Origen (Lectura Automática)
@@ -173,7 +189,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 <div>
                   <div className="font-bold text-cato-navy">{proyectoOrigen.nombre_proyecto}</div>
                   <div className="text-[11px] text-cato-muted mt-0.5">
-                    Supervisor: {proyectoOrigen.nombre_supervisor_centro} &bull; Zona:{' '}
+                    Catolíder: {proyectoOrigen.catolider_titular_nombre || 'Sin asignar'} | Zona:{' '}
                     {proyectoOrigen.macrodistrito_zona}
                   </div>
                 </div>
@@ -185,7 +201,6 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             </div>
           </div>
 
-          {/* Destino (Solo con cupos) */}
           <div className="space-y-1.5">
             <span className="text-[11px] uppercase font-bold text-cato-slate">
               Proyecto Receptor de Destino (Solo con Cupo Disponible){' '}
@@ -194,7 +209,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             <select
               value={selectedDestinoId}
               onChange={(e) => setSelectedDestinoId(e.target.value)}
-              disabled={disabled || !proyectoOrigen}
+              disabled={disabled || isSubmitting || !proyectoOrigen}
               className="w-full h-[72px] px-3 py-2 border border-cato-input rounded-md text-xs text-cato-text bg-white focus:outline-none focus:border-cato-navy disabled:bg-slate-100 disabled:cursor-not-allowed"
             >
               <option value="">
@@ -207,7 +222,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 const libres = p.cupo_maximo_voluntarios - count;
                 return (
                   <option key={p.id} value={p.id}>
-                    {p.nombre_proyecto} ({libres} cupos disponibles &bull; Pasaje: Bs.{' '}
+                    {p.nombre_proyecto} ({libres} cupos disponibles | Pasaje: Bs.{' '}
                     {p.monto_pasaje_fijo})
                   </option>
                 );
@@ -216,14 +231,19 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           </div>
         </div>
 
-        {/* Motivo de Traslado Estandarizado y Fecha */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
             label="Motivo Estandarizado de Traslado"
             required
             value={motivo}
-            onChange={(e) => setMotivo(e.target.value as MotivoTraslado)}
-            disabled={disabled}
+            onChange={(e) => {
+              const next = e.target.value as MotivoTraslado;
+              setMotivo(next);
+              if (next !== 'Otro') {
+                setMotivoOtroDetalle('');
+              }
+            }}
+            disabled={disabled || isSubmitting}
             options={[
               {
                 value: 'Cruce con materias universitarias',
@@ -241,6 +261,10 @@ export const TransferForm: React.FC<TransferFormProps> = ({
                 value: 'Incompatibilidad de perfil',
                 label: 'Incompatibilidad de perfil',
               },
+              {
+                value: 'Otro',
+                label: 'Otro (especificar motivo)',
+              },
             ]}
           />
 
@@ -250,16 +274,42 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             required
             value={fechaEfectiva}
             onChange={(e) => setFechaEfectiva(e.target.value)}
-            disabled={disabled}
+            disabled={disabled || isSubmitting}
           />
         </div>
 
-        {/* Action Button */}
+        {motivo === 'Otro' && (
+          <div>
+            <label
+              htmlFor="motivo-otro-detalle"
+              className="block text-xs font-semibold text-cato-slate mb-1"
+            >
+              Detalle del Motivo del Traslado <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="motivo-otro-detalle"
+              rows={2}
+              required
+              disabled={disabled || isSubmitting}
+              value={motivoOtroDetalle}
+              onChange={(e) => setMotivoOtroDetalle(e.target.value)}
+              placeholder="Describa de forma clara el motivo específico del traslado..."
+              className="w-full px-3 py-2 border border-cato-input rounded-md text-xs text-cato-text placeholder-cato-muted focus:outline-none focus:border-cato-navy focus:ring-1 focus:ring-cato-navy disabled:bg-slate-100"
+            />
+          </div>
+        )}
+
         <div className="pt-2 flex justify-end">
           <Button
             variant="cta"
             type="submit"
-            disabled={disabled || !selectedVoluntarioId || !selectedDestinoId}
+            isLoading={isSubmitting}
+            disabled={
+              disabled ||
+              !selectedVoluntarioId ||
+              !selectedDestinoId ||
+              (motivo === 'Otro' && !motivoOtroDetalle.trim())
+            }
             className="w-full sm:w-auto"
           >
             <span>Ejecutar Traslado y Notificar Automáticamente</span>
