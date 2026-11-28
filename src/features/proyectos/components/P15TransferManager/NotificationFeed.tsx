@@ -10,7 +10,7 @@ import type { NotificacionTraslado } from '../../types/proyectos.types';
 
 export interface NotificationFeedProps {
   notifications: NotificacionTraslado[];
-  onMarkAsRead: (id: string) => void;
+  onMarkAsRead: (id: string) => Promise<void> | void;
 }
 
 export const NotificationFeed: React.FC<NotificationFeedProps> = ({
@@ -55,12 +55,12 @@ export const NotificationFeed: React.FC<NotificationFeedProps> = ({
       </div>
 
       <p className="text-xs text-cato-muted">
-        Alertas generadas en tiempo real para líderes de proyecto y voluntarios por cada reasignación autorizada.
+        Alertas generadas en tiempo real para Catolíderes de origen/destino y voluntarios por cada reasignación autorizada.
       </p>
 
       {notifications.length === 0 ? (
         <div className="py-8 text-center text-xs text-cato-muted">
-          No hay notificaciones de traslados emitidas en este semestre.
+          No hay notificaciones de traslados emitidas en esta gestión.
         </div>
       ) : (
         <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
@@ -91,18 +91,25 @@ export const NotificationFeed: React.FC<NotificationFeedProps> = ({
                 </div>
 
                 <div className="font-semibold text-cato-navy mb-0.5">
-                  {notif.titulo} &bull; Destinatario: {notif.destinatario_nombre}
+                  {notif.titulo} | Destinatario: {notif.destinatario_nombre}
                 </div>
 
                 <p className="text-[11px] text-cato-text leading-relaxed">
                   {notif.mensaje}
                 </p>
 
+                {notif.motivo && (
+                  <div className="mt-1.5 text-[11px] text-cato-slate bg-cato-canvas px-2 py-1 rounded border border-cato-border/80">
+                    <span className="font-semibold">Motivo:</span> {notif.motivo}
+                    {notif.motivo_otro_detalle ? ` — ${notif.motivo_otro_detalle}` : ''}
+                  </div>
+                )}
+
                 {!notif.leido && (
                   <div className="mt-2 pt-2 border-t border-cato-border/60 flex justify-end">
                     <button
                       type="button"
-                      onClick={() => onMarkAsRead(notif.id)}
+                      onClick={() => void onMarkAsRead(notif.id)}
                       className="text-[10px] font-semibold text-cato-slate hover:text-cato-navy flex items-center gap-1"
                     >
                       <Check className="w-3 h-3" />

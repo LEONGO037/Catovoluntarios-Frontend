@@ -5,10 +5,12 @@ import { formatDate } from '../../../../utils/formatters';
 
 export interface TransferHistoryTableProps {
   traslados: TrasladoRegistro[];
+  semestre: string;
 }
 
 export const TransferHistoryTable: React.FC<TransferHistoryTableProps> = ({
   traslados,
+  semestre,
 }) => {
   return (
     <div className="bg-white rounded-xl border border-cato-border shadow-card overflow-hidden">
@@ -16,7 +18,7 @@ export const TransferHistoryTable: React.FC<TransferHistoryTableProps> = ({
         <div className="flex items-center gap-2">
           <History className="w-4 h-4 text-cato-navy" />
           <h3 className="text-sm font-bold text-cato-navy">
-            Historial Auditable de Traslados del Semestre (Gestión 2/2026)
+            Historial Auditable de Traslados del Semestre (Gestión {semestre})
           </h3>
         </div>
         <span className="text-xs text-cato-muted font-medium">
@@ -40,7 +42,7 @@ export const TransferHistoryTable: React.FC<TransferHistoryTableProps> = ({
             {traslados.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-cato-muted text-xs">
-                  No se registran traslados efectuados en el periodo actual.
+                  No se registran traslados efectuados en la Gestión {semestre}.
                 </td>
               </tr>
             ) : (
@@ -54,19 +56,28 @@ export const TransferHistoryTable: React.FC<TransferHistoryTableProps> = ({
                   </td>
                   <td className="px-4 py-3 font-medium text-cato-text">
                     <div>{item.voluntario_nombre}</div>
-                    <div className="text-[10px] text-cato-muted">{item.voluntario_carrera}</div>
+                    {item.voluntario_carrera && (
+                      <div className="text-[10px] text-cato-muted">{item.voluntario_carrera}</div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-cato-slate">
                     {item.proyecto_origen_nombre}
                   </td>
-                  <td className="px-4 py-3 text-cato-navy font-semibold flex items-center gap-1.5">
-                    <ArrowRight className="w-3.5 h-3.5 text-cato-gold-dark shrink-0" />
-                    <span>{item.proyecto_destino_nombre}</span>
+                  <td className="px-4 py-3 text-cato-navy font-semibold">
+                    <span className="inline-flex items-center gap-1.5">
+                      <ArrowRight className="w-3.5 h-3.5 text-cato-gold-dark shrink-0" />
+                      <span>{item.proyecto_destino_nombre}</span>
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-cato-muted">
-                    <span className="px-2 py-0.5 rounded bg-cato-canvas border border-cato-border text-cato-text font-medium text-[11px]">
+                    <span className="inline-block px-2 py-0.5 rounded bg-cato-canvas border border-cato-border text-cato-text font-medium text-[11px]">
                       {item.motivo_traslado}
                     </span>
+                    {item.motivo_traslado === 'Otro' && item.motivo_otro_detalle && (
+                      <p className="text-[11px] text-cato-slate mt-1 leading-snug">
+                        Detalle: {item.motivo_otro_detalle}
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">

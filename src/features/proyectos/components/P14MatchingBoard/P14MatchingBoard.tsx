@@ -5,8 +5,10 @@ import {
   AlertCircle,
   HelpCircle,
 } from 'lucide-react';
-import type { UserRole } from '../../../../types/roles.types';
+import type { UserRole } from '../../../../types/auth.types';
 import type { VoluntarioAdmitido } from '../../types/proyectos.types';
+import { useAuth } from '../../../auth/hooks/useAuth';
+import { useActiveSemester } from '../../../../components/layout/active-semester';
 import { useProyectos } from '../../hooks/useProyectos';
 import { useMatching } from '../../hooks/useMatching';
 import { UnassignedVolunteers } from './UnassignedVolunteers';
@@ -21,12 +23,24 @@ export interface P14MatchingBoardProps {
 }
 
 export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
-  userRole = 'admin',
+  userRole,
 }) => {
-  const { proyectos } = useProyectos();
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(
-    proyectos[0]?.id || ''
+  const { user } = useAuth();
+  const activeSemester = useActiveSemester();
+  const effectiveRole: UserRole = userRole ?? user?.rol ?? 'CATOLIDER';
+  const isAdmin = effectiveRole === 'ADMIN_PASTORAL';
+
+  const { proyectos, error: proyectosError } = useProyectos(activeSemester);
+  const proyectosActivos = useMemo(
+    () => proyectos.filter((p) => p.estado === 'activo'),
+    [proyectos]
   );
+
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const activeProjectId =
+    selectedProjectId && proyectosActivos.some((p) => p.id === selectedProjectId)
+      ? selectedProjectId
+      : proyectosActivos[0]?.id || '';
 
   const {
     voluntarios,
@@ -35,16 +49,15 @@ export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
     unassignedVolunteers,
     balanceDemografico,
     filtros,
+    error: matchingError,
     setFiltros,
     asignar,
     desasignar,
-  } = useMatching(proyectos, selectedProjectId || proyectos[0]?.id || '');
+  } = useMatching(proyectosActivos, activeProjectId, activeSemester);
 
   const [assignCandidate, setAssignCandidate] = useState<VoluntarioAdmitido | null>(null);
+  const [actionError, setActionError] = useState('');
 
-  const isAdmin = userRole === 'admin';
-
-  // Conteo de voluntarios por proyecto
   const assignedCounts = useMemo(() => {
     return voluntarios.reduce<Record<string, number>>((acc, v) => {
       if (v.proyecto_id) {
@@ -60,16 +73,27 @@ export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
   );
 
   const handleOpenAssignModal = (vol: VoluntarioAdmitido) => {
+    setActionError('');
     setAssignCandidate(vol);
   };
 
-  const handleConfirmAssign = (voluntarioId: string, proyectoId: string) => {
-    asignar(voluntarioId, proyectoId);
+  const handleConfirmAssign = async (voluntarioId: string, proyectoId: string) => {
+    setActionError('');
+    await asignar(voluntarioId, proyectoId);
   };
 
-  const handleUnassign = (voluntarioId: string) => {
-    if (window.confirm('¿Está seguro de desasignar este voluntario del proyecto?')) {
-      desasignar(voluntarioId);
+  const handleUnassign = async (voluntarioId: string) => {
+    if (window.confirm('¿Está seguro de desasignar este voluntario del Proyecto Receptor?')) {
+      setActionError('');
+      try {
+        await desasignar(voluntarioId);
+      } catch (err: unknown) {
+        setActionError(
+          err instanceof Error
+            ? err.message
+            : 'No se pudo desasignar al voluntario.'
+        );
+      }
     }
   };
 
@@ -87,9 +111,21 @@ export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {(proyectosError || matchingError || actionError) && (
+        <AlertBanner
+          type="danger"
+          title="Error al gestionar Ubicación de Voluntarios"
+          message={actionError || matchingError || proyectosError}
+        />
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-cato-navy border border-blue-200">
+              Gestión {activeSemester}
+            </span>
+          </div>
           <h2 className="text-xl font-extrabold text-cato-navy tracking-tight flex items-center gap-2">
             <Users2 className="w-6 h-6 text-cato-navy" />
             Asignación Inteligente y Ubicación de Voluntarios
@@ -107,9 +143,7 @@ export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
         </div>
       </div>
 
-      {/* Main Split-Screen Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Columna Izquierda: Postulantes por Ubicar (5 cols) */}
         <div className="lg:col-span-5">
           <UnassignedVolunteers
             volunteers={unassignedVolunteers}
@@ -121,12 +155,10 @@ export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
           />
         </div>
 
-        {/* Columna Derecha: Proyectos Receptores y Ubicados (7 cols) */}
         <div className="lg:col-span-7 space-y-5">
-          {/* Tabs de Proyectos Receptores */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-cato-border">
-            {proyectos.map((p) => {
-              const isActive = (currentProyecto?.id || selectedProjectId) === p.id;
+            {proyectosActivos.map((p) => {
+              const isActive = (currentProyecto?.id || activeProjectId) === p.id;
               const count = assignedCounts[p.id] || 0;
 
               return (
@@ -139,7 +171,11 @@ export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
                       : 'border-transparent text-cato-muted hover:text-cato-slate hover:bg-white/60'
                   }`}
                 >
-                  <Building2 className={`w-3.5 h-3.5 ${isActive ? 'text-cato-gold-dark' : 'text-cato-steel'}`} />
+                  <Building2
+                    className={`w-3.5 h-3.5 ${
+                      isActive ? 'text-cato-gold-dark' : 'text-cato-steel'
+                    }`}
+                  />
                   <span>{p.nombre_proyecto}</span>
                   <span
                     className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
@@ -157,16 +193,16 @@ export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
 
           {currentProyecto ? (
             <>
-              {/* Balance Demográfico en Tiempo Real */}
               <DemographicBalance
                 balance={balanceDemografico}
                 project={currentProyecto}
               />
 
-              {/* Tabla de Voluntarios Asignados al Proyecto Activo */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-cato-slate px-1">
-                  <span>Nómina de Voluntarios Asignados al Centro ({assignedVolunteers.length})</span>
+                  <span>
+                    Nómina de Voluntarios Asignados al Centro ({assignedVolunteers.length})
+                  </span>
                   <span className="text-[11px] text-cato-muted font-normal">
                     Contacto telefónico directo vía enlace oficial de WhatsApp
                   </span>
@@ -181,19 +217,18 @@ export const P14MatchingBoard: React.FC<P14MatchingBoardProps> = ({
           ) : (
             <div className="p-8 text-center bg-white rounded-xl border border-cato-border text-xs text-cato-muted">
               <AlertCircle className="w-8 h-8 mx-auto text-cato-steel/50 mb-2" />
-              Seleccione un Proyecto Receptor para visualizar su balance demográfico y nómina.
+              No existen Proyectos Receptores activos en la Gestión {activeSemester}.
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal de Asignación Rápida */}
       <QuickAssignModal
         isOpen={Boolean(assignCandidate)}
         onClose={() => setAssignCandidate(null)}
         volunteer={assignCandidate}
-        proyectos={proyectos}
-        currentProjectId={currentProyecto?.id || proyectos[0]?.id || ''}
+        proyectos={proyectosActivos}
+        currentProjectId={currentProyecto?.id || activeProjectId}
         onConfirm={handleConfirmAssign}
         assignedCounts={assignedCounts}
       />

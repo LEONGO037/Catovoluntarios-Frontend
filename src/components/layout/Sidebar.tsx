@@ -190,13 +190,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       group: 'Proyectos y Ubicación',
-      roles: ['ADMIN_PASTORAL'],
+      roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
       items: [
         {
           to: '/proyectos',
           label: 'Proyectos Receptores',
           icon: Building2,
-          roles: ['ADMIN_PASTORAL'],
+          roles: ['ADMIN_PASTORAL', 'CATOLIDER'],
         },
         {
           to: '/ubicacion',
